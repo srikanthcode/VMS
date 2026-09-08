@@ -91,7 +91,7 @@ const RegisterPage = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="form-custom">
-          <div className="mb-3">
+          <div className="mb-2">
             <label className="form-label">Full Name</label>
             <div className="input-group">
               <span className="input-group-text">
@@ -109,7 +109,7 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          <div className="mb-3">
+          <div className="mb-2">
             <label className="form-label">Email Address</label>
             <div className="input-group">
               <span className="input-group-text">
@@ -127,7 +127,7 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          <div className="mb-3">
+          <div className="mb-2">
             <label className="form-label">Phone Number</label>
             <div className="input-group">
               <span className="input-group-text">
@@ -145,7 +145,7 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          <div className="mb-3">
+          <div className="mb-2">
             <label className="form-label">Password</label>
             <div className="input-group">
               <span className="input-group-text">
@@ -163,7 +163,7 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          <div className="mb-4">
+          <div className="mb-3">
             <label className="form-label">Confirm Password</label>
             <div className="input-group">
               <span className="input-group-text">

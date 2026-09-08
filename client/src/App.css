@@ -1448,8 +1448,8 @@ body {
   border-radius: var(--radius);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   width: 100%;
-  max-width: 450px;
-  padding: 2.5rem;
+  max-width: 420px;
+  padding: 2rem;
   border: 1px solid #2a2a4a;
 }
 
@@ -1461,13 +1461,13 @@ body {
 
 .auth-card .logo {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .auth-card .logo h2 {
   font-weight: 700;
   color: #ffffff;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
 }
 
 [data-theme="light"] .auth-card .logo h2 {
@@ -1476,7 +1476,7 @@ body {
 
 .auth-card .logo p {
   color: #8a94a6;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
 }
 
 [data-theme="light"] .auth-card .logo p {
@@ -1484,7 +1484,7 @@ body {
 }
 
 .auth-card .logo i {
-  font-size: 2.5rem;
+  font-size: 2rem;
   color: var(--accent);
   display: block;
   margin-bottom: 0.5rem;
@@ -1493,7 +1493,8 @@ body {
 .auth-card .form-label {
   color: #c8d0dc;
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  margin-bottom: 0.3rem;
 }
 
 [data-theme="light"] .auth-card .form-label {
@@ -1504,6 +1505,8 @@ body {
   background: #2a2a4a;
   border-color: #3a3a5a;
   color: #8a94a6;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
 }
 
 [data-theme="light"] .auth-card .input-group-text {
@@ -1516,6 +1519,8 @@ body {
   background: #2a2a4a;
   border-color: #3a3a5a;
   color: #ffffff;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
 }
 
 .auth-card .form-control::placeholder {
