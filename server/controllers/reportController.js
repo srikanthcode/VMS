@@ -1,37 +1,38 @@
-const { Booking, Bill, Payment, User, Vehicle, ServiceType } = require('../models');
+const { Booking, Bill, Payment, User, Vehicle, ServiceType, sequelize } = require('../models');
+const { Op } = require('sequelize');
 
 const getRevenueReport = async (req, res) => {
   try {
     const { startDate, endDate, groupBy } = req.query;
 
-    let matchStage = { status: 'PAID' };
+    let where = { status: 'PAID' };
     if (startDate && endDate) {
-      matchStage.createdAt = {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate)
+      where.createdAt = {
+        [Op.gte]: new Date(startDate),
+        [Op.lte]: new Date(endDate)
       };
     }
 
-    const payments = await Payment.aggregate([
-      { $match: matchStage },
-      {
-        $group: {
-          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
-          revenue: { $sum: '$amount' },
-          transactionCount: { $sum: 1 }
-        }
-      },
-      { $sort: { _id: 1 } }
-    ]);
+    const payments = await Payment.findAll({
+      where,
+      attributes: [
+        [sequelize.fn('DATE', sequelize.col('createdAt')), 'date'],
+        [sequelize.fn('SUM', sequelize.col('amount')), 'revenue'],
+        [sequelize.fn('COUNT', sequelize.col('id')), 'transactionCount']
+      ],
+      group: [sequelize.fn('DATE', sequelize.col('createdAt'))],
+      order: [[sequelize.fn('DATE', sequelize.col('createdAt')), 'ASC']],
+      raw: true
+    });
 
-    const totalRevenue = payments.reduce((sum, p) => sum + (p.revenue || 0), 0);
-    const totalTransactions = payments.reduce((sum, p) => sum + (p.transactionCount || 0), 0);
+    const totalRevenue = payments.reduce((sum, p) => sum + (parseFloat(p.revenue) || 0), 0);
+    const totalTransactions = payments.reduce((sum, p) => sum + (parseInt(p.transactionCount) || 0), 0);
 
     res.json({
       success: true,
       data: {
         summary: { totalRevenue, totalTransactions },
-        breakdown: payments.map(p => ({ date: p._id, revenue: p.revenue, transactionCount: p.transactionCount }))
+        breakdown: payments.map(p => ({ date: p.date, revenue: parseFloat(p.revenue), transactionCount: parseInt(p.transactionCount) }))
       }
     });
   } catch (error) {
@@ -43,35 +44,31 @@ const getServiceReport = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
 
-    let matchStage = {};
+    let where = {};
     if (startDate && endDate) {
-      matchStage.createdAt = {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate)
+      where.createdAt = {
+        [Op.gte]: new Date(startDate),
+        [Op.lte]: new Date(endDate)
       };
     }
 
-    const serviceStats = await Booking.aggregate([
-      ...(Object.keys(matchStage).length > 0 ? [{ $match: matchStage }] : []),
-      {
-        $lookup: {
-          from: 'servicetypes',
-          localField: 'serviceTypeId',
-          foreignField: '_id',
-          as: 'serviceType'
+    const serviceStats = await Booking.findAll({
+      where,
+      attributes: [
+        'serviceTypeId',
+        [sequelize.fn('COUNT', sequelize.col('Booking.id')), 'bookingCount'],
+        [sequelize.fn('AVG', sequelize.col('estimatedPrice')), 'avgPrice']
+      ],
+      include: [
+        {
+          model: ServiceType,
+          attributes: ['id', 'name', 'price']
         }
-      },
-      { $unwind: '$serviceType' },
-      {
-        $group: {
-          _id: '$serviceTypeId',
-          bookingCount: { $sum: 1 },
-          avgPrice: { $avg: '$estimatedPrice' },
-          name: { $first: '$serviceType.name' },
-          price: { $first: '$serviceType.price' }
-        }
-      }
-    ]);
+      ],
+      group: ['serviceTypeId', 'ServiceType.id', 'ServiceType.name', 'ServiceType.price'],
+      raw: true,
+      nest: true
+    });
 
     res.json({ success: true, data: serviceStats });
   } catch (error) {
@@ -83,40 +80,40 @@ const getBookingReport = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
 
-    let matchStage = {};
+    let where = {};
     if (startDate && endDate) {
-      matchStage.createdAt = {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate)
+      where.createdAt = {
+        [Op.gte]: new Date(startDate),
+        [Op.lte]: new Date(endDate)
       };
     }
 
-    const statusStats = await Booking.aggregate([
-      ...(Object.keys(matchStage).length > 0 ? [{ $match: matchStage }] : []),
-      {
-        $group: {
-          _id: '$status',
-          count: { $sum: 1 }
-        }
-      }
-    ]);
+    const statusStats = await Booking.findAll({
+      where,
+      attributes: [
+        'status',
+        [sequelize.fn('COUNT', sequelize.col('id')), 'count']
+      ],
+      group: ['status'],
+      raw: true
+    });
 
-    const totalBookings = statusStats.reduce((sum, s) => sum + s.count, 0);
-    const completedBookings = statusStats.find(s => s._id === 'COMPLETED');
-    const cancelledBookings = statusStats.find(s => s._id === 'CANCELLED');
+    const totalBookings = statusStats.reduce((sum, s) => sum + parseInt(s.count), 0);
+    const completedBookings = statusStats.find(s => s.status === 'COMPLETED');
+    const cancelledBookings = statusStats.find(s => s.status === 'CANCELLED');
 
     res.json({
       success: true,
       data: {
         summary: {
           total: totalBookings,
-          completed: completedBookings ? completedBookings.count : 0,
-          cancelled: cancelledBookings ? cancelledBookings.count : 0,
+          completed: completedBookings ? parseInt(completedBookings.count) : 0,
+          cancelled: cancelledBookings ? parseInt(cancelledBookings.count) : 0,
           completionRate: totalBookings > 0
-            ? ((completedBookings ? completedBookings.count : 0) / totalBookings * 100).toFixed(2)
+            ? ((completedBookings ? parseInt(completedBookings.count) : 0) / totalBookings * 100).toFixed(2)
             : 0
         },
-        byStatus: statusStats.map(s => ({ status: s._id, count: s.count }))
+        byStatus: statusStats.map(s => ({ status: s.status, count: parseInt(s.count) }))
       }
     });
   } catch (error) {
@@ -128,32 +125,32 @@ const getCustomerReport = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
 
-    let matchStage = { role: 'CUSTOMER' };
+    let where = { role: 'CUSTOMER' };
     if (startDate && endDate) {
-      matchStage.createdAt = {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate)
+      where.createdAt = {
+        [Op.gte]: new Date(startDate),
+        [Op.lte]: new Date(endDate)
       };
     }
 
-    const customerStats = await User.aggregate([
-      { $match: matchStage },
-      {
-        $group: {
-          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { _id: 1 } }
-    ]);
+    const customerStats = await User.findAll({
+      where,
+      attributes: [
+        [sequelize.fn('DATE', sequelize.col('createdAt')), 'date'],
+        [sequelize.fn('COUNT', sequelize.col('id')), 'count']
+      ],
+      group: [sequelize.fn('DATE', sequelize.col('createdAt'))],
+      order: [[sequelize.fn('DATE', sequelize.col('createdAt')), 'ASC']],
+      raw: true
+    });
 
-    const totalCustomers = await User.countDocuments({ role: 'CUSTOMER' });
+    const totalCustomers = await User.count({ where: { role: 'CUSTOMER' } });
 
     res.json({
       success: true,
       data: {
         totalCustomers,
-        registrationTrend: customerStats.map(s => ({ date: s._id, count: s.count }))
+        registrationTrend: customerStats.map(s => ({ date: s.date, count: parseInt(s.count) }))
       }
     });
   } catch (error) {
@@ -163,20 +160,23 @@ const getCustomerReport = async (req, res) => {
 
 const getMechanicReport = async (req, res) => {
   try {
-    const mechanics = await User.find({ role: 'MECHANIC' }).select('name email');
+    const mechanics = await User.findAll({
+      where: { role: 'MECHANIC' },
+      attributes: ['id', 'name', 'email']
+    });
 
     const mechanicPerformance = await Promise.all(
       mechanics.map(async (mechanic) => {
-        const completedServices = await Booking.countDocuments({
-          mechanicId: mechanic._id, status: 'COMPLETED'
+        const completedServices = await Booking.count({
+          where: { mechanicId: mechanic.id, status: 'COMPLETED' }
         });
 
-        const totalServices = await Booking.countDocuments({
-          mechanicId: mechanic._id
+        const totalServices = await Booking.count({
+          where: { mechanicId: mechanic.id }
         });
 
         return {
-          id: mechanic._id,
+          id: mechanic.id,
           name: mechanic.name,
           email: mechanic.email,
           completedServices,
@@ -196,26 +196,42 @@ const getMechanicReport = async (req, res) => {
 
 const getDashboardStats = async (req, res) => {
   try {
-    const totalCustomers = await User.countDocuments({ role: 'CUSTOMER' });
-    const totalMechanics = await User.countDocuments({ role: 'MECHANIC' });
-    const totalVehicles = await Vehicle.countDocuments();
-    const totalBookings = await Booking.countDocuments();
-    const pendingBookings = await Booking.countDocuments({ status: 'PENDING' });
-    const completedBookings = await Booking.countDocuments({ status: 'COMPLETED' });
-    const activeServices = await ServiceType.countDocuments({ isActive: true });
+    const totalCustomers = await User.count({ where: { role: 'CUSTOMER' } });
+    const totalMechanics = await User.count({ where: { role: 'MECHANIC' } });
+    const totalVehicles = await Vehicle.count();
+    const totalBookings = await Booking.count();
+    const pendingBookings = await Booking.count({ where: { status: 'PENDING' } });
+    const completedBookings = await Booking.count({ where: { status: 'COMPLETED' } });
+    const activeServices = await ServiceType.count({ where: { isActive: true } });
 
-    const revenueResult = await Payment.aggregate([
-      { $match: { status: 'PAID' } },
-      { $group: { _id: null, total: { $sum: '$amount' } } }
-    ]);
-    const totalRevenue = revenueResult.length > 0 ? revenueResult[0].total : 0;
+    const revenueResult = await Payment.findOne({
+      where: { status: 'PAID' },
+      attributes: [[sequelize.fn('SUM', sequelize.col('amount')), 'total']],
+      raw: true
+    });
+    const totalRevenue = revenueResult && revenueResult.total ? parseFloat(revenueResult.total) : 0;
 
-    const recentBookings = await Booking.find()
-      .populate('userId', 'name')
-      .populate('vehicleId', 'vehicleNumber brand')
-      .populate('serviceTypeId', 'name')
-      .sort({ createdAt: -1 })
-      .limit(5);
+    const recentBookings = await Booking.findAll({
+      include: [
+        { model: Vehicle },
+        { model: ServiceType }
+      ],
+      order: [['createdAt', 'DESC']],
+      limit: 5
+    });
+
+    const recentBookingUserIds = [...new Set(recentBookings.map(b => b.userId).filter(Boolean))];
+    const recentUsers = recentBookingUserIds.length > 0 ? await User.findAll({
+      where: { id: recentBookingUserIds },
+      attributes: ['id', 'name']
+    }) : [];
+    const recentUserMap = {};
+    recentUsers.forEach(u => { recentUserMap[u.id] = u.toJSON(); });
+
+    const enrichedRecentBookings = recentBookings.map(b => ({
+      ...b.toJSON(),
+      user: recentUserMap[b.userId] || null
+    }));
 
     res.json({
       success: true,
@@ -228,7 +244,7 @@ const getDashboardStats = async (req, res) => {
         completedBookings,
         activeServices,
         totalRevenue,
-        recentBookings
+        recentBookings: enrichedRecentBookings
       }
     });
   } catch (error) {

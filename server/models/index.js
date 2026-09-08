@@ -1,140 +1,155 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const userSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  phone: { type: String, required: true },
-  password: { type: String, required: true },
-  role: { type: String, enum: ['ADMIN', 'CUSTOMER', 'MECHANIC'], default: 'CUSTOMER' },
-  avatar: { type: String },
-  isActive: { type: Boolean, default: true },
-  latitude: { type: Number },
-  longitude: { type: Number },
-  lastLocationUpdate: { type: Date }
-}, { timestamps: true });
+const User = sequelize.define('User', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  name: { type: DataTypes.STRING, allowNull: false },
+  email: { type: DataTypes.STRING, allowNull: false, unique: true, validate: { isEmail: true } },
+  phone: { type: DataTypes.STRING, allowNull: false },
+  password: { type: DataTypes.STRING, allowNull: false },
+  role: { type: DataTypes.ENUM('ADMIN', 'CUSTOMER', 'MECHANIC'), defaultValue: 'CUSTOMER' },
+  avatar: { type: DataTypes.STRING, allowNull: true },
+  isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
+  latitude: { type: DataTypes.DECIMAL(10, 8), allowNull: true },
+  longitude: { type: DataTypes.DECIMAL(11, 8), allowNull: true },
+  lastLocationUpdate: { type: DataTypes.DATE, allowNull: true }
+});
 
-const vehicleSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  vehicleNumber: { type: String, required: true, unique: true },
-  vehicleType: { type: String, enum: ['BIKE', 'SCOOTER', 'CAR', 'THREE_WHEELER'], required: true },
-  brand: { type: String, required: true },
-  model: { type: String, required: true },
-  variant: { type: String },
-  year: { type: Number, required: true },
-  fuelType: { type: String, enum: ['PETROL', 'DIESEL', 'ELECTRIC', 'CNG'], required: true },
-  color: { type: String },
-  currentKM: { type: Number, default: 0 },
-  insuranceExpiry: { type: Date },
-  rcNumber: { type: String }
-}, { timestamps: true });
+const Vehicle = sequelize.define('Vehicle', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  vehicleNumber: { type: DataTypes.STRING, allowNull: false, unique: true },
+  vehicleType: { type: DataTypes.ENUM('BIKE', 'SCOOTER', 'CAR', 'THREE_WHEELER'), allowNull: false },
+  brand: { type: DataTypes.STRING, allowNull: false },
+  model: { type: DataTypes.STRING, allowNull: false },
+  variant: { type: DataTypes.STRING, allowNull: true },
+  year: { type: DataTypes.INTEGER, allowNull: false },
+  fuelType: { type: DataTypes.ENUM('PETROL', 'DIESEL', 'ELECTRIC', 'CNG'), allowNull: false },
+  color: { type: DataTypes.STRING, allowNull: true },
+  currentKM: { type: DataTypes.INTEGER, defaultValue: 0 },
+  insuranceExpiry: { type: DataTypes.DATE, allowNull: true },
+  rcNumber: { type: DataTypes.STRING, allowNull: true }
+});
 
-const serviceTypeSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  description: { type: String },
-  price: { type: Number, required: true },
-  duration: { type: Number },
-  image: { type: String },
-  isActive: { type: Boolean, default: true }
-}, { timestamps: true });
+const ServiceType = sequelize.define('ServiceType', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  name: { type: DataTypes.STRING, allowNull: false },
+  description: { type: DataTypes.TEXT, allowNull: true },
+  price: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
+  duration: { type: DataTypes.INTEGER, allowNull: true },
+  image: { type: DataTypes.STRING, allowNull: true },
+  isActive: { type: DataTypes.BOOLEAN, defaultValue: true }
+});
 
-const bookingSchema = new mongoose.Schema({
-  bookingId: { type: String, required: true, unique: true },
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  vehicleId: { type: mongoose.Schema.Types.ObjectId, ref: 'Vehicle', required: true },
-  serviceTypeId: { type: mongoose.Schema.Types.ObjectId, ref: 'ServiceType', required: true },
-  mechanicId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  preferredDate: { type: Date, required: true },
-  preferredTime: { type: String, required: true },
-  pickupRequired: { type: Boolean, default: false },
-  pickupAddress: { type: String },
-  pickupLandmark: { type: String },
-  pickupTime: { type: String },
-  pickupContact: { type: String },
-  additionalNotes: { type: String },
+const Booking = sequelize.define('Booking', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  bookingId: { type: DataTypes.STRING, unique: true, allowNull: false },
+  preferredDate: { type: DataTypes.DATEONLY, allowNull: false },
+  preferredTime: { type: DataTypes.STRING, allowNull: false },
+  pickupRequired: { type: DataTypes.BOOLEAN, defaultValue: false },
+  pickupAddress: { type: DataTypes.TEXT, allowNull: true },
+  pickupLandmark: { type: DataTypes.STRING, allowNull: true },
+  pickupTime: { type: DataTypes.STRING, allowNull: true },
+  pickupContact: { type: DataTypes.STRING, allowNull: true },
+  additionalNotes: { type: DataTypes.TEXT, allowNull: true },
   status: {
-    type: String,
-    enum: ['PENDING', 'CONFIRMED', 'PICKUP_SCHEDULED', 'VEHICLE_PICKED_UP', 'INSPECTION', 'SERVICE_IN_PROGRESS', 'READY_FOR_DELIVERY', 'OUT_FOR_DELIVERY', 'COMPLETED', 'CANCELLED'],
-    default: 'PENDING'
+    type: DataTypes.ENUM('PENDING', 'CONFIRMED', 'PICKUP_SCHEDULED', 'VEHICLE_PICKED_UP', 'INSPECTION', 'SERVICE_IN_PROGRESS', 'READY_FOR_DELIVERY', 'OUT_FOR_DELIVERY', 'COMPLETED', 'CANCELLED'),
+    defaultValue: 'PENDING'
   },
-  estimatedPrice: { type: Number }
-}, { timestamps: true });
+  estimatedPrice: { type: DataTypes.DECIMAL(10, 2), allowNull: true }
+});
 
-const bookingStatusHistorySchema = new mongoose.Schema({
-  bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking', required: true },
-  status: { type: String, required: true },
-  notes: { type: String },
-  updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
-}, { timestamps: true });
+const BookingStatusHistory = sequelize.define('BookingStatusHistory', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  status: { type: DataTypes.STRING, allowNull: false },
+  notes: { type: DataTypes.TEXT, allowNull: true },
+  updatedBy: { type: DataTypes.INTEGER, allowNull: true }
+});
 
-const billSchema = new mongoose.Schema({
-  bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking', required: true },
-  invoiceNumber: { type: String, required: true, unique: true },
-  subtotal: { type: Number, required: true },
-  discount: { type: Number, default: 0 },
-  tax: { type: Number, required: true },
-  taxRate: { type: Number, default: 18 },
-  additionalCharges: { type: Number, default: 0 },
-  grandTotal: { type: Number, required: true },
-  partsCost: { type: Number, default: 0 },
-  laborCost: { type: Number, default: 0 }
-}, { timestamps: true });
+const Bill = sequelize.define('Bill', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  invoiceNumber: { type: DataTypes.STRING, unique: true, allowNull: false },
+  subtotal: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
+  discount: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
+  tax: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
+  taxRate: { type: DataTypes.DECIMAL(5, 2), defaultValue: 18 },
+  additionalCharges: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
+  grandTotal: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
+  partsCost: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
+  laborCost: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 }
+});
 
-const paymentSchema = new mongoose.Schema({
-  billId: { type: mongoose.Schema.Types.ObjectId, ref: 'Bill', required: true },
-  amount: { type: Number, required: true },
-  paymentMethod: { type: String, enum: ['CASH', 'CARD', 'UPI', 'NET_BANKING'], required: true },
-  transactionId: { type: String },
-  status: { type: String, enum: ['PENDING', 'PAID', 'FAILED', 'REFUNDED'], default: 'PENDING' },
-  paidAt: { type: Date }
-}, { timestamps: true });
+const Payment = sequelize.define('Payment', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  amount: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
+  paymentMethod: { type: DataTypes.ENUM('CASH', 'CARD', 'UPI', 'NET_BANKING'), allowNull: false },
+  transactionId: { type: DataTypes.STRING, allowNull: true },
+  status: { type: DataTypes.ENUM('PENDING', 'PAID', 'FAILED', 'REFUNDED'), defaultValue: 'PENDING' },
+  paidAt: { type: DataTypes.DATE, allowNull: true }
+});
 
-const notificationSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  title: { type: String, required: true },
-  message: { type: String, required: true },
-  type: { type: String, enum: ['BOOKING', 'SERVICE', 'PAYMENT', 'REMINDER', 'GENERAL'], default: 'GENERAL' },
-  isRead: { type: Boolean, default: false }
-}, { timestamps: true });
+const Notification = sequelize.define('Notification', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  title: { type: DataTypes.STRING, allowNull: false },
+  message: { type: DataTypes.TEXT, allowNull: false },
+  type: { type: DataTypes.ENUM('BOOKING', 'SERVICE', 'PAYMENT', 'REMINDER', 'GENERAL'), defaultValue: 'GENERAL' },
+  isRead: { type: DataTypes.BOOLEAN, defaultValue: false }
+});
 
-const reviewSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking', required: true },
-  rating: { type: Number, required: true, min: 1, max: 5 },
-  comment: { type: String, required: true },
-  isVisible: { type: Boolean, default: true },
-  adminReply: { type: String }
-}, { timestamps: true });
+const Review = sequelize.define('Review', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  rating: { type: DataTypes.INTEGER, allowNull: false, validate: { min: 1, max: 5 } },
+  comment: { type: DataTypes.TEXT, allowNull: false },
+  isVisible: { type: DataTypes.BOOLEAN, defaultValue: true },
+  adminReply: { type: DataTypes.TEXT, allowNull: true }
+});
 
-const pickupRequestSchema = new mongoose.Schema({
-  bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking', required: true },
-  address: { type: String, required: true },
-  landmark: { type: String },
-  preferredTime: { type: String, required: true },
-  contactNumber: { type: String, required: true },
-  status: { type: String, enum: ['PENDING', 'SCHEDULED', 'PICKED_UP'], default: 'PENDING' }
-}, { timestamps: true });
+const PickupRequest = sequelize.define('PickupRequest', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  address: { type: DataTypes.TEXT, allowNull: false },
+  landmark: { type: DataTypes.STRING, allowNull: true },
+  preferredTime: { type: DataTypes.STRING, allowNull: false },
+  contactNumber: { type: DataTypes.STRING, allowNull: false },
+  status: { type: DataTypes.ENUM('PENDING', 'SCHEDULED', 'PICKED_UP'), defaultValue: 'PENDING' }
+});
 
-const auditLogSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  action: { type: String, required: true },
-  entity: { type: String, required: true },
-  entityId: { type: mongoose.Schema.Types.ObjectId },
-  details: { type: String }
-}, { timestamps: true });
+const AuditLog = sequelize.define('AuditLog', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  action: { type: DataTypes.STRING, allowNull: false },
+  entity: { type: DataTypes.STRING, allowNull: false },
+  entityId: { type: DataTypes.INTEGER, allowNull: true },
+  details: { type: DataTypes.TEXT, allowNull: true }
+});
 
-const User = mongoose.model('User', userSchema);
-const Vehicle = mongoose.model('Vehicle', vehicleSchema);
-const ServiceType = mongoose.model('ServiceType', serviceTypeSchema);
-const Booking = mongoose.model('Booking', bookingSchema);
-const BookingStatusHistory = mongoose.model('BookingStatusHistory', bookingStatusHistorySchema);
-const Bill = mongoose.model('Bill', billSchema);
-const Payment = mongoose.model('Payment', paymentSchema);
-const Notification = mongoose.model('Notification', notificationSchema);
-const Review = mongoose.model('Review', reviewSchema);
-const PickupRequest = mongoose.model('PickupRequest', pickupRequestSchema);
-const AuditLog = mongoose.model('AuditLog', auditLogSchema);
+// Associations
+User.hasMany(Vehicle, { foreignKey: 'userId' });
+Vehicle.belongsTo(User, { as: 'owner', foreignKey: 'userId' });
+User.hasMany(Booking, { foreignKey: 'userId' });
+Booking.belongsTo(User, { foreignKey: 'userId' });
+Vehicle.hasMany(Booking, { foreignKey: 'vehicleId' });
+Booking.belongsTo(Vehicle, { foreignKey: 'vehicleId' });
+ServiceType.hasMany(Booking, { foreignKey: 'serviceTypeId' });
+Booking.belongsTo(ServiceType, { foreignKey: 'serviceTypeId' });
+User.hasMany(Booking, { as: 'mechanicBookings', foreignKey: 'mechanicId' });
+Booking.belongsTo(User, { as: 'mechanic', foreignKey: 'mechanicId' });
+Booking.hasOne(Bill, { foreignKey: 'bookingId' });
+Bill.belongsTo(Booking, { foreignKey: 'bookingId' });
+Bill.hasOne(Payment, { foreignKey: 'billId' });
+Payment.belongsTo(Bill, { foreignKey: 'billId' });
+User.hasMany(Notification, { foreignKey: 'userId' });
+Notification.belongsTo(User, { foreignKey: 'userId' });
+User.hasMany(Review, { foreignKey: 'userId' });
+Review.belongsTo(User, { foreignKey: 'userId' });
+Booking.hasOne(Review, { foreignKey: 'bookingId' });
+Review.belongsTo(Booking, { foreignKey: 'bookingId' });
+Booking.hasOne(PickupRequest, { foreignKey: 'bookingId' });
+PickupRequest.belongsTo(Booking, { foreignKey: 'bookingId' });
+Booking.hasMany(BookingStatusHistory, { foreignKey: 'bookingId' });
+BookingStatusHistory.belongsTo(Booking, { foreignKey: 'bookingId' });
+User.hasMany(AuditLog, { foreignKey: 'userId' });
+AuditLog.belongsTo(User, { foreignKey: 'userId' });
 
 module.exports = {
+  sequelize,
   User,
   Vehicle,
   ServiceType,

@@ -3,25 +3,32 @@ const { generateInvoiceNumber } = require('../utils/helpers');
 
 const getBills = async (req, res) => {
   try {
-    let query = {};
+    let where = {};
 
     if (req.user.role === 'CUSTOMER') {
-      const bookings = await Booking.find({ userId: req.user.id }).select('_id');
-      const bookingIds = bookings.map(b => b._id);
-      query.bookingId = { $in: bookingIds };
+      const bookings = await Booking.findAll({
+        where: { userId: req.user.id },
+        attributes: ['id']
+      });
+      const bookingIds = bookings.map(b => b.id);
+      where.bookingId = { [require('sequelize').Op.in]: bookingIds };
     }
 
-    const bills = await Bill.find(query)
-      .populate({
-        path: 'bookingId',
-        populate: [
-          { path: 'userId', select: 'name email' },
-          { path: 'vehicleId' },
-          { path: 'serviceTypeId' }
-        ]
-      })
-      .populate('paymentId')
-      .sort({ createdAt: -1 });
+    const bills = await Bill.findAll({
+      where,
+      include: [
+        {
+          model: Booking,
+          include: [
+            { model: User, as: 'user', attributes: ['id', 'name', 'email'] },
+            { model: Vehicle, include: [{ model: User, as: 'owner', attributes: ['id', 'name', 'email'] }] },
+            { model: ServiceType }
+          ]
+        },
+        { model: Payment }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
 
     res.json({ success: true, data: bills });
   } catch (error) {
@@ -31,22 +38,25 @@ const getBills = async (req, res) => {
 
 const getBill = async (req, res) => {
   try {
-    const bill = await Bill.findById(req.params.id)
-      .populate({
-        path: 'bookingId',
-        populate: [
-          { path: 'userId', select: 'name email phone' },
-          { path: 'vehicleId' },
-          { path: 'serviceTypeId' }
-        ]
-      })
-      .populate('paymentId');
+    const bill = await Bill.findByPk(req.params.id, {
+      include: [
+        {
+          model: Booking,
+          include: [
+            { model: User, as: 'user', attributes: ['id', 'name', 'email', 'phone'] },
+            { model: Vehicle, include: [{ model: User, as: 'owner', attributes: ['id', 'name', 'email'] }] },
+            { model: ServiceType }
+          ]
+        },
+        { model: Payment }
+      ]
+    });
 
     if (!bill) {
       return res.status(404).json({ success: false, message: 'Bill not found' });
     }
 
-    if (req.user.role === 'CUSTOMER' && bill.bookingId.userId._id.toString() !== req.user.id) {
+    if (req.user.role === 'CUSTOMER' && bill.Booking.userId !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
@@ -60,12 +70,12 @@ const createBill = async (req, res) => {
   try {
     const { bookingId, subtotal, discount, tax, taxRate, additionalCharges, partsCost, laborCost } = req.body;
 
-    const booking = await Booking.findById(bookingId);
+    const booking = await Booking.findByPk(bookingId);
     if (!booking) {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    const existingBill = await Bill.findOne({ bookingId });
+    const existingBill = await Bill.findOne({ where: { bookingId } });
     if (existingBill) {
       return res.status(400).json({ success: false, message: 'Bill already exists for this booking' });
     }
@@ -87,15 +97,18 @@ const createBill = async (req, res) => {
       laborCost: laborCost || 0
     });
 
-    const fullBill = await Bill.findById(bill._id)
-      .populate({
-        path: 'bookingId',
-        populate: [
-          { path: 'userId', select: 'name email phone' },
-          { path: 'vehicleId' },
-          { path: 'serviceTypeId' }
-        ]
-      });
+    const fullBill = await Bill.findByPk(bill.id, {
+      include: [
+        {
+          model: Booking,
+          include: [
+            { model: User, as: 'user', attributes: ['id', 'name', 'email', 'phone'] },
+            { model: Vehicle, include: [{ model: User, as: 'owner', attributes: ['id', 'name', 'email'] }] },
+            { model: ServiceType }
+          ]
+        }
+      ]
+    });
 
     res.status(201).json({ success: true, data: fullBill });
   } catch (error) {
@@ -105,22 +118,26 @@ const createBill = async (req, res) => {
 
 const getBillByBooking = async (req, res) => {
   try {
-    const bill = await Bill.findOne({ bookingId: req.params.bookingId })
-      .populate({
-        path: 'bookingId',
-        populate: [
-          { path: 'userId', select: 'name email phone' },
-          { path: 'vehicleId' },
-          { path: 'serviceTypeId' }
-        ]
-      })
-      .populate('paymentId');
+    const bill = await Bill.findOne({
+      where: { bookingId: req.params.bookingId },
+      include: [
+        {
+          model: Booking,
+          include: [
+            { model: User, as: 'user', attributes: ['id', 'name', 'email', 'phone'] },
+            { model: Vehicle, include: [{ model: User, as: 'owner', attributes: ['id', 'name', 'email'] }] },
+            { model: ServiceType }
+          ]
+        },
+        { model: Payment }
+      ]
+    });
 
     if (!bill) {
       return res.status(404).json({ success: false, message: 'Bill not found for this booking' });
     }
 
-    if (req.user.role === 'CUSTOMER' && bill.bookingId.userId._id.toString() !== req.user.id) {
+    if (req.user.role === 'CUSTOMER' && bill.Booking.userId !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 

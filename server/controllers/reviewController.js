@@ -2,18 +2,22 @@ const { Review, User, Booking, Vehicle, ServiceType } = require('../models');
 
 const getReviews = async (req, res) => {
   try {
-    const query = req.user && req.user.role === 'ADMIN' ? {} : { isVisible: true };
+    const where = req.user && req.user.role === 'ADMIN' ? {} : { isVisible: true };
 
-    const reviews = await Review.find(query)
-      .populate('userId', 'name avatar')
-      .populate({
-        path: 'bookingId',
-        populate: [
-          { path: 'vehicleId' },
-          { path: 'serviceTypeId' }
-        ]
-      })
-      .sort({ createdAt: -1 });
+    const reviews = await Review.findAll({
+      where,
+      include: [
+        { model: User, attributes: ['id', 'name', 'avatar'] },
+        {
+          model: Booking,
+          include: [
+            { model: Vehicle, include: [{ model: User, as: 'owner', attributes: ['id', 'name', 'email'] }] },
+            { model: ServiceType }
+          ]
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
 
     res.json({ success: true, data: reviews });
   } catch (error) {
@@ -23,15 +27,19 @@ const getReviews = async (req, res) => {
 
 const getMyReviews = async (req, res) => {
   try {
-    const reviews = await Review.find({ userId: req.user.id })
-      .populate({
-        path: 'bookingId',
-        populate: [
-          { path: 'vehicleId' },
-          { path: 'serviceTypeId' }
-        ]
-      })
-      .sort({ createdAt: -1 });
+    const reviews = await Review.findAll({
+      where: { userId: req.user.id },
+      include: [
+        {
+          model: Booking,
+          include: [
+            { model: Vehicle, include: [{ model: User, as: 'owner', attributes: ['id', 'name', 'email'] }] },
+            { model: ServiceType }
+          ]
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
 
     res.json({ success: true, data: reviews });
   } catch (error) {
@@ -43,7 +51,9 @@ const createReview = async (req, res) => {
   try {
     const { bookingId, rating, comment } = req.body;
 
-    const booking = await Booking.findOne({ _id: bookingId, userId: req.user.id });
+    const booking = await Booking.findOne({
+      where: { id: bookingId, userId: req.user.id }
+    });
 
     if (!booking) {
       return res.status(404).json({ success: false, message: 'Booking not found' });
@@ -53,7 +63,7 @@ const createReview = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Can only review completed bookings' });
     }
 
-    const existingReview = await Review.findOne({ bookingId });
+    const existingReview = await Review.findOne({ where: { bookingId } });
     if (existingReview) {
       return res.status(400).json({ success: false, message: 'Review already exists for this booking' });
     }
@@ -65,15 +75,18 @@ const createReview = async (req, res) => {
       comment
     });
 
-    const fullReview = await Review.findById(review._id)
-      .populate('userId', 'name avatar')
-      .populate({
-        path: 'bookingId',
-        populate: [
-          { path: 'vehicleId' },
-          { path: 'serviceTypeId' }
-        ]
-      });
+    const fullReview = await Review.findByPk(review.id, {
+      include: [
+        { model: User, attributes: ['id', 'name', 'avatar'] },
+        {
+          model: Booking,
+          include: [
+            { model: Vehicle, include: [{ model: User, as: 'owner', attributes: ['id', 'name', 'email'] }] },
+            { model: ServiceType }
+          ]
+        }
+      ]
+    });
 
     res.status(201).json({ success: true, data: fullReview });
   } catch (error) {
@@ -83,24 +96,24 @@ const createReview = async (req, res) => {
 
 const updateReview = async (req, res) => {
   try {
-    const review = await Review.findById(req.params.id);
+    const review = await Review.findByPk(req.params.id);
 
     if (!review) {
       return res.status(404).json({ success: false, message: 'Review not found' });
     }
 
-    if (req.user.role === 'CUSTOMER' && review.userId.toString() !== req.user.id) {
+    if (req.user.role === 'CUSTOMER' && review.userId !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
     const { rating, comment } = req.body;
 
-    const updated = await Review.findByIdAndUpdate(req.params.id, {
+    await review.update({
       rating: rating || review.rating,
       comment: comment || review.comment
-    }, { new: true });
+    });
 
-    res.json({ success: true, data: updated });
+    res.json({ success: true, data: review });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
@@ -108,17 +121,17 @@ const updateReview = async (req, res) => {
 
 const deleteReview = async (req, res) => {
   try {
-    const review = await Review.findById(req.params.id);
+    const review = await Review.findByPk(req.params.id);
 
     if (!review) {
       return res.status(404).json({ success: false, message: 'Review not found' });
     }
 
-    if (req.user.role === 'CUSTOMER' && review.userId.toString() !== req.user.id) {
+    if (req.user.role === 'CUSTOMER' && review.userId !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
-    await Review.findByIdAndDelete(req.params.id);
+    await review.destroy();
 
     res.json({ success: true, message: 'Review deleted successfully' });
   } catch (error) {
@@ -130,14 +143,14 @@ const adminReply = async (req, res) => {
   try {
     const { adminReply } = req.body;
 
-    const review = await Review.findById(req.params.id);
+    const review = await Review.findByPk(req.params.id);
     if (!review) {
       return res.status(404).json({ success: false, message: 'Review not found' });
     }
 
-    const updated = await Review.findByIdAndUpdate(req.params.id, { adminReply }, { new: true });
+    await review.update({ adminReply });
 
-    res.json({ success: true, data: updated });
+    res.json({ success: true, data: review });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }

@@ -3,7 +3,10 @@ const bcrypt = require('bcryptjs');
 
 const getMechanics = async (req, res) => {
   try {
-    const mechanics = await User.find({ role: 'MECHANIC' }).select('-password');
+    const mechanics = await User.findAll({
+      where: { role: 'MECHANIC' },
+      attributes: { exclude: ['password'] }
+    });
 
     res.json({ success: true, data: mechanics });
   } catch (error) {
@@ -13,7 +16,10 @@ const getMechanics = async (req, res) => {
 
 const getMechanic = async (req, res) => {
   try {
-    const mechanic = await User.findOne({ _id: req.params.id, role: 'MECHANIC' }).select('-password');
+    const mechanic = await User.findOne({
+      where: { id: req.params.id, role: 'MECHANIC' },
+      attributes: { exclude: ['password'] }
+    });
 
     if (!mechanic) {
       return res.status(404).json({ success: false, message: 'Mechanic not found' });
@@ -29,7 +35,7 @@ const createMechanic = async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'Email already registered' });
     }
@@ -47,7 +53,7 @@ const createMechanic = async (req, res) => {
     res.status(201).json({
       success: true,
       data: {
-        id: mechanic._id,
+        id: mechanic.id,
         name: mechanic.name,
         email: mechanic.email,
         phone: mechanic.phone,
@@ -63,7 +69,9 @@ const createMechanic = async (req, res) => {
 
 const updateMechanic = async (req, res) => {
   try {
-    const mechanic = await User.findOne({ _id: req.params.id, role: 'MECHANIC' });
+    const mechanic = await User.findOne({
+      where: { id: req.params.id, role: 'MECHANIC' }
+    });
 
     if (!mechanic) {
       return res.status(404).json({ success: false, message: 'Mechanic not found' });
@@ -72,27 +80,27 @@ const updateMechanic = async (req, res) => {
     const { name, email, phone } = req.body;
 
     if (email && email !== mechanic.email) {
-      const existing = await User.findOne({ email });
+      const existing = await User.findOne({ where: { email } });
       if (existing) {
         return res.status(400).json({ success: false, message: 'Email already exists' });
       }
     }
 
-    const updated = await User.findByIdAndUpdate(req.params.id, {
+    await mechanic.update({
       name: name || mechanic.name,
       email: email || mechanic.email,
       phone: phone || mechanic.phone
-    }, { new: true });
+    });
 
     res.json({
       success: true,
       data: {
-        id: updated._id,
-        name: updated.name,
-        email: updated.email,
-        phone: updated.phone,
-        role: updated.role,
-        isActive: updated.isActive
+        id: mechanic.id,
+        name: mechanic.name,
+        email: mechanic.email,
+        phone: mechanic.phone,
+        role: mechanic.role,
+        isActive: mechanic.isActive
       }
     });
   } catch (error) {
@@ -102,20 +110,22 @@ const updateMechanic = async (req, res) => {
 
 const toggleMechanicStatus = async (req, res) => {
   try {
-    const mechanic = await User.findOne({ _id: req.params.id, role: 'MECHANIC' });
+    const mechanic = await User.findOne({
+      where: { id: req.params.id, role: 'MECHANIC' }
+    });
 
     if (!mechanic) {
       return res.status(404).json({ success: false, message: 'Mechanic not found' });
     }
 
-    const updated = await User.findByIdAndUpdate(req.params.id, { isActive: !mechanic.isActive }, { new: true });
+    await mechanic.update({ isActive: !mechanic.isActive });
 
     res.json({
       success: true,
       data: {
-        id: updated._id,
-        name: updated.name,
-        isActive: updated.isActive
+        id: mechanic.id,
+        name: mechanic.name,
+        isActive: mechanic.isActive
       }
     });
   } catch (error) {
@@ -127,11 +137,15 @@ const getMechanicBookings = async (req, res) => {
   try {
     const mechanicId = req.user.role === 'MECHANIC' ? req.user.id : req.params.id;
 
-    const bookings = await Booking.find({ mechanicId })
-      .populate('userId', 'name email phone')
-      .populate('vehicleId')
-      .populate('serviceTypeId')
-      .sort({ createdAt: -1 });
+    const bookings = await Booking.findAll({
+      where: { mechanicId },
+      include: [
+        { model: User, as: 'user', attributes: ['id', 'name', 'email', 'phone'] },
+        { model: Vehicle, include: [{ model: User, as: 'owner', attributes: ['id', 'name', 'email'] }] },
+        { model: ServiceType }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
 
     res.json({ success: true, data: bookings });
   } catch (error) {
@@ -143,7 +157,9 @@ const updateServiceProgress = async (req, res) => {
   try {
     const { status, notes } = req.body;
 
-    const booking = await Booking.findOne({ _id: req.params.id, mechanicId: req.user.id });
+    const booking = await Booking.findOne({
+      where: { id: req.params.id, mechanicId: req.user.id }
+    });
 
     if (!booking) {
       return res.status(404).json({ success: false, message: 'Booking not found or not assigned to you' });
@@ -154,17 +170,17 @@ const updateServiceProgress = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid status for mechanic' });
     }
 
-    const updated = await Booking.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    await booking.update({ status });
 
     const { BookingStatusHistory } = require('../models');
     await BookingStatusHistory.create({
-      bookingId: booking._id,
+      bookingId: booking.id,
       status,
       notes: notes || `Status updated by mechanic`,
       updatedBy: req.user.id
     });
 
-    res.json({ success: true, data: updated });
+    res.json({ success: true, data: booking });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }

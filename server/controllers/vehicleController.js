@@ -2,8 +2,11 @@ const { Vehicle, User, Booking } = require('../models');
 
 const getVehicles = async (req, res) => {
   try {
-    const query = req.user.role === 'ADMIN' ? {} : { userId: req.user.id };
-    const vehicles = await Vehicle.find(query).populate('userId', 'name email');
+    const where = req.user.role === 'ADMIN' ? {} : { userId: req.user.id };
+    const vehicles = await Vehicle.findAll({
+      where,
+      include: [{ model: User, as: 'owner', attributes: ['id', 'name', 'email'] }]
+    });
 
     res.json({ success: true, data: vehicles });
   } catch (error) {
@@ -13,13 +16,15 @@ const getVehicles = async (req, res) => {
 
 const getVehicle = async (req, res) => {
   try {
-    const vehicle = await Vehicle.findById(req.params.id).populate('userId', 'name email');
+    const vehicle = await Vehicle.findByPk(req.params.id, {
+      include: [{ model: User, as: 'owner', attributes: ['id', 'name', 'email'] }]
+    });
 
     if (!vehicle) {
       return res.status(404).json({ success: false, message: 'Vehicle not found' });
     }
 
-    if (req.user.role === 'CUSTOMER' && vehicle.userId._id.toString() !== req.user.id) {
+    if (req.user.role === 'CUSTOMER' && vehicle.userId !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
@@ -33,7 +38,7 @@ const createVehicle = async (req, res) => {
   try {
     const { vehicleNumber, vehicleType, brand, model, variant, year, fuelType, color, currentKM, insuranceExpiry, rcNumber } = req.body;
 
-    const existingVehicle = await Vehicle.findOne({ vehicleNumber });
+    const existingVehicle = await Vehicle.findOne({ where: { vehicleNumber } });
     if (existingVehicle) {
       return res.status(400).json({ success: false, message: 'Vehicle number already registered' });
     }
@@ -61,26 +66,26 @@ const createVehicle = async (req, res) => {
 
 const updateVehicle = async (req, res) => {
   try {
-    const vehicle = await Vehicle.findById(req.params.id);
+    const vehicle = await Vehicle.findByPk(req.params.id);
 
     if (!vehicle) {
       return res.status(404).json({ success: false, message: 'Vehicle not found' });
     }
 
-    if (req.user.role === 'CUSTOMER' && vehicle.userId.toString() !== req.user.id) {
+    if (req.user.role === 'CUSTOMER' && vehicle.userId !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
     const { vehicleNumber, vehicleType, brand, model, variant, year, fuelType, color, currentKM, insuranceExpiry, rcNumber } = req.body;
 
     if (vehicleNumber && vehicleNumber !== vehicle.vehicleNumber) {
-      const existing = await Vehicle.findOne({ vehicleNumber });
+      const existing = await Vehicle.findOne({ where: { vehicleNumber } });
       if (existing) {
         return res.status(400).json({ success: false, message: 'Vehicle number already exists' });
       }
     }
 
-    const updated = await Vehicle.findByIdAndUpdate(req.params.id, {
+    await vehicle.update({
       vehicleNumber: vehicleNumber || vehicle.vehicleNumber,
       vehicleType: vehicleType || vehicle.vehicleType,
       brand: brand || vehicle.brand,
@@ -92,9 +97,9 @@ const updateVehicle = async (req, res) => {
       currentKM: currentKM !== undefined ? currentKM : vehicle.currentKM,
       insuranceExpiry: insuranceExpiry !== undefined ? insuranceExpiry : vehicle.insuranceExpiry,
       rcNumber: rcNumber !== undefined ? rcNumber : vehicle.rcNumber
-    }, { new: true });
+    });
 
-    res.json({ success: true, data: updated });
+    res.json({ success: true, data: vehicle });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
@@ -102,22 +107,22 @@ const updateVehicle = async (req, res) => {
 
 const deleteVehicle = async (req, res) => {
   try {
-    const vehicle = await Vehicle.findById(req.params.id);
+    const vehicle = await Vehicle.findByPk(req.params.id);
 
     if (!vehicle) {
       return res.status(404).json({ success: false, message: 'Vehicle not found' });
     }
 
-    if (req.user.role === 'CUSTOMER' && vehicle.userId.toString() !== req.user.id) {
+    if (req.user.role === 'CUSTOMER' && vehicle.userId !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
-    const bookingCount = await Booking.countDocuments({ vehicleId: vehicle._id });
+    const bookingCount = await Booking.count({ where: { vehicleId: vehicle.id } });
     if (bookingCount > 0) {
       return res.status(400).json({ success: false, message: 'Cannot delete vehicle with existing bookings' });
     }
 
-    await Vehicle.findByIdAndDelete(req.params.id);
+    await vehicle.destroy();
 
     res.json({ success: true, message: 'Vehicle deleted successfully' });
   } catch (error) {

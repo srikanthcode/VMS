@@ -3,23 +3,43 @@ const { generateBookingId } = require('../utils/helpers');
 
 const getBookings = async (req, res) => {
   try {
-    let query = {};
+    let where = {};
 
     if (req.user.role === 'CUSTOMER') {
-      query.userId = req.user.id;
+      where.userId = req.user.id;
     } else if (req.user.role === 'MECHANIC') {
-      query.mechanicId = req.user.id;
+      where.mechanicId = req.user.id;
     }
 
-    const bookings = await Booking.find(query)
-      .populate('userId', 'name email phone')
-      .populate('vehicleId')
-      .populate('serviceTypeId')
-      .populate('mechanicId', 'name email')
-      .populate('billId')
-      .sort({ createdAt: -1 });
+    const bookings = await Booking.findAll({
+      where,
+      include: [
+        { model: Vehicle },
+        { model: ServiceType }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
 
-    res.json({ success: true, data: bookings });
+    const userIds = [...new Set(bookings.map(b => b.userId).filter(Boolean))];
+    const mechanicIds = [...new Set(bookings.map(b => b.mechanicId).filter(Boolean))];
+    const allUserIds = [...new Set([...userIds, ...mechanicIds])];
+    
+    const users = allUserIds.length > 0 ? await User.findAll({
+      where: { id: allUserIds },
+      attributes: ['id', 'name', 'email', 'phone']
+    }) : [];
+    
+    const userMap = {};
+    users.forEach(u => { userMap[u.id] = u.toJSON(); });
+
+    const enrichedBookings = bookings.map(b => {
+      const booking = b.toJSON();
+      booking.user = userMap[b.userId] || null;
+      booking.mechanic = userMap[b.mechanicId] || null;
+      return booking;
+    });
+
+    res.json({ success: true, data: enrichedBookings });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
@@ -27,28 +47,34 @@ const getBookings = async (req, res) => {
 
 const getBooking = async (req, res) => {
   try {
-    const booking = await Booking.findById(req.params.id)
-      .populate('userId', 'name email phone')
-      .populate('vehicleId')
-      .populate('serviceTypeId')
-      .populate('mechanicId', 'name email');
+    const booking = await Booking.findByPk(req.params.id, {
+      include: [
+        { model: Vehicle },
+        { model: ServiceType }
+      ]
+    });
 
     if (!booking) {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    if (req.user.role === 'CUSTOMER' && booking.userId._id.toString() !== req.user.id) {
+    if (req.user.role === 'CUSTOMER' && booking.userId !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
-    if (req.user.role === 'MECHANIC' && booking.mechanicId && booking.mechanicId._id.toString() !== req.user.id) {
+    if (req.user.role === 'MECHANIC' && booking.mechanicId && booking.mechanicId !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
-    const bill = await Bill.findOne({ bookingId: booking._id }).populate('paymentId');
-    const history = await BookingStatusHistory.find({ bookingId: booking._id }).sort({ createdAt: -1 });
+    const user = booking.userId ? await User.findByPk(booking.userId, { attributes: ['id', 'name', 'email', 'phone'] }) : null;
+    const mechanic = booking.mechanicId ? await User.findByPk(booking.mechanicId, { attributes: ['id', 'name', 'email'] }) : null;
 
-    res.json({ success: true, data: { ...booking.toObject(), bill, statusHistory: history } });
+    const history = await BookingStatusHistory.findAll({
+      where: { bookingId: booking.id },
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.json({ success: true, data: { ...booking.toJSON(), user: user ? user.toJSON() : null, mechanic: mechanic ? mechanic.toJSON() : null, statusHistory: history } });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
@@ -58,12 +84,12 @@ const createBooking = async (req, res) => {
   try {
     const { vehicleId, serviceTypeId, preferredDate, preferredTime, pickupRequired, pickupAddress, pickupLandmark, pickupTime, pickupContact, additionalNotes } = req.body;
 
-    const vehicle = await Vehicle.findOne({ _id: vehicleId, userId: req.user.id });
+    const vehicle = await Vehicle.findOne({ where: { id: vehicleId, userId: req.user.id } });
     if (!vehicle) {
       return res.status(404).json({ success: false, message: 'Vehicle not found or not owned by you' });
     }
 
-    const serviceType = await ServiceType.findById(serviceTypeId);
+    const serviceType = await ServiceType.findByPk(serviceTypeId);
     if (!serviceType) {
       return res.status(404).json({ success: false, message: 'Service type not found' });
     }
@@ -87,16 +113,19 @@ const createBooking = async (req, res) => {
     });
 
     await BookingStatusHistory.create({
-      bookingId: booking._id,
+      bookingId: booking.id,
       status: 'PENDING',
       notes: 'Booking created',
       updatedBy: req.user.id
     });
 
-    const fullBooking = await Booking.findById(booking._id)
-      .populate('userId', 'name email phone')
-      .populate('vehicleId')
-      .populate('serviceTypeId');
+    const fullBooking = await Booking.findByPk(booking.id, {
+      include: [
+        { model: User, as: 'user', attributes: ['id', 'name', 'email', 'phone'] },
+        { model: Vehicle },
+        { model: ServiceType }
+      ]
+    });
 
     res.status(201).json({ success: true, data: fullBooking });
   } catch (error) {
@@ -106,13 +135,13 @@ const createBooking = async (req, res) => {
 
 const updateBooking = async (req, res) => {
   try {
-    const booking = await Booking.findById(req.params.id);
+    const booking = await Booking.findByPk(req.params.id);
 
     if (!booking) {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    if (req.user.role === 'CUSTOMER' && booking.userId.toString() !== req.user.id) {
+    if (req.user.role === 'CUSTOMER' && booking.userId !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
@@ -122,7 +151,7 @@ const updateBooking = async (req, res) => {
 
     const { preferredDate, preferredTime, pickupRequired, pickupAddress, pickupLandmark, pickupTime, pickupContact, additionalNotes } = req.body;
 
-    const updated = await Booking.findByIdAndUpdate(req.params.id, {
+    await booking.update({
       preferredDate: preferredDate || booking.preferredDate,
       preferredTime: preferredTime || booking.preferredTime,
       pickupRequired: pickupRequired !== undefined ? pickupRequired : booking.pickupRequired,
@@ -131,9 +160,9 @@ const updateBooking = async (req, res) => {
       pickupTime: pickupTime !== undefined ? pickupTime : booking.pickupTime,
       pickupContact: pickupContact !== undefined ? pickupContact : booking.pickupContact,
       additionalNotes: additionalNotes !== undefined ? additionalNotes : booking.additionalNotes
-    }, { new: true });
+    });
 
-    res.json({ success: true, data: updated });
+    res.json({ success: true, data: booking });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
@@ -141,13 +170,13 @@ const updateBooking = async (req, res) => {
 
 const cancelBooking = async (req, res) => {
   try {
-    const booking = await Booking.findById(req.params.id);
+    const booking = await Booking.findByPk(req.params.id);
 
     if (!booking) {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    if (req.user.role === 'CUSTOMER' && booking.userId.toString() !== req.user.id) {
+    if (req.user.role === 'CUSTOMER' && booking.userId !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
@@ -155,16 +184,16 @@ const cancelBooking = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Cannot cancel booking in current status' });
     }
 
-    const updated = await Booking.findByIdAndUpdate(req.params.id, { status: 'CANCELLED' }, { new: true });
+    await booking.update({ status: 'CANCELLED' });
 
     await BookingStatusHistory.create({
-      bookingId: booking._id,
+      bookingId: booking.id,
       status: 'CANCELLED',
       notes: req.body.reason || 'Booking cancelled',
       updatedBy: req.user.id
     });
 
-    res.json({ success: true, message: 'Booking cancelled successfully', data: updated });
+    res.json({ success: true, message: 'Booking cancelled successfully', data: booking });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
@@ -174,7 +203,7 @@ const updateStatus = async (req, res) => {
   try {
     const { status, notes } = req.body;
 
-    const booking = await Booking.findById(req.params.id);
+    const booking = await Booking.findByPk(req.params.id);
     if (!booking) {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
@@ -189,16 +218,16 @@ const updateStatus = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid status' });
     }
 
-    const updated = await Booking.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    await booking.update({ status });
 
     await BookingStatusHistory.create({
-      bookingId: booking._id,
+      bookingId: booking.id,
       status,
       notes: notes || `Status updated to ${status}`,
       updatedBy: req.user.id
     });
 
-    res.json({ success: true, data: updated });
+    res.json({ success: true, data: booking });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
@@ -208,26 +237,26 @@ const assignMechanic = async (req, res) => {
   try {
     const { mechanicId } = req.body;
 
-    const booking = await Booking.findById(req.params.id);
+    const booking = await Booking.findByPk(req.params.id);
     if (!booking) {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    const mechanic = await User.findOne({ _id: mechanicId, role: 'MECHANIC' });
+    const mechanic = await User.findOne({ where: { id: mechanicId, role: 'MECHANIC' } });
     if (!mechanic) {
       return res.status(404).json({ success: false, message: 'Mechanic not found' });
     }
 
-    const updated = await Booking.findByIdAndUpdate(req.params.id, { mechanicId }, { new: true });
+    await booking.update({ mechanicId });
 
     await BookingStatusHistory.create({
-      bookingId: booking._id,
+      bookingId: booking.id,
       status: booking.status,
       notes: `Assigned to mechanic ${mechanic.name}`,
       updatedBy: req.user.id
     });
 
-    res.json({ success: true, data: updated });
+    res.json({ success: true, data: booking });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }

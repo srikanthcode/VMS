@@ -4,7 +4,9 @@ const createPickupRequest = async (req, res) => {
   try {
     const { bookingId, address, landmark, preferredTime, contactNumber } = req.body;
 
-    const booking = await Booking.findOne({ _id: bookingId, userId: req.user.id });
+    const booking = await Booking.findOne({
+      where: { id: bookingId, userId: req.user.id }
+    });
 
     if (!booking) {
       return res.status(404).json({ success: false, message: 'Booking not found' });
@@ -14,7 +16,7 @@ const createPickupRequest = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Pickup not required for this booking' });
     }
 
-    const existingPickup = await PickupRequest.findOne({ bookingId });
+    const existingPickup = await PickupRequest.findOne({ where: { bookingId } });
     if (existingPickup) {
       return res.status(400).json({ success: false, message: 'Pickup request already exists' });
     }
@@ -27,15 +29,18 @@ const createPickupRequest = async (req, res) => {
       contactNumber
     });
 
-    const fullPickup = await PickupRequest.findById(pickup._id)
-      .populate({
-        path: 'bookingId',
-        populate: [
-          { path: 'userId', select: 'name email' },
-          { path: 'vehicleId' },
-          { path: 'serviceTypeId' }
-        ]
-      });
+    const fullPickup = await PickupRequest.findByPk(pickup.id, {
+      include: [
+        {
+          model: Booking,
+          include: [
+            { model: User, as: 'user', attributes: ['id', 'name', 'email'] },
+            { model: Vehicle, include: [{ model: User, as: 'owner', attributes: ['id', 'name', 'email'] }] },
+            { model: ServiceType }
+          ]
+        }
+      ]
+    });
 
     res.status(201).json({ success: true, data: fullPickup });
   } catch (error) {
@@ -45,21 +50,24 @@ const createPickupRequest = async (req, res) => {
 
 const getPickupRequest = async (req, res) => {
   try {
-    const pickup = await PickupRequest.findById(req.params.id)
-      .populate({
-        path: 'bookingId',
-        populate: [
-          { path: 'userId', select: 'name email phone' },
-          { path: 'vehicleId' },
-          { path: 'serviceTypeId' }
-        ]
-      });
+    const pickup = await PickupRequest.findByPk(req.params.id, {
+      include: [
+        {
+          model: Booking,
+          include: [
+            { model: User, as: 'user', attributes: ['id', 'name', 'email', 'phone'] },
+            { model: Vehicle, include: [{ model: User, as: 'owner', attributes: ['id', 'name', 'email'] }] },
+            { model: ServiceType }
+          ]
+        }
+      ]
+    });
 
     if (!pickup) {
       return res.status(404).json({ success: false, message: 'Pickup request not found' });
     }
 
-    if (req.user.role === 'CUSTOMER' && pickup.bookingId.userId._id.toString() !== req.user.id) {
+    if (req.user.role === 'CUSTOMER' && pickup.Booking.userId !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
@@ -73,7 +81,7 @@ const updatePickupStatus = async (req, res) => {
   try {
     const { status } = req.body;
 
-    const pickup = await PickupRequest.findById(req.params.id);
+    const pickup = await PickupRequest.findByPk(req.params.id);
     if (!pickup) {
       return res.status(404).json({ success: false, message: 'Pickup request not found' });
     }
@@ -83,15 +91,15 @@ const updatePickupStatus = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid status' });
     }
 
-    const updated = await PickupRequest.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    await pickup.update({ status });
 
     if (status === 'PICKED_UP') {
-      await Booking.findByIdAndUpdate(pickup.bookingId, { status: 'VEHICLE_PICKED_UP' });
+      await Booking.update({ status: 'VEHICLE_PICKED_UP' }, { where: { id: pickup.bookingId } });
     } else if (status === 'SCHEDULED') {
-      await Booking.findByIdAndUpdate(pickup.bookingId, { status: 'PICKUP_SCHEDULED' });
+      await Booking.update({ status: 'PICKUP_SCHEDULED' }, { where: { id: pickup.bookingId } });
     }
 
-    res.json({ success: true, data: updated });
+    res.json({ success: true, data: pickup });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }

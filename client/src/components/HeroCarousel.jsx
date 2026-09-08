@@ -1,6 +1,9 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 
 const HeroCarousel = () => {
+  const [currentSlide, setCurrentSlide] = useState(0)
+
   const slides = [
     {
       id: 1,
@@ -37,59 +40,75 @@ const HeroCarousel = () => {
     }
   ]
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length)
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [slides.length])
+
+  const goToSlide = (index) => {
+    setCurrentSlide(index)
+  }
+
+  const goToPrev = () => {
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)
+  }
+
+  const goToNext = () => {
+    setCurrentSlide((prev) => (prev + 1) % slides.length)
+  }
+
   return (
-    <div id="heroCarousel" className="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
-      <div className="carousel-indicators">
-        {slides.map((slide, index) => (
+    <div className="hero-carousel">
+      {slides.map((slide, index) => (
+        <div
+          key={slide.id}
+          className={`hero-slide ${index === currentSlide ? 'active' : ''}`}
+          style={{ backgroundImage: `url(${slide.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+        >
+          <div className="overlay"></div>
+        </div>
+      ))}
+
+      <div className="container h-100 position-relative">
+        <div className="row h-100 align-items-center">
+          <div className="col-lg-8 hero-content">
+            <span className="badge bg-danger mb-3 px-3 py-2">Fast & Reliable Service</span>
+            <h1 className="hero-title">
+              {slides[currentSlide].title}
+            </h1>
+            <p className="hero-subtitle">{slides[currentSlide].subtitle}</p>
+            <p className="mb-4" style={{ color: 'rgba(255, 255, 255, 0.85)', textShadow: '1px 1px 3px rgba(0, 0, 0, 0.3)' }}>{slides[currentSlide].description}</p>
+            <div className="d-flex gap-3 flex-wrap">
+              <Link to={slides[currentSlide].btn1Link} className="btn btn-accent btn-lg px-4">
+                <i className="bi bi-calendar-check me-2"></i>
+                {slides[currentSlide].btn1Text}
+              </Link>
+              <Link to={slides[currentSlide].btn2Link} className="btn btn-outline-light btn-lg px-4">
+                {slides[currentSlide].btn2Text}
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button className="carousel-control-prev" onClick={goToPrev}>
+        <span className="carousel-control-prev-icon"></span>
+      </button>
+      <button className="carousel-control-next" onClick={goToNext}>
+        <span className="carousel-control-next-icon"></span>
+      </button>
+
+      <div className="carousel-indicators-custom">
+        {slides.map((_, index) => (
           <button
-            key={slide.id}
-            type="button"
-            data-bs-target="#heroCarousel"
-            data-bs-slide-to={index}
-            className={index === 0 ? 'active' : ''}
+            key={index}
+            className={`carousel-dot ${index === currentSlide ? 'active' : ''}`}
+            onClick={() => goToSlide(index)}
           />
         ))}
       </div>
-
-      <div className="carousel-inner">
-        {slides.map((slide, index) => (
-          <div
-            key={slide.id}
-            className={`carousel-item ${index === 0 ? 'active' : ''}`}
-            style={{ backgroundImage: `url(${slide.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
-          >
-            <div className="overlay"></div>
-            <div className="container h-100">
-              <div className="row h-100 align-items-center">
-                <div className="col-lg-8 hero-content">
-                  <span className="badge bg-danger mb-3 px-3 py-2">Fast & Reliable Service</span>
-                  <h1 className="hero-title">
-                    {slide.title}
-                  </h1>
-                  <p className="hero-subtitle">{slide.subtitle}</p>
-                  <p className="mb-4" style={{ color: 'rgba(255, 255, 255, 0.85)', textShadow: '1px 1px 3px rgba(0, 0, 0, 0.3)' }}>{slide.description}</p>
-                  <div className="d-flex gap-3 flex-wrap">
-                    <Link to={slide.btn1Link} className="btn btn-accent btn-lg px-4">
-                      <i className="bi bi-calendar-check me-2"></i>
-                      {slide.btn1Text}
-                    </Link>
-                    <Link to={slide.btn2Link} className="btn btn-outline-light btn-lg px-4">
-                      {slide.btn2Text}
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <button className="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
-        <span className="carousel-control-prev-icon"></span>
-      </button>
-      <button className="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
-        <span className="carousel-control-next-icon"></span>
-      </button>
     </div>
   )
 }

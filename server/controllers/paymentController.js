@@ -3,28 +3,40 @@ const { generateTransactionId } = require('../utils/helpers');
 
 const getPayments = async (req, res) => {
   try {
-    let query = {};
+    let where = {};
 
     if (req.user.role === 'CUSTOMER') {
-      const bookings = await Booking.find({ userId: req.user.id }).select('_id');
-      const bookingIds = bookings.map(b => b._id);
-      const bills = await Bill.find({ bookingId: { $in: bookingIds } }).select('_id');
-      const billIds = bills.map(b => b._id);
-      query.billId = { $in: billIds };
+      const bookings = await Booking.findAll({
+        where: { userId: req.user.id },
+        attributes: ['id']
+      });
+      const bookingIds = bookings.map(b => b.id);
+      const bills = await Bill.findAll({
+        where: { bookingId: { [require('sequelize').Op.in]: bookingIds } },
+        attributes: ['id']
+      });
+      const billIds = bills.map(b => b.id);
+      where.billId = { [require('sequelize').Op.in]: billIds };
     }
 
-    const payments = await Payment.find(query)
-      .populate({
-        path: 'billId',
-        populate: {
-          path: 'bookingId',
-          populate: [
-            { path: 'userId', select: 'name email' },
-            { path: 'vehicleId' }
+    const payments = await Payment.findAll({
+      where,
+      include: [
+        {
+          model: Bill,
+          include: [
+            {
+              model: Booking,
+              include: [
+                { model: User, as: 'user', attributes: ['id', 'name', 'email'] },
+                { model: Vehicle, include: [{ model: User, as: 'owner', attributes: ['id', 'name', 'email'] }] }
+              ]
+            }
           ]
         }
-      })
-      .sort({ createdAt: -1 });
+      ],
+      order: [['createdAt', 'DESC']]
+    });
 
     res.json({ success: true, data: payments });
   } catch (error) {
@@ -36,32 +48,34 @@ const processPayment = async (req, res) => {
   try {
     const { billId, paymentMethod } = req.body;
 
-    const bill = await Bill.findById(billId).populate('bookingId');
+    const bill = await Bill.findByPk(billId, {
+      include: [{ model: Booking }]
+    });
 
     if (!bill) {
       return res.status(404).json({ success: false, message: 'Bill not found' });
     }
 
-    if (req.user.role === 'CUSTOMER' && bill.bookingId.userId.toString() !== req.user.id) {
+    if (req.user.role === 'CUSTOMER' && bill.Booking.userId !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
-    const existingPayment = await Payment.findOne({ billId, status: 'PAID' });
+    const existingPayment = await Payment.findOne({ where: { billId, status: 'PAID' } });
     if (existingPayment) {
       return res.status(400).json({ success: false, message: 'Payment already completed' });
     }
 
     const transactionId = generateTransactionId();
 
-    let payment = await Payment.findOne({ billId });
+    let payment = await Payment.findOne({ where: { billId } });
     if (payment) {
-      payment = await Payment.findByIdAndUpdate(payment._id, {
+      await payment.update({
         amount: bill.grandTotal,
         paymentMethod,
         transactionId,
         status: 'PAID',
         paidAt: new Date()
-      }, { new: true });
+      });
     } else {
       payment = await Payment.create({
         billId,
@@ -81,14 +95,22 @@ const processPayment = async (req, res) => {
 
 const getPaymentByBill = async (req, res) => {
   try {
-    const payment = await Payment.findOne({ billId: req.params.billId })
-      .populate({
-        path: 'billId',
-        populate: {
-          path: 'bookingId',
-          populate: { path: 'userId', select: 'name email' }
+    const payment = await Payment.findOne({
+      where: { billId: req.params.billId },
+      include: [
+        {
+          model: Bill,
+          include: [
+            {
+              model: Booking,
+              include: [
+                { model: User, as: 'user', attributes: ['id', 'name', 'email'] }
+              ]
+            }
+          ]
         }
-      });
+      ]
+    });
 
     if (!payment) {
       return res.status(404).json({ success: false, message: 'Payment not found' });

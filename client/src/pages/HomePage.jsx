@@ -38,12 +38,9 @@ const HomePage = () => {
   ]
 
   const whyChooseUs = [
-    { icon: 'bi-award', title: 'Certified Service', description: 'ISO certified service center with trained mechanics' },
-    { icon: 'bi-clock-history', title: 'Quick Turnaround', description: 'Most services completed within 24 hours' },
-    { icon: 'bi-shield-lock', title: 'Warranty', description: 'Service warranty on all repairs and maintenance' },
-    { icon: 'bi-telephone', title: '24/7 Support', description: 'Round the clock customer support' },
-    { icon: 'bi-phone', title: 'Online Booking', description: 'Book services anytime from anywhere' },
-    { icon: 'bi-geo-alt', title: 'Track Service', description: 'Real-time tracking of your vehicle status' }
+    { icon: 'bi-lightning-charge', title: 'Fast & Reliable Service', description: 'Quick and dependable vehicle servicing with guaranteed quality results', gradient: 'linear-gradient(135deg, #e94560 0%, #0f3460 100%)' },
+    { icon: 'bi-person-gear', title: 'Expert Mechanics', description: 'Certified professionals delivering complete vehicle care with precision', gradient: 'linear-gradient(135deg, #0f3460 0%, #28a745 100%)' },
+    { icon: 'bi-truck', title: 'Pickup & Drop Available', description: 'Convenient doorstep service - we pick up and deliver your vehicle', gradient: 'linear-gradient(135deg, #17a2b8 0%, #e94560 100%)' }
   ]
 
   const howItWorks = [
@@ -123,32 +120,6 @@ const HomePage = () => {
             <Link to="/services" className="btn btn-accent">
               View All Services <i className="bi bi-arrow-right ms-2"></i>
             </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Why Choose Us */}
-      <section className="section">
-        <div className="container">
-          <div className="text-center mb-5">
-            <h2 className="section-title">Why Choose Us</h2>
-            <p className="section-subtitle">
-              We are committed to providing the best vehicle service experience
-            </p>
-          </div>
-
-          <div className="row g-4">
-            {whyChooseUs.map((item, index) => (
-              <div key={index} className="col-lg-4 col-md-6">
-                <div className="feature-card h-100">
-                  <div className="feature-icon">
-                    <i className={`bi ${item.icon}`}></i>
-                  </div>
-                  <h5 className="fw-bold">{item.title}</h5>
-                  <p className="mb-0">{item.description}</p>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </section>

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
 const { handleValidation } = require('../middleware/validation');
+const { Op } = require('sequelize');
 
 const authController = require('../controllers/authController');
 const vehicleController = require('../controllers/vehicleController');
@@ -235,12 +236,12 @@ router.put('/location/update', authenticate, async (req, res) => {
   try {
     const { latitude, longitude } = req.body;
     const { User } = require('../models');
-    
-    await User.findByIdAndUpdate(
-      req.user.id,
-      { latitude, longitude, lastLocationUpdate: new Date() }
+
+    await User.update(
+      { latitude, longitude, lastLocationUpdate: new Date() },
+      { where: { id: req.user.id } }
     );
-    
+
     res.json({ success: true, message: 'Location updated' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
@@ -250,12 +251,15 @@ router.put('/location/update', authenticate, async (req, res) => {
 router.get('/location/track', authenticate, async (req, res) => {
   try {
     const { User } = require('../models');
-    
-    const users = await User.find({
-      latitude: { $ne: null },
-      longitude: { $ne: null }
-    }).select('name role latitude longitude lastLocationUpdate avatar');
-    
+
+    const users = await User.findAll({
+      where: {
+        latitude: { [Op.ne]: null },
+        longitude: { [Op.ne]: null }
+      },
+      attributes: ['id', 'name', 'role', 'latitude', 'longitude', 'lastLocationUpdate', 'avatar']
+    });
+
     res.json({ success: true, data: users });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
@@ -265,13 +269,15 @@ router.get('/location/track', authenticate, async (req, res) => {
 router.get('/location/user/:id', authenticate, async (req, res) => {
   try {
     const { User } = require('../models');
-    
-    const user = await User.findById(req.params.id).select('name role latitude longitude lastLocationUpdate avatar phone');
-    
+
+    const user = await User.findByPk(req.params.id, {
+      attributes: ['id', 'name', 'role', 'latitude', 'longitude', 'lastLocationUpdate', 'avatar', 'phone']
+    });
+
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
-    
+
     res.json({ success: true, data: user });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });

@@ -44,14 +44,14 @@ const sendOTPEmail = async (email, otp) => {
 };
 
 const generateToken = (user) => {
-  return jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
 };
 
 const register = async (req, res) => {
   try {
     const { name, email, phone, password, role } = req.body;
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'Email already registered' });
     }
@@ -71,7 +71,7 @@ const register = async (req, res) => {
       success: true,
       data: {
         user: {
-          id: user._id,
+          id: user.id,
           name: user.name,
           email: user.email,
           phone: user.phone,
@@ -92,7 +92,7 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ where: { email } });
     if (!user) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
@@ -112,7 +112,7 @@ const login = async (req, res) => {
       success: true,
       data: {
         user: {
-          id: user._id,
+          id: user.id,
           name: user.name,
           email: user.email,
           phone: user.phone,
@@ -131,7 +131,9 @@ const login = async (req, res) => {
 
 const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    const user = await User.findByPk(req.user.id, {
+      attributes: { exclude: ['password'] }
+    });
     res.json({ success: true, data: user });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
@@ -141,20 +143,18 @@ const getProfile = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const { name, phone } = req.body;
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      { name, phone },
-      { new: true }
-    ).select('-password');
+    const user = await User.findByPk(req.user.id);
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
+    await user.update({ name, phone });
+
     res.json({
       success: true,
       data: {
-        id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
         phone: user.phone,
@@ -172,7 +172,7 @@ const changePassword = async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
 
-    const user = await User.findById(req.user.id);
+    const user = await User.findByPk(req.user.id);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
@@ -183,7 +183,7 @@ const changePassword = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await User.findByIdAndUpdate(req.user.id, { password: hashedPassword });
+    await user.update({ password: hashedPassword });
 
     res.json({ success: true, message: 'Password updated successfully' });
   } catch (error) {
@@ -195,7 +195,7 @@ const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ where: { email } });
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
@@ -254,13 +254,13 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please verify OTP first' });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ where: { email } });
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await User.findOneAndUpdate({ email }, { password: hashedPassword });
+    await User.update({ password: hashedPassword }, { where: { email } });
 
     delete otpStore[email];
 

@@ -3,25 +3,32 @@ const { generateInvoice } = require('../utils/pdfGenerator');
 
 const getInvoices = async (req, res) => {
   try {
-    let query = {};
+    let where = {};
 
     if (req.user.role === 'CUSTOMER') {
-      const bookings = await Booking.find({ userId: req.user.id }).select('_id');
-      const bookingIds = bookings.map(b => b._id);
-      query.bookingId = { $in: bookingIds };
+      const bookings = await Booking.findAll({
+        where: { userId: req.user.id },
+        attributes: ['id']
+      });
+      const bookingIds = bookings.map(b => b.id);
+      where.bookingId = { [require('sequelize').Op.in]: bookingIds };
     }
 
-    const bills = await Bill.find(query)
-      .populate({
-        path: 'bookingId',
-        populate: [
-          { path: 'userId', select: 'name email phone' },
-          { path: 'vehicleId' },
-          { path: 'serviceTypeId' }
-        ]
-      })
-      .populate('paymentId')
-      .sort({ createdAt: -1 });
+    const bills = await Bill.findAll({
+      where,
+      include: [
+        {
+          model: Booking,
+          include: [
+            { model: User, as: 'user', attributes: ['id', 'name', 'email', 'phone'] },
+            { model: Vehicle, include: [{ model: User, as: 'owner', attributes: ['id', 'name', 'email'] }] },
+            { model: ServiceType }
+          ]
+        },
+        { model: Payment }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
 
     res.json({ success: true, data: bills });
   } catch (error) {
@@ -31,22 +38,25 @@ const getInvoices = async (req, res) => {
 
 const getInvoice = async (req, res) => {
   try {
-    const bill = await Bill.findById(req.params.id)
-      .populate({
-        path: 'bookingId',
-        populate: [
-          { path: 'userId', select: 'name email phone' },
-          { path: 'vehicleId' },
-          { path: 'serviceTypeId' }
-        ]
-      })
-      .populate('paymentId');
+    const bill = await Bill.findByPk(req.params.id, {
+      include: [
+        {
+          model: Booking,
+          include: [
+            { model: User, as: 'user', attributes: ['id', 'name', 'email', 'phone'] },
+            { model: Vehicle, include: [{ model: User, as: 'owner', attributes: ['id', 'name', 'email'] }] },
+            { model: ServiceType }
+          ]
+        },
+        { model: Payment }
+      ]
+    });
 
     if (!bill) {
       return res.status(404).json({ success: false, message: 'Invoice not found' });
     }
 
-    if (req.user.role === 'CUSTOMER' && bill.bookingId.userId._id.toString() !== req.user.id) {
+    if (req.user.role === 'CUSTOMER' && bill.Booking.userId !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
@@ -58,22 +68,25 @@ const getInvoice = async (req, res) => {
 
 const generateInvoicePDF = async (req, res) => {
   try {
-    const bill = await Bill.findById(req.params.id)
-      .populate({
-        path: 'bookingId',
-        populate: [
-          { path: 'userId', select: 'name email phone' },
-          { path: 'vehicleId' },
-          { path: 'serviceTypeId' }
-        ]
-      })
-      .populate('paymentId');
+    const bill = await Bill.findByPk(req.params.id, {
+      include: [
+        {
+          model: Booking,
+          include: [
+            { model: User, as: 'user', attributes: ['id', 'name', 'email', 'phone'] },
+            { model: Vehicle, include: [{ model: User, as: 'owner', attributes: ['id', 'name', 'email'] }] },
+            { model: ServiceType }
+          ]
+        },
+        { model: Payment }
+      ]
+    });
 
     if (!bill) {
       return res.status(404).json({ success: false, message: 'Invoice not found' });
     }
 
-    if (req.user.role === 'CUSTOMER' && bill.bookingId.userId._id.toString() !== req.user.id) {
+    if (req.user.role === 'CUSTOMER' && bill.Booking.userId !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
@@ -81,21 +94,21 @@ const generateInvoicePDF = async (req, res) => {
       invoiceNumber: bill.invoiceNumber,
       date: bill.createdAt,
       customer: {
-        name: bill.bookingId.userId.name,
-        email: bill.bookingId.userId.email,
-        phone: bill.bookingId.userId.phone
+        name: bill.Booking.User.name,
+        email: bill.Booking.User.email,
+        phone: bill.Booking.User.phone
       },
       vehicle: {
-        number: bill.bookingId.vehicleId.vehicleNumber,
-        brand: bill.bookingId.vehicleId.brand,
-        model: bill.bookingId.vehicleId.model
+        number: bill.Booking.Vehicle.vehicleNumber,
+        brand: bill.Booking.Vehicle.brand,
+        model: bill.Booking.Vehicle.model
       },
       service: {
-        name: bill.bookingId.serviceTypeId.name,
-        description: bill.bookingId.serviceTypeId.description
+        name: bill.Booking.ServiceType.name,
+        description: bill.Booking.ServiceType.description
       },
       items: [
-        { description: bill.bookingId.serviceTypeId.name, amount: bill.subtotal }
+        { description: bill.Booking.ServiceType.name, amount: bill.subtotal }
       ],
       subtotal: bill.subtotal,
       discount: bill.discount,
@@ -103,7 +116,7 @@ const generateInvoicePDF = async (req, res) => {
       tax: bill.tax,
       additionalCharges: bill.additionalCharges,
       grandTotal: bill.grandTotal,
-      paymentStatus: bill.paymentId ? bill.paymentId.status : 'PENDING'
+      paymentStatus: bill.Payment ? bill.Payment.status : 'PENDING'
     });
 
     res.setHeader('Content-Type', 'application/pdf');
