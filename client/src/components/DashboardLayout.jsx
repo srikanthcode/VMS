@@ -126,7 +126,7 @@ const DashboardLayout = ({ children, role = 'customer', links = [] }) => {
                 className="btn btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2"
                 data-bs-toggle="dropdown"
               >
-                <div className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style={{ width: '35px', height: '35px' }}>
+                <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '35px', height: '35px', background: '#e94560', color: 'white', fontWeight: '600', fontSize: '0.85rem' }}>
                   {user?.name?.charAt(0) || 'U'}
                 </div>
                 <span className="d-none d-md-inline">{user?.name || 'User'}</span>

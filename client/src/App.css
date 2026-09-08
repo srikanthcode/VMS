@@ -273,11 +273,11 @@ p, span, label, li {
 }
 
 .bg-primary {
-  background-color: #1a1a2e !important;
+  background-color: #e94560 !important;
 }
 
 [data-theme="light"] .bg-primary {
-  background-color: #0d6efd !important;
+  background-color: #e94560 !important;
 }
 
 .navbar-toggler {
@@ -870,7 +870,7 @@ body {
 
 .sidebar {
   width: 260px;
-  background: var(--primary);
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
   color: var(--text-primary);
   position: fixed;
   top: 0;
@@ -879,45 +879,53 @@ body {
   z-index: 1000;
   transition: var(--transition);
   overflow-y: auto;
+  border-right: 1px solid rgba(233, 69, 96, 0.2);
 }
 
 .sidebar-brand {
-  padding: 1.5rem;
-  border-bottom: 1px solid var(--border);
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .sidebar-brand h4 {
   margin: 0;
   font-weight: 700;
+  font-size: 1.25rem;
 }
 
 .sidebar-nav {
-  padding: 1rem 0;
+  padding: 0.75rem 0;
 }
 
 .sidebar-nav-item {
   display: flex;
   align-items: center;
-  padding: 0.75rem 1.5rem;
+  padding: 0.65rem 1.5rem;
   color: var(--text-secondary);
   text-decoration: none;
   transition: var(--transition);
   gap: 0.75rem;
+  font-size: 0.9rem;
+  border-left: 3px solid transparent;
 }
 
 .sidebar-nav-item:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(233, 69, 96, 0.1);
   color: var(--text-primary);
+  border-left-color: rgba(233, 69, 96, 0.5);
 }
 
 .sidebar-nav-item.active {
-  background: var(--accent);
-  color: var(--text-primary);
+  background: rgba(233, 69, 96, 0.15);
+  color: #e94560;
+  border-left-color: #e94560;
+  font-weight: 500;
 }
 
 .sidebar-nav-item i {
-  font-size: 1.1rem;
-  width: 24px;
+  font-size: 1.05rem;
+  width: 22px;
 }
 
 .main-content {
@@ -929,14 +937,15 @@ body {
 
 .topbar {
   background: var(--bg-white);
-  padding: 1rem 2rem;
+  padding: 0.875rem 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: var(--shadow);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   position: sticky;
   top: 0;
   z-index: 100;
+  border-bottom: 1px solid var(--border);
 }
 
 .topbar-search {
