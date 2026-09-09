@@ -184,7 +184,7 @@ const HomePage = () => {
                 <i className="bi bi-tools display-1 mb-3"></i>
                 <h3 className="fw-bold">Professional Vehicle Care</h3>
                 <p>Trust our experts to keep your vehicle in perfect condition</p>
-                <Link to="/register" className="btn btn-accent btn-lg">
+                <Link to="/login" className="btn btn-accent btn-lg">
                   Get Started <i className="bi bi-arrow-right ms-2"></i>
                 </Link>
               </div>
@@ -250,7 +250,7 @@ const HomePage = () => {
             Book your service today and experience the best vehicle care in town
           </p>
           <div className="d-flex gap-3 flex-wrap justify-content-center">
-            <Link to="/register" className="btn btn-accent btn-lg px-4">
+            <Link to="/login" className="btn btn-accent btn-lg px-4">
               <i className="bi bi-calendar-plus me-2"></i>
               Book Service
             </Link>
