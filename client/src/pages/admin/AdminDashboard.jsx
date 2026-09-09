@@ -31,8 +31,8 @@ const AdminDashboard = () => {
     try {
       const [dashboardRes, bookingsRes, revenueRes] = await Promise.all([
         api.reports.dashboard().catch(() => ({ data: {} })),
-        api.bookings.getAll({ limit: 10 }).catch(() => ({ data: { bookings: [] } })),
-        api.reports.revenue({ period: 'monthly' }).catch(() => ({ data: { data: [] } }))
+        api.bookings.getAll({ limit: 10 }).catch(() => ({ data: [] })),
+        api.reports.revenue({ period: 'monthly' }).catch(() => ({ data: {} }))
       ])
 
       const dashboard = dashboardRes.data
@@ -45,8 +45,11 @@ const AdminDashboard = () => {
         revenue: dashboard.totalRevenue || 0
       })
 
-      setRecentBookings(bookingsRes.data || [])
-      setRevenueData(revenueRes.data.breakdown || [])
+      const bookingData = bookingsRes.data
+      setRecentBookings(bookingData.bookings || bookingData || [])
+
+      const revenueBreakdown = revenueRes.data
+      setRevenueData(revenueBreakdown.breakdown || revenueBreakdown.data || [])
 
       // Mock service and booking stats
       setServiceStats([
