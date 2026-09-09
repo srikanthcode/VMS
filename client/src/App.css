@@ -1558,6 +1558,11 @@ body {
   border: 1px solid #2a2a4a;
 }
 
+.auth-card-md {
+  max-width: 380px;
+  padding: 1.5rem;
+}
+
 [data-theme="light"] .auth-card {
   background: #ffffff;
   border-color: #e9ecef;
@@ -1569,10 +1574,18 @@ body {
   margin-bottom: 1.5rem;
 }
 
+.auth-card-md .logo {
+  margin-bottom: 1rem;
+}
+
 .auth-card .logo h2 {
   font-weight: 700;
   color: #ffffff;
   font-size: 1.3rem;
+}
+
+.auth-card-md .logo h2 {
+  font-size: 1.1rem;
 }
 
 [data-theme="light"] .auth-card .logo h2 {
@@ -1582,6 +1595,10 @@ body {
 .auth-card .logo p {
   color: #8a94a6;
   font-size: 0.85rem;
+}
+
+.auth-card-md .logo p {
+  font-size: 0.8rem;
 }
 
 [data-theme="light"] .auth-card .logo p {
@@ -1595,11 +1612,21 @@ body {
   margin-bottom: 0.5rem;
 }
 
+.auth-card-md .logo i {
+  font-size: 1.5rem;
+  margin-bottom: 0.3rem;
+}
+
 .auth-card .form-label {
   color: #c8d0dc;
   font-weight: 500;
   font-size: 0.85rem;
   margin-bottom: 0.3rem;
+}
+
+.auth-card-md .form-label {
+  font-size: 0.8rem;
+  margin-bottom: 0.2rem;
 }
 
 [data-theme="light"] .auth-card .form-label {
@@ -1614,6 +1641,11 @@ body {
   font-size: 0.9rem;
 }
 
+.auth-card-md .input-group-text {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+}
+
 [data-theme="light"] .auth-card .input-group-text {
   background: #f8f9fa;
   border-color: #dee2e6;
@@ -1626,6 +1658,11 @@ body {
   color: #ffffff;
   padding: 0.5rem 0.75rem;
   font-size: 0.9rem;
+}
+
+.auth-card-md .form-control {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
 }
 
 .auth-card .form-control::placeholder {

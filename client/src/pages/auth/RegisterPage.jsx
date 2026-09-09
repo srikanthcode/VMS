@@ -84,7 +84,7 @@ const RegisterPage = () => {
 
   return (
     <div className="auth-page">
-      <div className="auth-card animate-slideUp">
+      <div className="auth-card auth-card-md animate-slideUp">
         <div className="logo">
           <i className="bi bi-tools"></i>
           <h2>Vehicle Management System</h2>
@@ -92,9 +92,9 @@ const RegisterPage = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="form-custom">
-          <div className="mb-3">
+          <div className="mb-2">
             <label className="form-label">Username</label>
-            <div className="input-group">
+            <div className="input-group input-group-sm">
               <span className="input-group-text">
                 <i className="bi bi-person"></i>
               </span>
@@ -110,9 +110,9 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          <div className="mb-3">
+          <div className="mb-2">
             <label className="form-label">Email Address</label>
-            <div className="input-group">
+            <div className="input-group input-group-sm">
               <span className="input-group-text">
                 <i className="bi bi-envelope"></i>
               </span>
@@ -128,9 +128,9 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          <div className="mb-3">
+          <div className="mb-2">
             <label className="form-label">Phone Number</label>
-            <div className="input-group">
+            <div className="input-group input-group-sm">
               <span className="input-group-text">
                 <i className="bi bi-phone"></i>
               </span>
@@ -146,9 +146,9 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          <div className="mb-3">
+          <div className="mb-2">
             <label className="form-label">Password</label>
-            <div className="input-group">
+            <div className="input-group input-group-sm">
               <span className="input-group-text">
                 <i className="bi bi-lock"></i>
               </span>
@@ -164,9 +164,9 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          <div className="mb-4">
+          <div className="mb-3">
             <label className="form-label">Confirm Password</label>
-            <div className="input-group">
+            <div className="input-group input-group-sm">
               <span className="input-group-text">
                 <i className="bi bi-lock-fill"></i>
               </span>
@@ -184,7 +184,7 @@ const RegisterPage = () => {
 
           <button
             type="submit"
-            className="btn btn-accent w-100 py-3"
+            className="btn btn-accent w-100 py-2"
             disabled={loading}
           >
             {loading ? (
@@ -201,8 +201,8 @@ const RegisterPage = () => {
           </button>
         </form>
 
-        <div className="text-center mt-4">
-          <p className="text-muted mb-0">
+        <div className="text-center mt-3">
+          <p className="text-muted mb-0" style={{ fontSize: '0.85rem' }}>
             Already have an account?{' '}
             <Link to="/login" className="text-decoration-none fw-bold">
               Sign In
