@@ -7,7 +7,11 @@ const RegisterPage = () => {
   const navigate = useNavigate()
   const { register } = useAuth()
   const [formData, setFormData] = useState({
-    email: ''
+    username: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: ''
   })
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
@@ -15,10 +19,34 @@ const RegisterPage = () => {
   const validateForm = () => {
     const newErrors = {}
 
+    if (!formData.username.trim()) {
+      newErrors.username = 'Username is required'
+    } else if (formData.username.length < 3) {
+      newErrors.username = 'Username must be at least 3 characters'
+    }
+
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required'
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid'
+    }
+
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required'
+    } else if (!/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) {
+      newErrors.phone = 'Enter a valid 10-digit phone number'
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password is required'
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters'
+    }
+
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password'
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match'
     }
 
     setErrors(newErrors)
@@ -40,7 +68,10 @@ const RegisterPage = () => {
     setLoading(true)
     try {
       await register({
-        email: formData.email
+        username: formData.username,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password
       })
       toast.success('Account created! Please login.')
       navigate('/login')
@@ -62,6 +93,24 @@ const RegisterPage = () => {
 
         <form onSubmit={handleSubmit} className="form-custom">
           <div className="mb-3">
+            <label className="form-label">Username</label>
+            <div className="input-group">
+              <span className="input-group-text">
+                <i className="bi bi-person"></i>
+              </span>
+              <input
+                type="text"
+                className={`form-control ${errors.username ? 'is-invalid' : ''}`}
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="Choose a username"
+              />
+              {errors.username && <div className="invalid-feedback">{errors.username}</div>}
+            </div>
+          </div>
+
+          <div className="mb-3">
             <label className="form-label">Email Address</label>
             <div className="input-group">
               <span className="input-group-text">
@@ -76,6 +125,60 @@ const RegisterPage = () => {
                 placeholder="Enter your email"
               />
               {errors.email && <div className="invalid-feedback">{errors.email}</div>}
+            </div>
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label">Phone Number</label>
+            <div className="input-group">
+              <span className="input-group-text">
+                <i className="bi bi-phone"></i>
+              </span>
+              <input
+                type="tel"
+                className={`form-control ${errors.phone ? 'is-invalid' : ''}`}
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="Enter 10-digit phone number"
+              />
+              {errors.phone && <div className="invalid-feedback">{errors.phone}</div>}
+            </div>
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label">Password</label>
+            <div className="input-group">
+              <span className="input-group-text">
+                <i className="bi bi-lock"></i>
+              </span>
+              <input
+                type="password"
+                className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Create a password"
+              />
+              {errors.password && <div className="invalid-feedback">{errors.password}</div>}
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="form-label">Confirm Password</label>
+            <div className="input-group">
+              <span className="input-group-text">
+                <i className="bi bi-lock-fill"></i>
+              </span>
+              <input
+                type="password"
+                className={`form-control ${errors.confirmPassword ? 'is-invalid' : ''}`}
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirm your password"
+              />
+              {errors.confirmPassword && <div className="invalid-feedback">{errors.confirmPassword}</div>}
             </div>
           </div>
 

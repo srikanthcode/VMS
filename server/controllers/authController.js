@@ -49,28 +49,28 @@ const generateToken = (user) => {
 
 const register = async (req, res) => {
   try {
-    const { email, role } = req.body;
+    const { username, email, phone, password, role } = req.body;
 
-    const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) {
+    if (!username || !email || !password) {
+      return res.status(400).json({ success: false, message: 'Username, email and password are required' });
+    }
+
+    const existingEmail = await User.findOne({ where: { email } });
+    if (existingEmail) {
       return res.status(400).json({ success: false, message: 'Email already registered' });
     }
 
-    const baseUsername = email.split('@')[0];
-    let username = baseUsername;
-    let counter = 1;
-    while (await User.findOne({ where: { username } })) {
-      username = `${baseUsername}${counter}`;
-      counter++;
+    const existingUsername = await User.findOne({ where: { username } });
+    if (existingUsername) {
+      return res.status(400).json({ success: false, message: 'Username already taken' });
     }
 
-    const defaultPassword = 'pass123';
-    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({
       username,
-      name: baseUsername,
+      name: username,
       email,
-      phone: '',
+      phone: phone || '',
       password: hashedPassword,
       role: role || 'CUSTOMER'
     });
@@ -79,8 +79,12 @@ const register = async (req, res) => {
       success: true,
       message: 'Account created successfully',
       data: {
-        username,
-        email: user.email
+        id: user.id,
+        username: user.username,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role
       }
     });
   } catch (error) {
@@ -92,7 +96,14 @@ const login = async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    const user = await User.findOne({ where: { username } });
+    const user = await User.findOne({
+      where: {
+        [require('sequelize').Op.or]: [
+          { username: username },
+          { email: username }
+        ]
+      }
+    });
     if (!user) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }

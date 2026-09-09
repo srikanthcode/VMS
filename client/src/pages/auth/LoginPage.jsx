@@ -71,7 +71,7 @@ const LoginPage = () => {
 
         <form onSubmit={handleSubmit} className="form-custom">
           <div className="mb-3">
-            <label className="form-label">Username</label>
+            <label className="form-label">Email or Username</label>
             <div className="input-group">
               <span className="input-group-text">
                 <i className="bi bi-person"></i>
@@ -82,7 +82,7 @@ const LoginPage = () => {
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                placeholder="Enter your username"
+                placeholder="Enter email or username"
               />
               {errors.username && <div className="invalid-feedback">{errors.username}</div>}
             </div>

@@ -11,7 +11,7 @@ const AdminCustomersPage = () => {
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 })
   const [showModal, setShowModal] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState(null)
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', role: 'CUSTOMER' })
+  const [formData, setFormData] = useState({ username: '', name: '', email: '', phone: '', role: 'CUSTOMER' })
   const [formLoading, setFormLoading] = useState(false)
   const [errors, setErrors] = useState({})
 
@@ -38,13 +38,13 @@ const AdminCustomersPage = () => {
 
   const handleAdd = () => {
     setSelectedCustomer(null)
-    setFormData({ name: '', email: '', phone: '', role: 'CUSTOMER' })
+    setFormData({ username: '', name: '', email: '', phone: '', role: 'CUSTOMER' })
     setShowModal(true)
   }
 
   const handleEdit = (customer) => {
     setSelectedCustomer(customer)
-    setFormData({ name: customer.name, email: customer.email, phone: customer.phone || '', role: customer.role })
+    setFormData({ username: customer.username || '', name: customer.name, email: customer.email, phone: customer.phone || '', role: customer.role })
     setShowModal(true)
   }
 
@@ -94,6 +94,7 @@ const AdminCustomersPage = () => {
   }
 
   const columns = [
+    { key: 'username', label: 'Username', sortable: true },
     { key: 'name', label: 'Name', sortable: true },
     { key: 'email', label: 'Email', sortable: true },
     { key: 'phone', label: 'Phone' },
@@ -148,6 +149,16 @@ const AdminCustomersPage = () => {
         }
       >
         <form className="form-custom">
+          <div className="mb-3">
+            <label className="form-label">Username *</label>
+            <input
+              type="text"
+              className={`form-control ${errors.username ? 'is-invalid' : ''}`}
+              value={formData.username}
+              onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+            />
+            {errors.username && <div className="invalid-feedback">{errors.username}</div>}
+          </div>
           <div className="mb-3">
             <label className="form-label">Name *</label>
             <input
