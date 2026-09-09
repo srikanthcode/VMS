@@ -7,48 +7,27 @@ const RegisterPage = () => {
   const navigate = useNavigate()
   const { register } = useAuth()
   const [formData, setFormData] = useState({
-    name: '',
     email: '',
-    phone: '',
-    password: '',
-    confirmPassword: ''
+    password: ''
   })
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
 
   const validateForm = () => {
     const newErrors = {}
-    
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required'
-    }
-    
+
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required'
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid'
     }
-    
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required'
-    } else if (!/^[6-9]\d{9}$/.test(formData.phone)) {
-      newErrors.phone = 'Phone number must be 10 digits starting with 6-9'
-    }
-    
+
     if (!formData.password) {
       newErrors.password = 'Password is required'
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters'
-    } else if (!/(?=.*[0-9])/.test(formData.password)) {
-      newErrors.password = 'Password must contain at least one number'
     }
-    
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password'
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match'
-    }
-    
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -68,11 +47,8 @@ const RegisterPage = () => {
     setLoading(true)
     try {
       await register({
-        name: formData.name,
         email: formData.email,
-        phone: formData.phone,
-        password: formData.password,
-        confirmPassword: formData.confirmPassword
+        password: formData.password
       })
       toast.success('Account created! Please login.')
       navigate('/login')
@@ -93,25 +69,7 @@ const RegisterPage = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="form-custom">
-          <div className="mb-2">
-            <label className="form-label">Full Name</label>
-            <div className="input-group">
-              <span className="input-group-text">
-                <i className="bi bi-person"></i>
-              </span>
-              <input
-                type="text"
-                className={`form-control ${errors.name ? 'is-invalid' : ''}`}
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Enter your full name"
-              />
-              {errors.name && <div className="invalid-feedback">{errors.name}</div>}
-            </div>
-          </div>
-
-          <div className="mb-2">
+          <div className="mb-3">
             <label className="form-label">Email Address</label>
             <div className="input-group">
               <span className="input-group-text">
@@ -129,25 +87,7 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          <div className="mb-2">
-            <label className="form-label">Phone Number</label>
-            <div className="input-group">
-              <span className="input-group-text">
-                <i className="bi bi-telephone"></i>
-              </span>
-              <input
-                type="tel"
-                className={`form-control ${errors.phone ? 'is-invalid' : ''}`}
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="Enter 10-digit phone number"
-              />
-              {errors.phone && <div className="invalid-feedback">{errors.phone}</div>}
-            </div>
-          </div>
-
-          <div className="mb-2">
+          <div className="mb-3">
             <label className="form-label">Password</label>
             <div className="input-group">
               <span className="input-group-text">
@@ -162,24 +102,6 @@ const RegisterPage = () => {
                 placeholder="Create a password"
               />
               {errors.password && <div className="invalid-feedback">{errors.password}</div>}
-            </div>
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label">Confirm Password</label>
-            <div className="input-group">
-              <span className="input-group-text">
-                <i className="bi bi-lock-fill"></i>
-              </span>
-              <input
-                type="password"
-                className={`form-control ${errors.confirmPassword ? 'is-invalid' : ''}`}
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="Confirm your password"
-              />
-              {errors.confirmPassword && <div className="invalid-feedback">{errors.confirmPassword}</div>}
             </div>
           </div>
 

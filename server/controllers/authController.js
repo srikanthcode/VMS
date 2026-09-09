@@ -56,11 +56,12 @@ const register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email already registered' });
     }
 
+    const displayName = name || email.split('@')[0];
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({
-      name,
+      name: displayName,
       email,
-      phone,
+      phone: phone || '',
       password: hashedPassword,
       role: role || 'CUSTOMER'
     });
