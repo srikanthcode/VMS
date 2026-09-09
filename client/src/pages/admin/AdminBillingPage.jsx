@@ -75,10 +75,15 @@ const AdminBillingPage = () => {
 
     setFormLoading(true)
     try {
+      const subtotal = formData.items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
       const data = {
-        ...formData,
-        items: formData.items.map(item => ({ ...item, amount: Number(item.amount) })),
-        totalAmount: calculateTotal()
+        bookingId: formData.bookingId,
+        subtotal,
+        tax: Number(formData.tax) || 0,
+        taxRate: 18,
+        additionalCharges: 0,
+        partsCost: 0,
+        laborCost: 0
       }
       await api.bills.create(data)
       toast.success('Bill created successfully')
@@ -96,10 +101,13 @@ const AdminBillingPage = () => {
   }
 
   const columns = [
-    { key: '_id', label: 'Bill ID', render: (val) => `#${val?.slice(-6).toUpperCase()}` },
-    { key: 'booking', label: 'Booking', render: (val) => `#${val?.id?.slice(-6).toUpperCase() || 'N/A'}` },
-    { key: 'totalAmount', label: 'Amount', render: (val) => `₹${val}`, sortable: true },
-    { key: 'paymentStatus', label: 'Payment', render: (val) => <span className={`badge ${val === 'PAID' ? 'bg-success' : 'bg-warning'}`}>{val || 'UNPAID'}</span> },
+    { key: 'invoiceNumber', label: 'Invoice #', render: (val) => val || 'N/A' },
+    { key: 'Booking', label: 'Booking', render: (val) => `#${val?.bookingId || val?.id || 'N/A'}` },
+    { key: 'grandTotal', label: 'Amount', render: (val) => `₹${val}`, sortable: true },
+    { key: 'Payment', label: 'Payment', render: (val, row) => {
+      const status = val?.status || (row.Payments && row.Payments.length > 0 ? row.Payments[0].status : null)
+      return <span className={`badge ${status === 'PAID' ? 'bg-success' : 'bg-warning'}`}>{status || 'UNPAID'}</span>
+    }},
     { key: 'createdAt', label: 'Date', render: (val) => formatDate(val), sortable: true }
   ]
 
@@ -140,7 +148,7 @@ const AdminBillingPage = () => {
               <option value="">Choose a booking</option>
               {bookings.map(booking => (
                 <option key={booking.id} value={booking.id}>
-                  #{booking.id?.slice(-6).toUpperCase()} - {booking.customer?.name} - {booking.service?.name}
+                  #{booking.bookingId || booking.id} - {booking.user?.name || 'N/A'} - {booking.ServiceType?.name || 'N/A'}
                 </option>
               ))}
             </select>

@@ -11,6 +11,10 @@ const getBookings = async (req, res) => {
       where.mechanicId = req.user.id;
     }
 
+    if (req.query.status) {
+      where.status = req.query.status;
+    }
+
     const bookings = await Booking.findAll({
       where,
       include: [
