@@ -195,10 +195,10 @@ const HomePage = () => {
 
       {/* Pickup & Drop Section */}
       <section className="pickup-drop-section" style={{ 
-        backgroundImage: 'linear-gradient(rgba(26, 26, 46, 0.85), rgba(26, 26, 46, 0.85)), url(/images/pickup-drop-bg.jpg)',
+        backgroundImage: 'linear-gradient(rgba(26, 26, 46, 0.5), rgba(26, 26, 46, 0.5)), url(/images/pickup-drop-bg.jpg)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
+        backgroundRepeat: 'no-repeat',
         padding: '5rem 0'
       }}>
         <div className="container">

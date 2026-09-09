@@ -1989,6 +1989,28 @@ body {
   color: #495057;
 }
 
+/* Pickup & Drop Section */
+.pickup-drop-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.pickup-drop-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(26, 26, 46, 0.4), rgba(22, 33, 62, 0.4));
+  z-index: 1;
+}
+
+.pickup-drop-section .container {
+  position: relative;
+  z-index: 2;
+}
+
 /* Why Choose Us */
 .why-choose-section {
   background: var(--bg-dark);
