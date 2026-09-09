@@ -64,15 +64,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (data) => {
     try {
       const response = await api.auth.register(data)
-      const { user: userData, token: authToken } = response.data
-      
-      localStorage.setItem('token', authToken)
-      localStorage.setItem('user', JSON.stringify(userData))
-      setUser(userData)
-      setToken(authToken)
-      
-      toast.success('Registration successful!')
-      return userData
+      return response.data
     } catch (error) {
       const message = error.response?.data?.message || 'Registration failed'
       toast.error(message)

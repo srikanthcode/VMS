@@ -74,7 +74,8 @@ const RegisterPage = () => {
         password: formData.password,
         confirmPassword: formData.confirmPassword
       })
-      navigate('/dashboard')
+      toast.success('Account created! Please login.')
+      navigate('/login')
     } catch (error) {
       // Error is handled by auth context
     } finally {

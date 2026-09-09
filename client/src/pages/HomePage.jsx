@@ -250,7 +250,7 @@ const HomePage = () => {
             Book your service today and experience the best vehicle care in town
           </p>
           <div className="d-flex gap-3 flex-wrap justify-content-center">
-            <Link to="/login" className="btn btn-accent btn-lg px-4">
+            <Link to="/register" className="btn btn-accent btn-lg px-4">
               <i className="bi bi-calendar-plus me-2"></i>
               Book Service
             </Link>
