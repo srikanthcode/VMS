@@ -44,10 +44,13 @@ const AdminInvoicesPage = () => {
   }
 
   const columns = [
-    { key: '_id', label: 'Invoice #', render: (val) => `INV-${val?.slice(-6).toUpperCase()}` },
-    { key: 'booking', label: 'Booking', render: (val) => `#${val?.id?.slice(-6).toUpperCase() || 'N/A'}` },
-    { key: 'totalAmount', label: 'Amount', render: (val) => `₹${val}`, sortable: true },
-    { key: 'status', label: 'Status', render: (val) => <span className={`badge ${val === 'PAID' ? 'bg-success' : 'bg-warning'}`}>{val || 'PENDING'}</span> },
+    { key: 'invoiceNumber', label: 'Invoice #', render: (val) => val || 'N/A' },
+    { key: 'Booking', label: 'Booking', render: (val) => `#${val?.bookingId || val?.id || 'N/A'}` },
+    { key: 'grandTotal', label: 'Amount', render: (val) => `₹${val}`, sortable: true },
+    { key: 'Payment', label: 'Status', render: (val, row) => {
+      const status = val?.status || (row.Payments && row.Payments.length > 0 ? row.Payments[0].status : null)
+      return <span className={`badge ${status === 'PAID' ? 'bg-success' : 'bg-warning'}`}>{status || 'PENDING'}</span>
+    }},
     { key: 'createdAt', label: 'Date', render: (val) => formatDate(val), sortable: true },
     {
       key: 'actions',

@@ -39,9 +39,9 @@ const VehiclesPage = () => {
 
   const getFuelIcon = (fuelType) => {
     const icons = {
-      'Petrol': 'bi-fuel-pump',
-      'Diesel': 'bi-fuel-pump',
-      'Electric': 'bi-ev-station',
+      'PETROL': 'bi-fuel-pump',
+      'DIESEL': 'bi-fuel-pump',
+      'ELECTRIC': 'bi-ev-station',
       'CNG': 'bi-fuel-diesel'
     }
     return icons[fuelType] || 'bi-fuel-pump'

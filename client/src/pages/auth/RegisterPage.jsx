@@ -71,7 +71,8 @@ const RegisterPage = () => {
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
-        password: formData.password
+        password: formData.password,
+        confirmPassword: formData.confirmPassword
       })
       navigate('/dashboard')
     } catch (error) {

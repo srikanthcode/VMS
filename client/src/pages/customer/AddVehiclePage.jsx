@@ -8,12 +8,12 @@ const AddVehiclePage = () => {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
     vehicleNumber: '',
-    vehicleType: 'Bike',
+    vehicleType: 'BIKE',
     brand: '',
     model: '',
     variant: '',
     year: new Date().getFullYear(),
-    fuelType: 'Petrol',
+    fuelType: 'PETROL',
     color: '',
     currentKM: '',
     insuranceExpiry: '',
@@ -22,8 +22,8 @@ const AddVehiclePage = () => {
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
 
-  const vehicleTypes = ['Bike', 'Scooter', 'Car', 'SUV', 'Truck', 'Other']
-  const fuelTypes = ['Petrol', 'Diesel', 'Electric', 'CNG']
+  const vehicleTypes = ['BIKE', 'SCOOTER', 'CAR', 'THREE_WHEELER']
+  const fuelTypes = ['PETROL', 'DIESEL', 'ELECTRIC', 'CNG']
 
   const validateForm = () => {
     const newErrors = {}

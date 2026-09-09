@@ -11,7 +11,7 @@ const AdminMechanicsPage = () => {
   const [showModal, setShowModal] = useState(false)
   const [selectedMechanic, setSelectedMechanic] = useState(null)
   const [formData, setFormData] = useState({
-    name: '', email: '', phone: '', specialization: '', experience: ''
+    name: '', email: '', phone: ''
   })
   const [formLoading, setFormLoading] = useState(false)
   const [errors, setErrors] = useState({})
@@ -33,7 +33,7 @@ const AdminMechanicsPage = () => {
 
   const handleAdd = () => {
     setSelectedMechanic(null)
-    setFormData({ name: '', email: '', phone: '', specialization: '', experience: '' })
+    setFormData({ name: '', email: '', phone: '' })
     setShowModal(true)
   }
 
@@ -42,9 +42,7 @@ const AdminMechanicsPage = () => {
     setFormData({
       name: mechanic.name,
       email: mechanic.email,
-      phone: mechanic.phone || '',
-      specialization: mechanic.specialization || '',
-      experience: mechanic.experience || ''
+      phone: mechanic.phone || ''
     })
     setShowModal(true)
   }
@@ -108,8 +106,6 @@ const AdminMechanicsPage = () => {
     { key: 'name', label: 'Name', sortable: true },
     { key: 'email', label: 'Email' },
     { key: 'phone', label: 'Phone' },
-    { key: 'specialization', label: 'Specialization' },
-    { key: 'experience', label: 'Experience' },
     {
       key: 'isActive',
       label: 'Status',
@@ -199,25 +195,6 @@ const AdminMechanicsPage = () => {
                 className="form-control"
                 value={formData.phone}
                 onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-              />
-            </div>
-            <div className="col-md-6">
-              <label className="form-label">Specialization</label>
-              <input
-                type="text"
-                className="form-control"
-                value={formData.specialization}
-                onChange={(e) => setFormData(prev => ({ ...prev, specialization: e.target.value }))}
-                placeholder="e.g., Engine, Brakes"
-              />
-            </div>
-            <div className="col-md-6">
-              <label className="form-label">Experience (years)</label>
-              <input
-                type="number"
-                className="form-control"
-                value={formData.experience}
-                onChange={(e) => setFormData(prev => ({ ...prev, experience: e.target.value }))}
               />
             </div>
           </div>

@@ -87,7 +87,7 @@ const BookingDetailPage = () => {
             <div className="d-flex justify-content-between align-items-start mb-4">
               <div>
                 <h4 className="fw-bold mb-1">
-                  Booking #{booking.id?.slice(-6).toUpperCase()}
+                  Booking #{booking.bookingId || booking.id}
                 </h4>
                 <p className="text-muted mb-0">
                   Created on {formatDate(booking.createdAt)}
@@ -116,11 +116,11 @@ const BookingDetailPage = () => {
             <div className="row g-3">
               <div className="col-md-6">
                 <p className="text-muted mb-1">Service Name</p>
-                <p className="fw-bold mb-0">{booking.service?.name || 'N/A'}</p>
+                <p className="fw-bold mb-0">{booking.ServiceType?.name || 'N/A'}</p>
               </div>
               <div className="col-md-6">
                 <p className="text-muted mb-1">Service Price</p>
-                <p className="fw-bold text-primary mb-0">₹{booking.service?.price || 0}</p>
+                <p className="fw-bold text-primary mb-0">₹{booking.ServiceType?.price || 0}</p>
               </div>
               <div className="col-md-6">
                 <p className="text-muted mb-1">Preferred Date</p>
@@ -140,7 +140,7 @@ const BookingDetailPage = () => {
           </div>
 
           {/* Vehicle Info */}
-          {booking.vehicle && (
+          {booking.Vehicle && (
             <div className="card-custom p-4">
               <h5 className="fw-bold mb-3">
                 <i className="bi bi-car-front me-2"></i>
@@ -149,21 +149,21 @@ const BookingDetailPage = () => {
               <div className="row g-3">
                 <div className="col-md-6">
                   <p className="text-muted mb-1">Vehicle Number</p>
-                  <p className="fw-bold mb-0">{booking.vehicle.vehicleNumber}</p>
+                  <p className="fw-bold mb-0">{booking.Vehicle.vehicleNumber}</p>
                 </div>
                 <div className="col-md-6">
                   <p className="text-muted mb-1">Vehicle</p>
                   <p className="fw-bold mb-0">
-                    {booking.vehicle.brand} {booking.vehicle.model}
+                    {booking.Vehicle.brand} {booking.Vehicle.model}
                   </p>
                 </div>
                 <div className="col-md-6">
                   <p className="text-muted mb-1">Type</p>
-                  <p className="fw-bold mb-0">{booking.vehicle.vehicleType}</p>
+                  <p className="fw-bold mb-0">{booking.Vehicle.vehicleType}</p>
                 </div>
                 <div className="col-md-6">
                   <p className="text-muted mb-1">Fuel Type</p>
-                  <p className="fw-bold mb-0">{booking.vehicle.fuelType}</p>
+                  <p className="fw-bold mb-0">{booking.Vehicle.fuelType}</p>
                 </div>
               </div>
             </div>
@@ -180,21 +180,11 @@ const BookingDetailPage = () => {
             </h5>
             <div className="d-flex justify-content-between py-2 border-bottom">
               <span>Service Cost</span>
-              <span>₹{booking.service?.price || 0}</span>
-            </div>
-            {booking.pickupCharge > 0 && (
-              <div className="d-flex justify-content-between py-2 border-bottom">
-                <span>Pickup Charge</span>
-                <span>₹{booking.pickupCharge}</span>
-              </div>
-            )}
-            <div className="d-flex justify-content-between py-2 border-bottom">
-              <span>Tax</span>
-              <span>₹{booking.tax || 0}</span>
+              <span>₹{booking.ServiceType?.price || 0}</span>
             </div>
             <div className="d-flex justify-content-between py-2">
-              <span className="fw-bold">Total Amount</span>
-              <span className="h5 text-primary mb-0">₹{booking.totalAmount || 0}</span>
+              <span className="fw-bold">Estimated Cost</span>
+              <span className="h5 text-primary mb-0">₹{booking.estimatedPrice || 0}</span>
             </div>
 
             <div className="mt-3">

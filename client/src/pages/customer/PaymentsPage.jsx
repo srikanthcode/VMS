@@ -46,7 +46,7 @@ const PaymentsPage = () => {
     try {
       await api.payments.process({
         billId: selectedBill.id,
-        amount: selectedBill.totalAmount,
+        amount: selectedBill.grandTotal,
         paymentMethod
       })
       toast.success('Payment successful!')
@@ -70,7 +70,7 @@ const PaymentsPage = () => {
     })
   }
 
-  const unpaidBills = bills.filter(bill => bill.paymentStatus !== 'PAID')
+  const unpaidBills = bills.filter(bill => bill.Payment?.status !== 'PAID')
 
   if (loading) {
     return (
@@ -99,10 +99,10 @@ const PaymentsPage = () => {
               <div key={bill.id} className="col-md-6 col-lg-4">
                 <div className="border rounded p-3">
                   <div className="d-flex justify-content-between align-items-start mb-2">
-                    <span className="text-muted">Bill #{bill.id?.slice(-6).toUpperCase()}</span>
+                    <span className="text-muted">Bill #{bill.invoiceNumber || bill.id}</span>
                     <StatusBadge status="UNPAID" />
                   </div>
-                  <h5 className="text-primary mb-2">₹{bill.totalAmount}</h5>
+                  <h5 className="text-primary mb-2">₹{bill.grandTotal}</h5>
                   <button
                     className="btn btn-accent btn-sm w-100"
                     onClick={() => handlePay(bill)}
@@ -137,7 +137,7 @@ const PaymentsPage = () => {
                 {payments.map((payment) => (
                   <tr key={payment.id}>
                     <td>#{payment.id?.slice(-6).toUpperCase()}</td>
-                    <td>#{payment.bill?.id?.slice(-6).toUpperCase() || 'N/A'}</td>
+                    <td>#{payment.Bill?.invoiceNumber || payment.Bill?.id || 'N/A'}</td>
                     <td className="fw-bold">₹{payment.amount}</td>
                     <td>
                       <i className="bi bi-credit-card me-1"></i>
@@ -171,7 +171,7 @@ const PaymentsPage = () => {
               <div className="modal-body">
                 <div className="mb-3">
                   <p className="mb-1">Bill Amount</p>
-                  <h3 className="text-primary">₹{selectedBill?.totalAmount}</h3>
+                  <h3 className="text-primary">₹{selectedBill?.grandTotal}</h3>
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Payment Method</label>
@@ -211,7 +211,7 @@ const PaymentsPage = () => {
                   ) : (
                     <>
                       <i className="bi bi-check-circle me-2"></i>
-                      Pay ₹{selectedBill?.totalAmount}
+                      Pay ₹{selectedBill?.grandTotal}
                     </>
                   )}
                 </button>

@@ -11,7 +11,7 @@ const AdminServicesPage = () => {
   const [showModal, setShowModal] = useState(false)
   const [selectedService, setSelectedService] = useState(null)
   const [formData, setFormData] = useState({
-    name: '', description: '', price: '', estimatedDuration: '', includes: ''
+    name: '', description: '', price: '', duration: '', includes: ''
   })
   const [formLoading, setFormLoading] = useState(false)
   const [errors, setErrors] = useState({})
@@ -33,7 +33,7 @@ const AdminServicesPage = () => {
 
   const handleAdd = () => {
     setSelectedService(null)
-    setFormData({ name: '', description: '', price: '', estimatedDuration: '', includes: '' })
+    setFormData({ name: '', description: '', price: '', duration: '', includes: '' })
     setShowModal(true)
   }
 
@@ -43,7 +43,7 @@ const AdminServicesPage = () => {
       name: service.name,
       description: service.description,
       price: service.price,
-      estimatedDuration: service.estimatedDuration || '',
+      duration: service.duration || '',
       includes: service.includes?.join(', ') || ''
     })
     setShowModal(true)
@@ -109,7 +109,7 @@ const AdminServicesPage = () => {
   const columns = [
     { key: 'name', label: 'Service Name', sortable: true },
     { key: 'price', label: 'Price', render: (val) => `₹${val}`, sortable: true },
-    { key: 'estimatedDuration', label: 'Duration' },
+    { key: 'duration', label: 'Duration' },
     {
       key: 'isActive',
       label: 'Status',
@@ -194,13 +194,13 @@ const AdminServicesPage = () => {
               {errors.price && <div className="invalid-feedback">{errors.price}</div>}
             </div>
             <div className="col-md-6">
-              <label className="form-label">Estimated Duration</label>
+              <label className="form-label">Duration (minutes)</label>
               <input
-                type="text"
+                type="number"
                 className="form-control"
-                value={formData.estimatedDuration}
-                onChange={(e) => setFormData(prev => ({ ...prev, estimatedDuration: e.target.value }))}
-                placeholder="e.g., 2-3 hours"
+                value={formData.duration}
+                onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
+                placeholder="e.g., 60"
               />
             </div>
             <div className="col-md-6">

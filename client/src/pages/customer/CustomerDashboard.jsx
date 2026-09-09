@@ -137,10 +137,10 @@ const CustomerDashboard = () => {
                                 #{booking.id?.slice(-6).toUpperCase()}
                               </Link>
                             </td>
-                            <td>{booking.service?.name || 'N/A'}</td>
+                            <td>{booking.ServiceType?.name || 'N/A'}</td>
                             <td>{formatDate(booking.preferredDate)}</td>
                             <td><StatusBadge status={booking.status} /></td>
-                            <td>₹{booking.totalAmount || 0}</td>
+                            <td>₹{booking.estimatedPrice || 0}</td>
                           </tr>
                         ))}
                       </tbody>

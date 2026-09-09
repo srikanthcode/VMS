@@ -28,11 +28,11 @@ const AdminPaymentsPage = () => {
   }
 
   const columns = [
-    { key: '_id', label: 'Payment ID', render: (val) => `#${val?.slice(-6).toUpperCase()}` },
-    { key: 'bill', label: 'Bill ID', render: (val) => val?.id ? `#${val.id.slice(-6).toUpperCase()}` : 'N/A' },
+    { key: 'id', label: 'Payment ID', render: (val) => `#${val}` },
+    { key: 'Bill', label: 'Bill ID', render: (val) => val?.invoiceNumber || (val?.id ? `#${val.id}` : 'N/A') },
     { key: 'amount', label: 'Amount', render: (val) => `₹${val}`, sortable: true },
     { key: 'paymentMethod', label: 'Method', render: (val) => val || 'Online' },
-    { key: 'status', label: 'Status', render: (val) => <span className={`badge ${val === 'COMPLETED' ? 'bg-success' : 'bg-warning'}`}>{val || 'PENDING'}</span> },
+    { key: 'status', label: 'Status', render: (val) => <span className={`badge ${val === 'PAID' ? 'bg-success' : 'bg-warning'}`}>{val || 'PENDING'}</span> },
     { key: 'createdAt', label: 'Date', render: (val) => formatDate(val), sortable: true }
   ]
 

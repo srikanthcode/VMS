@@ -80,13 +80,13 @@ const InvoicesPage = () => {
               <tbody>
                 {invoices.map((invoice) => (
                   <tr key={invoice.id}>
-                    <td className="fw-bold">INV-{invoice.id?.slice(-6).toUpperCase()}</td>
-                    <td>#{invoice.booking?.id?.slice(-6).toUpperCase() || 'N/A'}</td>
+                    <td className="fw-bold">{invoice.invoiceNumber || `INV-${invoice.id}`}</td>
+                    <td>#{invoice.Booking?.bookingId || invoice.Booking?.id || 'N/A'}</td>
                     <td>{formatDate(invoice.createdAt)}</td>
-                    <td className="text-primary fw-bold">₹{invoice.totalAmount || 0}</td>
+                    <td className="text-primary fw-bold">₹{invoice.grandTotal || 0}</td>
                     <td>
-                      <span className={`badge ${invoice.status === 'PAID' ? 'bg-success' : 'bg-warning'}`}>
-                        {invoice.status || 'PENDING'}
+                      <span className={`badge ${invoice.Payment?.status === 'PAID' ? 'bg-success' : 'bg-warning'}`}>
+                        {invoice.Payment?.status || 'PENDING'}
                       </span>
                     </td>
                     <td>

@@ -71,23 +71,19 @@ const ServiceHistoryPage = () => {
                         #{booking.id?.slice(-6).toUpperCase()}
                       </Link>
                     </td>
-                    <td>{booking.vehicle?.vehicleNumber || 'N/A'}</td>
-                    <td>{booking.service?.name || 'N/A'}</td>
-                    <td>{formatDate(booking.completedDate || booking.updatedAt)}</td>
-                    <td>₹{booking.totalAmount || 0}</td>
+                    <td>{booking.Vehicle?.vehicleNumber || 'N/A'}</td>
+                    <td>{booking.ServiceType?.name || 'N/A'}</td>
+                    <td>{formatDate(booking.updatedAt)}</td>
+                    <td>₹{booking.estimatedPrice || 0}</td>
                     <td><StatusBadge status={booking.status} /></td>
                     <td>
-                      {booking.invoice ? (
-                        <Link
-                          to={`/dashboard/invoices?booking=${booking.id}`}
-                          className="btn btn-sm btn-outline-primary"
-                        >
-                          <i className="bi bi-file-earmark-text me-1"></i>
-                          View
-                        </Link>
-                      ) : (
-                        <span className="text-muted">-</span>
-                      )}
+                      <Link
+                        to={`/dashboard/invoices?booking=${booking.id}`}
+                        className="btn btn-sm btn-outline-primary"
+                      >
+                        <i className="bi bi-file-earmark-text me-1"></i>
+                        View
+                      </Link>
                     </td>
                   </tr>
                 ))}

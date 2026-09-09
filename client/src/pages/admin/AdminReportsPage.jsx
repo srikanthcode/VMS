@@ -52,10 +52,10 @@ const AdminReportsPage = () => {
 
   const chartData = {
     revenue: {
-      labels: reportData?.data?.map(d => d.month || d.label) || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+      labels: reportData?.breakdown?.map(d => d.date) || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
       datasets: [{
         label: 'Revenue (₹)',
-        data: reportData?.data?.map(d => d.revenue || d.value) || [12000, 19000, 15000, 25000, 22000, 30000],
+        data: reportData?.breakdown?.map(d => d.revenue) || [12000, 19000, 15000, 25000, 22000, 30000],
         borderColor: '#e94560',
         backgroundColor: 'rgba(233, 69, 96, 0.1)',
         fill: true,
@@ -63,18 +63,18 @@ const AdminReportsPage = () => {
       }]
     },
     services: {
-      labels: reportData?.data?.map(d => d.name) || ['Basic', 'Premium', 'Major', 'Oil Change', 'Brake'],
+      labels: reportData?.map(d => d.ServiceType?.name || d.name) || ['Basic', 'Premium', 'Major', 'Oil Change', 'Brake'],
       datasets: [{
         label: 'Bookings',
-        data: reportData?.data?.map(d => d.count) || [45, 32, 18, 65, 28],
+        data: reportData?.map(d => parseInt(d.bookingCount) || d.count) || [45, 32, 18, 65, 28],
         backgroundColor: '#e94560'
       }]
     },
     bookings: {
-      labels: reportData?.data?.map(d => d.status) || ['Pending', 'Confirmed', 'In Progress', 'Completed', 'Cancelled'],
+      labels: reportData?.byStatus?.map(d => d.status?.replace('_', ' ')) || ['Pending', 'Confirmed', 'In Progress', 'Completed', 'Cancelled'],
       datasets: [{
         label: 'Bookings',
-        data: reportData?.data?.map(d => d.count) || [12, 8, 5, 45, 3],
+        data: reportData?.byStatus?.map(d => d.count) || [12, 8, 5, 45, 3],
         backgroundColor: ['#ffc107', '#17a2b8', '#007bff', '#28a745', '#dc3545']
       }]
     }

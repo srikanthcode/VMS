@@ -93,13 +93,13 @@ const AdminBookingsPage = () => {
   }
 
   const columns = [
-    { key: '_id', label: 'Booking ID', render: (val) => `#${val?.slice(-6).toUpperCase()}` },
-    { key: 'customer', label: 'Customer', render: (val) => val?.name || 'N/A' },
-    { key: 'vehicle', label: 'Vehicle', render: (val) => val?.vehicleNumber || 'N/A' },
-    { key: 'service', label: 'Service', render: (val) => val?.name || 'N/A' },
+    { key: 'bookingId', label: 'Booking ID', render: (val) => `#${val || 'N/A'}` },
+    { key: 'user', label: 'Customer', render: (val) => val?.name || 'N/A' },
+    { key: 'Vehicle', label: 'Vehicle', render: (val) => val?.vehicleNumber || 'N/A' },
+    { key: 'ServiceType', label: 'Service', render: (val) => val?.name || 'N/A' },
     { key: 'preferredDate', label: 'Date', render: (val) => formatDate(val), sortable: true },
     { key: 'status', label: 'Status', render: (val) => <StatusBadge status={val} /> },
-    { key: 'totalAmount', label: 'Amount', render: (val) => `₹${val || 0}`, sortable: true },
+    { key: 'estimatedPrice', label: 'Amount', render: (val) => `₹${val || 0}`, sortable: true },
     {
       key: 'actions',
       label: 'Actions',
@@ -183,10 +183,10 @@ const AdminBookingsPage = () => {
             onChange={(e) => setSelectedMechanic(e.target.value)}
           >
             <option value="">Choose a mechanic</option>
-            {mechanics.filter(m => m.isActive !== false).map(mechanic => (
-              <option key={mechanic.id} value={mechanic.id}>
-                {mechanic.name} - {mechanic.specialization || 'General'}
-              </option>
+                {mechanics.filter(m => m.isActive !== false).map(mechanic => (
+                  <option key={mechanic.id} value={mechanic.id}>
+                    {mechanic.name}
+                  </option>
             ))}
           </select>
         </div>

@@ -124,10 +124,10 @@ const ReviewsPage = () => {
                 >
                   <option value="">Choose a completed booking</option>
                   {completedBookings
-                    .filter(booking => !reviews.some(r => r.booking?.id === booking.id))
+                    .filter(booking => !reviews.some(r => r.Booking?.id === booking.id))
                     .map(booking => (
                       <option key={booking.id} value={booking.id}>
-                        #{booking.id?.slice(-6).toUpperCase()} - {booking.service?.name}
+                        #{booking.bookingId || booking.id} - {booking.ServiceType?.name}
                       </option>
                     ))}
                 </select>

@@ -40,13 +40,13 @@ const AdminDashboard = () => {
         totalCustomers: dashboard.totalCustomers || 0,
         totalVehicles: dashboard.totalVehicles || 0,
         pendingServices: dashboard.pendingBookings || 0,
-        activeServices: dashboard.activeBookings || 0,
+        activeServices: dashboard.activeServices || 0,
         completedServices: dashboard.completedBookings || 0,
         revenue: dashboard.totalRevenue || 0
       })
 
-      setRecentBookings(bookingsRes.data.bookings || [])
-      setRevenueData(revenueRes.data.data || [])
+      setRecentBookings(bookingsRes.data || [])
+      setRevenueData(revenueRes.data.breakdown || [])
 
       // Mock service and booking stats
       setServiceStats([
@@ -80,10 +80,10 @@ const AdminDashboard = () => {
   }
 
   const revenueChartData = {
-    labels: revenueData.map(d => d.month || d.label) || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    labels: revenueData.map(d => d.date) || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
     datasets: [{
       label: 'Revenue (₹)',
-      data: revenueData.map(d => d.revenue || d.value) || [12000, 19000, 15000, 25000, 22000, 30000],
+      data: revenueData.map(d => d.revenue) || [12000, 19000, 15000, 25000, 22000, 30000],
       borderColor: '#e94560',
       backgroundColor: 'rgba(233, 69, 96, 0.1)',
       fill: true,
@@ -196,12 +196,12 @@ const AdminDashboard = () => {
                 <tbody>
                   {recentBookings.slice(0, 5).map((booking) => (
                     <tr key={booking.id}>
-                      <td>#{booking.id?.slice(-6).toUpperCase()}</td>
-                      <td>{booking.customer?.name || 'N/A'}</td>
-                      <td>{booking.service?.name || 'N/A'}</td>
+                      <td>#{booking.bookingId || booking.id}</td>
+                      <td>{booking.user?.name || 'N/A'}</td>
+                      <td>{booking.ServiceType?.name || 'N/A'}</td>
                       <td>{formatDate(booking.preferredDate)}</td>
                       <td><StatusBadge status={booking.status} /></td>
-                      <td>₹{booking.totalAmount || 0}</td>
+                      <td>₹{booking.estimatedPrice || 0}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -28,7 +28,7 @@ const BillsPage = () => {
 
   const handlePay = async (billId) => {
     try {
-      await api.payments.process({ billId, amount: bills.find(b => b.id === billId)?.totalAmount })
+      await api.payments.process({ billId, amount: bills.find(b => b.id === billId)?.grandTotal })
       toast.success('Payment successful!')
       fetchBills()
     } catch (error) {
@@ -67,18 +67,18 @@ const BillsPage = () => {
                 <div className="card-body">
                   <div className="d-flex justify-content-between align-items-start mb-3">
                     <div>
-                      <h6 className="fw-bold mb-1">Bill #{bill.id?.slice(-6).toUpperCase()}</h6>
+                      <h6 className="fw-bold mb-1">Bill #{bill.invoiceNumber || bill.id}</h6>
                       <p className="text-muted mb-0 small">
-                        Booking: #{bill.booking?.id?.slice(-6).toUpperCase() || 'N/A'}
+                        Booking: #{bill.Booking?.bookingId || bill.Booking?.id || 'N/A'}
                       </p>
                     </div>
-                    <StatusBadge status={bill.paymentStatus || 'UNPAID'} />
+                    <StatusBadge status={bill.Payment?.status || 'UNPAID'} />
                   </div>
 
                   <div className="mb-3">
                     <div className="d-flex justify-content-between py-2 border-bottom">
                       <span className="text-muted">Service</span>
-                      <span>{bill.booking?.service?.name || 'N/A'}</span>
+                      <span>{bill.Booking?.ServiceType?.name || 'N/A'}</span>
                     </div>
                     <div className="d-flex justify-content-between py-2 border-bottom">
                       <span className="text-muted">Date</span>
@@ -86,7 +86,7 @@ const BillsPage = () => {
                     </div>
                     <div className="d-flex justify-content-between py-2">
                       <span className="text-muted">Amount</span>
-                      <span className="h5 text-primary mb-0">₹{bill.totalAmount || 0}</span>
+                      <span className="h5 text-primary mb-0">₹{bill.grandTotal || 0}</span>
                     </div>
                   </div>
 
@@ -103,7 +103,7 @@ const BillsPage = () => {
                   )}
 
                   <div className="d-flex gap-2">
-                    {(bill.paymentStatus !== 'PAID') && (
+                    {(bill.Payment?.status !== 'PAID') && (
                       <button
                         className="btn btn-accent btn-sm"
                         onClick={() => handlePay(bill.id)}

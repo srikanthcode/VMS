@@ -22,7 +22,7 @@ const ReviewCard = ({ review }) => {
       <div className="d-flex justify-content-between align-items-start mb-2">
         <div>
           <div className="rating mb-1">{renderStars(review.rating)}</div>
-          <span className="reviewer">{review.customer?.name || 'Anonymous'}</span>
+          <span className="reviewer">{review.User?.name || 'Anonymous'}</span>
         </div>
         <span className="date">{formatDate(review.createdAt)}</span>
       </div>

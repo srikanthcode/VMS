@@ -152,9 +152,9 @@ const VehicleDetailPage = () => {
                     {serviceHistory.map((booking) => (
                       <tr key={booking.id}>
                         <td>{formatDate(booking.preferredDate)}</td>
-                        <td>{booking.service?.name || 'N/A'}</td>
+                        <td>{booking.ServiceType?.name || 'N/A'}</td>
                         <td><StatusBadge status={booking.status} /></td>
-                        <td>₹{booking.totalAmount || 0}</td>
+                        <td>₹{booking.estimatedPrice || 0}</td>
                         <td>
                           <Link
                             to={`/dashboard/bookings/${booking.id}`}

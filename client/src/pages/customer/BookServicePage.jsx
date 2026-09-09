@@ -11,7 +11,7 @@ const BookServicePage = () => {
 
   const [formData, setFormData] = useState({
     vehicleId: '',
-    serviceId: preselectedServiceId || '',
+    serviceTypeId: preselectedServiceId || '',
     preferredDate: '',
     preferredTime: '',
     pickupRequired: false,
@@ -30,11 +30,11 @@ const BookServicePage = () => {
   }, [])
 
   useEffect(() => {
-    if (formData.serviceId && services.length > 0) {
-      const service = services.find(s => s.id === formData.serviceId)
+    if (formData.serviceTypeId && services.length > 0) {
+      const service = services.find(s => s.id === formData.serviceTypeId)
       setSelectedService(service)
     }
-  }, [formData.serviceId, services])
+  }, [formData.serviceTypeId, services])
 
   const fetchData = async () => {
     try {
@@ -54,7 +54,7 @@ const BookServicePage = () => {
   const validateForm = () => {
     const newErrors = {}
     if (!formData.vehicleId) newErrors.vehicleId = 'Please select a vehicle'
-    if (!formData.serviceId) newErrors.serviceId = 'Please select a service'
+    if (!formData.serviceTypeId) newErrors.serviceTypeId = 'Please select a service'
     if (!formData.preferredDate) {
       newErrors.preferredDate = 'Please select a date'
     } else {
@@ -90,7 +90,7 @@ const BookServicePage = () => {
     try {
       await api.bookings.create({
         vehicleId: formData.vehicleId,
-        serviceId: formData.serviceId,
+        serviceTypeId: formData.serviceTypeId,
         preferredDate: formData.preferredDate,
         preferredTime: formData.preferredTime,
         pickupRequired: formData.pickupRequired,
@@ -161,9 +161,9 @@ const BookServicePage = () => {
                 <div className="col-md-6">
                   <label className="form-label">Select Service *</label>
                   <select
-                    className={`form-select ${errors.serviceId ? 'is-invalid' : ''}`}
-                    name="serviceId"
-                    value={formData.serviceId}
+                    className={`form-select ${errors.serviceTypeId ? 'is-invalid' : ''}`}
+                    name="serviceTypeId"
+                    value={formData.serviceTypeId}
                     onChange={handleChange}
                   >
                     <option value="">Choose a service</option>
@@ -173,7 +173,7 @@ const BookServicePage = () => {
                       </option>
                     ))}
                   </select>
-                  {errors.serviceId && <div className="invalid-feedback">{errors.serviceId}</div>}
+                  {errors.serviceTypeId && <div className="invalid-feedback">{errors.serviceTypeId}</div>}
                 </div>
 
                 {/* Date and Time */}
@@ -266,7 +266,7 @@ const BookServicePage = () => {
                       </div>
                       <div className="d-flex justify-content-between">
                         <span>Duration:</span>
-                        <span>{selectedService.estimatedDuration || '2-3 hours'}</span>
+                        <span>{selectedService.duration || '60'} minutes</span>
                       </div>
                     </div>
                   </div>

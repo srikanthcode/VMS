@@ -95,7 +95,7 @@ const ProfilePage = () => {
     setPasswordLoading(true)
     try {
       await api.auth.changePassword({
-        currentPassword: passwordData.currentPassword,
+        oldPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword
       })
       toast.success('Password changed successfully!')

@@ -53,9 +53,9 @@ const BookingsPage = () => {
   const filteredBookings = bookings.filter(booking => {
     const matchesFilter = filter === 'ALL' || booking.status === filter
     const matchesSearch = 
-      booking.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.service?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.vehicle?.vehicleNumber?.toLowerCase().includes(searchTerm.toLowerCase())
+      booking.bookingId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.ServiceType?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.Vehicle?.vehicleNumber?.toLowerCase().includes(searchTerm.toLowerCase())
     return matchesFilter && matchesSearch
   })
 
@@ -120,10 +120,10 @@ const BookingsPage = () => {
                   <div className="d-flex justify-content-between align-items-start mb-2">
                     <div>
                       <h6 className="fw-bold mb-1">
-                        #{booking.id?.slice(-6).toUpperCase()}
+                        #{booking.bookingId || booking.id}
                       </h6>
                       <p className="text-muted mb-0 small">
-                        {booking.service?.name || 'N/A'}
+                        {booking.ServiceType?.name || 'N/A'}
                       </p>
                     </div>
                     <StatusBadge status={booking.status} />
@@ -132,7 +132,7 @@ const BookingsPage = () => {
                   <div className="my-3">
                     <div className="d-flex align-items-center mb-2">
                       <i className="bi bi-car-front text-muted me-2"></i>
-                      <span>{booking.vehicle?.vehicleNumber || 'N/A'}</span>
+                      <span>{booking.Vehicle?.vehicleNumber || 'N/A'}</span>
                     </div>
                     <div className="d-flex align-items-center mb-2">
                       <i className="bi bi-calendar text-muted me-2"></i>
@@ -145,7 +145,7 @@ const BookingsPage = () => {
                   </div>
 
                   <div className="d-flex justify-content-between align-items-center pt-3 border-top">
-                    <span className="h5 text-primary mb-0">₹{booking.totalAmount || 0}</span>
+                    <span className="h5 text-primary mb-0">₹{booking.estimatedPrice || 0}</span>
                     <div className="d-flex gap-2">
                       <Link
                         to={`/dashboard/bookings/${booking.id}`}

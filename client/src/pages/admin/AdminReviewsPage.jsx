@@ -57,7 +57,7 @@ const AdminReviewsPage = () => {
   }
 
   const columns = [
-    { key: 'customer', label: 'Customer', render: (val) => val?.name || 'N/A' },
+    { key: 'User', label: 'Customer', render: (val) => val?.name || 'N/A' },
     { key: 'rating', label: 'Rating', render: (val) => <div>{renderStars(val)}</div> },
     { key: 'comment', label: 'Review', render: (val) => <p className="mb-0" style={{ maxWidth: '300px' }}>{val}</p> },
     { key: 'adminReply', label: 'Reply', render: (val) => val || <span className="text-muted">No reply</span> },
@@ -95,7 +95,7 @@ const AdminReviewsPage = () => {
           <div>
             <div className="mb-3 p-3 bg-light rounded">
               <div className="d-flex justify-content-between mb-2">
-                <strong>{selectedReview.customer?.name}</strong>
+                <strong>{selectedReview.User?.name}</strong>
                 <div>{renderStars(selectedReview.rating)}</div>
               </div>
               <p className="mb-0">{selectedReview.comment}</p>
