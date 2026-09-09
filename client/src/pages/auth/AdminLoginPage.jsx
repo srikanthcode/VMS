@@ -7,7 +7,7 @@ const AdminLoginPage = () => {
   const navigate = useNavigate()
   const { login } = useAuth()
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: ''
   })
   const [loading, setLoading] = useState(false)
@@ -15,10 +15,8 @@ const AdminLoginPage = () => {
 
   const validateForm = () => {
     const newErrors = {}
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required'
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid'
+    if (!formData.username.trim()) {
+      newErrors.username = 'Username is required'
     }
     if (!formData.password) {
       newErrors.password = 'Password is required'
@@ -41,7 +39,7 @@ const AdminLoginPage = () => {
 
     setLoading(true)
     try {
-      const userData = await login(formData.email, formData.password)
+      const userData = await login(formData.username, formData.password)
       if (userData.role === 'ADMIN') {
         navigate('/admin/dashboard')
       } else {
@@ -65,20 +63,20 @@ const AdminLoginPage = () => {
 
         <form onSubmit={handleSubmit} className="form-custom">
           <div className="mb-3">
-            <label className="form-label">Admin Email</label>
+            <label className="form-label">Username</label>
             <div className="input-group">
               <span className="input-group-text">
-                <i className="bi bi-envelope"></i>
+                <i className="bi bi-person"></i>
               </span>
               <input
-                type="email"
-                className={`form-control ${errors.email ? 'is-invalid' : ''}`}
-                name="email"
-                value={formData.email}
+                type="text"
+                className={`form-control ${errors.username ? 'is-invalid' : ''}`}
+                name="username"
+                value={formData.username}
                 onChange={handleChange}
-                placeholder="Enter admin email"
+                placeholder="Enter admin username"
               />
-              {errors.email && <div className="invalid-feedback">{errors.email}</div>}
+              {errors.username && <div className="invalid-feedback">{errors.username}</div>}
             </div>
           </div>
 

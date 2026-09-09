@@ -49,39 +49,38 @@ const generateToken = (user) => {
 
 const register = async (req, res) => {
   try {
-    const { name, email, phone, password, role } = req.body;
+    const { email, role } = req.body;
 
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'Email already registered' });
     }
 
-    const displayName = name || email.split('@')[0];
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const baseUsername = email.split('@')[0];
+    let username = baseUsername;
+    let counter = 1;
+    while (await User.findOne({ where: { username } })) {
+      username = `${baseUsername}${counter}`;
+      counter++;
+    }
+
+    const defaultPassword = 'pass123';
+    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
     const user = await User.create({
-      name: displayName,
+      username,
+      name: baseUsername,
       email,
-      phone: phone || '',
+      phone: '',
       password: hashedPassword,
       role: role || 'CUSTOMER'
     });
 
-    const token = generateToken(user);
-
     res.status(201).json({
       success: true,
+      message: 'Account created successfully',
       data: {
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone,
-          role: user.role,
-          avatar: user.avatar,
-          isActive: user.isActive,
-          createdAt: user.createdAt
-        },
-        token
+        username,
+        email: user.email
       }
     });
   } catch (error) {
@@ -91,9 +90,9 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({ where: { username } });
     if (!user) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
@@ -114,6 +113,7 @@ const login = async (req, res) => {
       data: {
         user: {
           id: user.id,
+          username: user.username,
           name: user.name,
           email: user.email,
           phone: user.phone,

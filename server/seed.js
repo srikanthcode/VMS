@@ -10,25 +10,25 @@ const seed = async () => {
 
     console.log('Creating admin user...');
     const adminPassword = await bcrypt.hash('admin123', 10);
-    const admin = await User.create({ name: 'Admin User', email: 'admin@vms.com', phone: '1234567890', password: adminPassword, role: 'ADMIN' });
-    console.log('Admin created:', admin.email);
+    const admin = await User.create({ username: 'admin', name: 'Admin User', email: 'admin@vms.com', phone: '1234567890', password: adminPassword, role: 'ADMIN' });
+    console.log('Admin created:', admin.username);
 
     console.log('Creating mechanics...');
     const mechanicPassword = await bcrypt.hash('mechanic123', 10);
     const mechanics = await Promise.all([
-      User.create({ name: 'John Mechanic', email: 'john@vms.com', phone: '9876543210', password: mechanicPassword, role: 'MECHANIC' }),
-      User.create({ name: 'Mike Mechanic', email: 'mike@vms.com', phone: '9876543211', password: mechanicPassword, role: 'MECHANIC' }),
-      User.create({ name: 'Sarah Mechanic', email: 'sarah@vms.com', phone: '9876543212', password: mechanicPassword, role: 'MECHANIC' })
+      User.create({ username: 'john_mech', name: 'John Mechanic', email: 'john@vms.com', phone: '9876543210', password: mechanicPassword, role: 'MECHANIC' }),
+      User.create({ username: 'mike_mech', name: 'Mike Mechanic', email: 'mike@vms.com', phone: '9876543211', password: mechanicPassword, role: 'MECHANIC' }),
+      User.create({ username: 'sarah_mech', name: 'Sarah Mechanic', email: 'sarah@vms.com', phone: '9876543212', password: mechanicPassword, role: 'MECHANIC' })
     ]);
 
     console.log('Creating customers...');
     const customerPassword = await bcrypt.hash('customer123', 10);
     const customers = await Promise.all([
-      User.create({ name: 'Alice Customer', email: 'alice@vms.com', phone: '8765432100', password: customerPassword, role: 'CUSTOMER' }),
-      User.create({ name: 'Bob Customer', email: 'bob@vms.com', phone: '8765432101', password: customerPassword, role: 'CUSTOMER' }),
-      User.create({ name: 'Charlie Customer', email: 'charlie@vms.com', phone: '8765432102', password: customerPassword, role: 'CUSTOMER' }),
-      User.create({ name: 'Diana Customer', email: 'diana@vms.com', phone: '8765432103', password: customerPassword, role: 'CUSTOMER' }),
-      User.create({ name: 'Eve Customer', email: 'eve@vms.com', phone: '8765432104', password: customerPassword, role: 'CUSTOMER' })
+      User.create({ username: 'alice', name: 'Alice Customer', email: 'alice@vms.com', phone: '8765432100', password: customerPassword, role: 'CUSTOMER' }),
+      User.create({ username: 'bob', name: 'Bob Customer', email: 'bob@vms.com', phone: '8765432101', password: customerPassword, role: 'CUSTOMER' }),
+      User.create({ username: 'charlie', name: 'Charlie Customer', email: 'charlie@vms.com', phone: '8765432102', password: customerPassword, role: 'CUSTOMER' }),
+      User.create({ username: 'diana', name: 'Diana Customer', email: 'diana@vms.com', phone: '8765432103', password: customerPassword, role: 'CUSTOMER' }),
+      User.create({ username: 'eve', name: 'Eve Customer', email: 'eve@vms.com', phone: '8765432104', password: customerPassword, role: 'CUSTOMER' })
     ]);
 
     console.log('Creating service types...');

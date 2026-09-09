@@ -7,8 +7,7 @@ const RegisterPage = () => {
   const navigate = useNavigate()
   const { register } = useAuth()
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    email: ''
   })
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
@@ -20,12 +19,6 @@ const RegisterPage = () => {
       newErrors.email = 'Email is required'
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid'
-    }
-
-    if (!formData.password) {
-      newErrors.password = 'Password is required'
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters'
     }
 
     setErrors(newErrors)
@@ -47,8 +40,7 @@ const RegisterPage = () => {
     setLoading(true)
     try {
       await register({
-        email: formData.email,
-        password: formData.password
+        email: formData.email
       })
       toast.success('Account created! Please login.')
       navigate('/login')
@@ -84,24 +76,6 @@ const RegisterPage = () => {
                 placeholder="Enter your email"
               />
               {errors.email && <div className="invalid-feedback">{errors.email}</div>}
-            </div>
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label">Password</label>
-            <div className="input-group">
-              <span className="input-group-text">
-                <i className="bi bi-lock"></i>
-              </span>
-              <input
-                type="password"
-                className={`form-control ${errors.password ? 'is-invalid' : ''}`}
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Create a password"
-              />
-              {errors.password && <div className="invalid-feedback">{errors.password}</div>}
             </div>
           </div>
 
