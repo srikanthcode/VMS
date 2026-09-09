@@ -62,7 +62,7 @@ const LoginPage = () => {
 
   return (
     <div className="auth-page">
-      <div className="auth-card animate-slideUp">
+      <div className="auth-card auth-card-md animate-slideUp">
         <div className="logo">
           <i className="bi bi-tools"></i>
           <h2>Vehicle Management System</h2>
@@ -70,9 +70,9 @@ const LoginPage = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="form-custom">
-          <div className="mb-3">
+          <div className="mb-2">
             <label className="form-label">Email or Username</label>
-            <div className="input-group">
+            <div className="input-group input-group-sm">
               <span className="input-group-text">
                 <i className="bi bi-person"></i>
               </span>
@@ -88,9 +88,9 @@ const LoginPage = () => {
             </div>
           </div>
 
-          <div className="mb-3">
+          <div className="mb-2">
             <label className="form-label">Password</label>
-            <div className="input-group">
+            <div className="input-group input-group-sm">
               <span className="input-group-text">
                 <i className="bi bi-lock"></i>
               </span>
@@ -106,7 +106,7 @@ const LoginPage = () => {
             </div>
           </div>
 
-          <div className="d-flex justify-content-between align-items-center mb-4">
+          <div className="d-flex justify-content-between align-items-center mb-3">
             <div className="form-check">
               <input
                 type="checkbox"
@@ -116,18 +116,18 @@ const LoginPage = () => {
                 checked={formData.rememberMe}
                 onChange={handleChange}
               />
-              <label className="form-check-label" htmlFor="rememberMe">
+              <label className="form-check-label" htmlFor="rememberMe" style={{ fontSize: '0.8rem' }}>
                 Remember me
               </label>
             </div>
-            <Link to="/forgot-password" className="text-decoration-none">
+            <Link to="/forgot-password" className="text-decoration-none" style={{ fontSize: '0.8rem' }}>
               Forgot Password?
             </Link>
           </div>
 
           <button
             type="submit"
-            className="btn btn-accent w-100 py-3"
+            className="btn btn-accent w-100 py-2"
             disabled={loading}
           >
             {loading ? (
@@ -144,14 +144,14 @@ const LoginPage = () => {
           </button>
         </form>
 
-        <div className="text-center mt-4">
-          <p className="text-muted mb-2">
+        <div className="text-center mt-3">
+          <p className="text-muted mb-2" style={{ fontSize: '0.85rem' }}>
             Don't have an account?{' '}
             <Link to="/register" className="text-decoration-none fw-bold">
               Sign Up
             </Link>
           </p>
-          <p className="text-muted mb-0">
+          <p className="text-muted mb-0" style={{ fontSize: '0.8rem' }}>
             <Link to="/admin/login" className="text-decoration-none">
               Admin Login
             </Link>
