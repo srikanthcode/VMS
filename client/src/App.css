@@ -1563,6 +1563,27 @@ body {
   padding: 1.5rem;
 }
 
+.back-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  transition: var(--transition);
+}
+
+.back-home:hover {
+  color: var(--accent-hover);
+  transform: translateX(-3px);
+}
+
+.back-home i {
+  font-size: 1rem;
+}
+
 [data-theme="light"] .auth-card {
   background: #ffffff;
   border-color: #e9ecef;

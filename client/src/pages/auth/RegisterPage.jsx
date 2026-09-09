@@ -85,6 +85,9 @@ const RegisterPage = () => {
   return (
     <div className="auth-page">
       <div className="auth-card auth-card-md animate-slideUp">
+        <Link to="/" className="back-home">
+          <i className="bi bi-arrow-left"></i> Home
+        </Link>
         <div className="logo">
           <i className="bi bi-tools"></i>
           <h2>Vehicle Management System</h2>
