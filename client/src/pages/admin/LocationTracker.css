@@ -2,18 +2,18 @@
   height: calc(100vh - 70px);
   display: flex;
   flex-direction: column;
-  background: var(--bg-primary, #0a0a1a);
+  background: var(--bg-light);
   overflow: hidden;
 }
 
 .location-header {
   padding: 15px 20px;
-  background: var(--bg-secondary, #1a1a2e);
-  color: var(--text-primary, white);
+  background: var(--bg-white);
+  color: var(--text-primary);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--border, #2a2a4a);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
@@ -35,7 +35,7 @@
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-  color: var(--text-secondary, #8a94a6);
+  color: var(--text-muted);
 }
 
 .leaflet-map {
@@ -46,20 +46,20 @@
 
 .users-sidebar {
   width: 300px;
-  background: var(--bg-secondary, #121225);
-  border-left: 1px solid var(--border, #2a2a4a);
+  background: var(--bg-white);
+  border-left: 1px solid var(--border);
   overflow-y: auto;
   padding: 15px;
   flex-shrink: 0;
 }
 
 .users-sidebar h6 {
-  color: var(--text-primary, #ffffff);
+  color: var(--text-primary);
 }
 
 .user-card {
-  background: var(--bg-card, #1e1e3a);
-  border: 1px solid var(--border, #2a2a4a);
+  background: var(--bg-light);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 12px;
   margin-bottom: 10px;
@@ -68,12 +68,12 @@
 }
 
 .user-card:hover {
-  border-color: var(--accent, #e94560);
+  border-color: var(--accent);
   transform: translateX(-2px);
 }
 
 .user-name {
-  color: var(--text-primary, #ffffff);
+  color: var(--text-primary);
   margin: 0;
   font-size: 0.9rem;
   font-weight: 600;
@@ -89,7 +89,7 @@
 }
 
 .live-badge {
-  color: #28a745;
+  color: var(--success);
   font-size: 0.7rem;
   font-weight: 500;
 }
@@ -100,14 +100,14 @@
 
 .update-time {
   display: block;
-  color: var(--text-secondary, #6c757d);
+  color: var(--text-muted);
   font-size: 0.7rem;
   margin-top: 6px;
 }
 
 /* Leaflet fixes */
 .leaflet-container {
-  background: #1a1a2e !important;
+  background: var(--bg-light) !important;
   font-family: 'Inter', sans-serif !important;
 }
 
@@ -158,14 +158,34 @@
 }
 
 .users-sidebar::-webkit-scrollbar-track {
-  background: var(--bg-secondary, #121225);
+  background: var(--bg-light);
 }
 
 .users-sidebar::-webkit-scrollbar-thumb {
-  background: var(--border, #2a2a4a);
+  background: var(--border);
   border-radius: 3px;
 }
 
 .users-sidebar::-webkit-scrollbar-thumb:hover {
-  background: var(--accent, #e94560);
+  background: var(--accent);
+}
+
+@media (max-width: 992px) {
+  .location-tracker {
+    height: calc(100vh - 60px);
+  }
+
+  .users-sidebar {
+    position: fixed;
+    right: -300px;
+    top: 0;
+    bottom: 0;
+    z-index: 1050;
+    transition: right 0.3s ease;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+  }
+
+  .users-sidebar.show {
+    right: 0;
+  }
 }

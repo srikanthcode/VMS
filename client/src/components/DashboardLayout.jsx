@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 
 const DashboardLayout = ({ children, role = 'customer', links = [] }) => {
   const { user, logout } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const location = useLocation()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -112,6 +114,14 @@ const DashboardLayout = ({ children, role = 'customer', links = [] }) => {
           </div>
 
           <div className="topbar-actions">
+            <button
+              className="btn btn-outline-secondary"
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              <i className={`bi ${theme === 'dark' ? 'bi-sun' : 'bi-moon'}`}></i>
+            </button>
+
             <div className="topbar-search d-none d-md-block">
               <i className="bi bi-search"></i>
               <input type="text" className="form-control" placeholder="Search..." />

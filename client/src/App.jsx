@@ -109,7 +109,10 @@ const MechanicRoute = ({ children }) => {
 
 function App() {
   const location = useLocation()
-  const hideNavbar = ['/login', '/register', '/forgot-password', '/admin/login', '/mechanic/login'].includes(location.pathname)
+  const hideNavbar = ['/login', '/register', '/forgot-password', '/admin/login', '/mechanic/login'].includes(location.pathname) 
+    || location.pathname.startsWith('/admin') 
+    || location.pathname.startsWith('/dashboard') 
+    || location.pathname.startsWith('/mechanic')
 
   return (
     <>
