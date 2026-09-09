@@ -193,6 +193,49 @@ const HomePage = () => {
         </div>
       </section>
 
+      {/* Pickup & Drop Section */}
+      <section className="pickup-drop-section" style={{ 
+        backgroundImage: 'linear-gradient(rgba(26, 26, 46, 0.85), rgba(26, 26, 46, 0.85)), url(/images/pickup-drop-bg.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+        padding: '5rem 0'
+      }}>
+        <div className="container">
+          <div className="row align-items-center">
+            <div className="col-lg-8">
+              <span className="badge bg-accent mb-3" style={{ background: '#e94560' }}>Pickup & Drop Available</span>
+              <h2 className="text-white fw-bold mb-3" style={{ fontSize: '2.2rem' }}>
+                Convenient Vehicle Servicing at Your Doorstep
+              </h2>
+              <p className="text-white-50 mb-4" style={{ fontSize: '1.1rem', maxWidth: '600px' }}>
+                No need to visit the service center. We pick up and deliver your vehicle.
+              </p>
+              <div className="d-flex gap-4 flex-wrap">
+                <div className="d-flex align-items-center gap-2">
+                  <i className="bi bi-check-circle-fill" style={{ color: '#e94560' }}></i>
+                  <span className="text-white">Free Pickup & Drop</span>
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                  <i className="bi bi-check-circle-fill" style={{ color: '#e94560' }}></i>
+                  <span className="text-white">Real-time Tracking</span>
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                  <i className="bi bi-check-circle-fill" style={{ color: '#e94560' }}></i>
+                  <span className="text-white">Insured Transport</span>
+                </div>
+              </div>
+            </div>
+            <div className="col-lg-4 text-lg-end mt-4 mt-lg-0">
+              <Link to="/register" className="btn btn-accent btn-lg px-4">
+                <i className="bi bi-calendar-plus me-2"></i>
+                Book Now
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Reviews Section - Auto Scroll */}
       {reviews.length > 0 && (
         <section className="section bg-white overflow-hidden">
