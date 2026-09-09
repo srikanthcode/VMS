@@ -60,7 +60,7 @@ const HomePage = () => {
       <div className="quick-features overflow-hidden py-4" style={{ background: 'linear-gradient(135deg, #1a1a2e, #16213e)' }}>
         <div className="features-scroll-wrapper">
           <div className="features-scroll-track">
-            {[...features, ...features].map((feature, index) => (
+            {[...features, ...features, ...features].map((feature, index) => (
               <div key={index} className="features-scroll-item">
                 <div className="quick-feature-item">
                   <i className={`bi ${feature.icon}`}></i>
