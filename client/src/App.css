@@ -1912,12 +1912,13 @@ body {
 .features-scroll-wrapper {
   width: 100%;
   overflow: hidden;
+  padding: 0.75rem 0;
 }
 
 .features-scroll-track {
   display: flex;
-  gap: 2rem;
-  animation: scrollFeatures 20s linear infinite;
+  gap: 1rem;
+  animation: scrollFeatures 25s linear infinite;
   width: max-content;
 }
 
@@ -1930,33 +1931,37 @@ body {
 }
 
 .features-scroll-item .quick-feature-item {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
   white-space: nowrap;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .features-scroll-item .quick-feature-item:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
 }
 
 .features-scroll-item .quick-feature-item i {
   color: #e94560;
-  font-size: 1.5rem;
+  font-size: 1.1rem;
 }
 
 .features-scroll-item .quick-feature-item h6 {
   color: #ffffff;
   margin: 0;
   font-weight: 600;
+  font-size: 0.8rem;
 }
 
 .features-scroll-item .quick-feature-item p {
   color: #b8c5d6;
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.7rem;
 }
 
 @keyframes scrollFeatures {
@@ -1969,11 +1974,11 @@ body {
 }
 
 [data-theme="light"] .features-scroll-item .quick-feature-item {
-  background: rgba(26, 26, 46, 0.1);
+  background: rgba(26, 26, 46, 0.08);
 }
 
 [data-theme="light"] .features-scroll-item .quick-feature-item:hover {
-  background: rgba(26, 26, 46, 0.15);
+  background: rgba(26, 26, 46, 0.12);
 }
 
 [data-theme="light"] .features-scroll-item .quick-feature-item h6 {

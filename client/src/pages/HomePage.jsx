@@ -31,7 +31,7 @@ const HomePage = () => {
   }
 
   const features = [
-    { icon: 'bi-tools', title: 'Expert Mechanics', description: 'Certified professionals with years of experience' },
+    { icon: 'bi-person-gear', title: 'Expert Mechanics', description: 'Certified professionals with years of experience' },
     { icon: 'bi-shield-check', title: 'Genuine Parts', description: '100% genuine parts with warranty' },
     { icon: 'bi-truck', title: 'Pickup & Drop', description: 'Free pickup and drop service available' },
     { icon: 'bi-cash-stack', title: 'Affordable Pricing', description: 'Best prices with no hidden charges' }
