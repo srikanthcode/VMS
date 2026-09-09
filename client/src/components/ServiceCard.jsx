@@ -15,7 +15,12 @@ const ServiceCard = ({ service }) => {
   }
 
   const imageMap = {
-    'Basic Service': '/images/basic-service.jpg'
+    'Basic Service': '/images/basic-service.jpg',
+    'Major Service': '/images/Major-service-Content-Image.webp',
+    'Brake Service': '/images/brake-service.jpg',
+    'AC Service': '/images/ac-service.png',
+    'Wheel Alignment': '/images/wheel-alignment.jpg',
+    'Battery Replacement': '/images/battery-replacement.jpg'
   }
 
   const icon = iconMap[service.name] || 'bi-tools'
