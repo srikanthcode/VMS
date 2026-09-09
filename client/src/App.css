@@ -1908,6 +1908,82 @@ body {
   }
 }
 
+/* Auto Scroll Features */
+.features-scroll-wrapper {
+  width: 100%;
+  overflow: hidden;
+}
+
+.features-scroll-track {
+  display: flex;
+  gap: 2rem;
+  animation: scrollFeatures 20s linear infinite;
+  width: max-content;
+}
+
+.features-scroll-track:hover {
+  animation-play-state: paused;
+}
+
+.features-scroll-item {
+  flex: 0 0 auto;
+}
+
+.features-scroll-item .quick-feature-item {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+.features-scroll-item .quick-feature-item:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.features-scroll-item .quick-feature-item i {
+  color: #e94560;
+  font-size: 1.5rem;
+}
+
+.features-scroll-item .quick-feature-item h6 {
+  color: #ffffff;
+  margin: 0;
+  font-weight: 600;
+}
+
+.features-scroll-item .quick-feature-item p {
+  color: #b8c5d6;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+@keyframes scrollFeatures {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-33.33%);
+  }
+}
+
+[data-theme="light"] .features-scroll-item .quick-feature-item {
+  background: rgba(26, 26, 46, 0.1);
+}
+
+[data-theme="light"] .features-scroll-item .quick-feature-item:hover {
+  background: rgba(26, 26, 46, 0.15);
+}
+
+[data-theme="light"] .features-scroll-item .quick-feature-item h6 {
+  color: #1a1a2e;
+}
+
+[data-theme="light"] .features-scroll-item .quick-feature-item p {
+  color: #495057;
+}
+
 /* Why Choose Us */
 .why-choose-section {
   background: var(--bg-dark);

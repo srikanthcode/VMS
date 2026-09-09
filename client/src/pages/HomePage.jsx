@@ -56,12 +56,12 @@ const HomePage = () => {
     <div>
       <HeroCarousel />
 
-      {/* Quick Features */}
-      <div className="quick-features">
-        <div className="container">
-          <div className="row">
-            {features.map((feature, index) => (
-              <div key={index} className="col-lg-3 col-md-6">
+      {/* Quick Features - Auto Scroll */}
+      <div className="quick-features overflow-hidden py-4" style={{ background: 'linear-gradient(135deg, #1a1a2e, #16213e)' }}>
+        <div className="features-scroll-wrapper">
+          <div className="features-scroll-track">
+            {[...features, ...features, ...features].map((feature, index) => (
+              <div key={index} className="features-scroll-item">
                 <div className="quick-feature-item">
                   <i className={`bi ${feature.icon}`}></i>
                   <div>
