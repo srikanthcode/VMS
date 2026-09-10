@@ -372,9 +372,21 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   background: #ffffff;
 }
 
+[data-theme="light"] .quick-features {
+  background: linear-gradient(135deg, #e9ecef, #dee2e6);
+}
+
 [data-theme="light"] .quick-feature-item {
   background: rgba(255, 255, 255, 0.9);
   color: #1a1a2e;
+}
+
+[data-theme="light"] .quick-feature-item h6 {
+  color: #1a1a2e;
+}
+
+[data-theme="light"] .quick-feature-item p {
+  color: #495057;
 }
 
 [data-theme="light"] .dropdown-menu {
