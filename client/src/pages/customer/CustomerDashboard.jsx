@@ -114,57 +114,68 @@ const CustomerDashboard = () => {
             </div>
           </div>
 
-          {/* Our Services - Professional Display */}
+          {/* Our Services - Auto Scroll */}
           <div className="mb-4">
             <h5 className="fw-bold mb-3">Our Services</h5>
-            <div className="row g-4">
-              {services.map((service) => (
-                <div className="col-lg-4 col-md-6" key={service.id}>
-                  <div
-                    className="service-showcase-card"
-                    onClick={() => setSelectedService(selectedService?.id === service.id ? null : service)}
-                  >
-                    <div className="service-showcase-img">
-                      <img src={service.image} alt={service.title} />
-                      <div className="service-showcase-overlay">
-                        <span className="service-showcase-price">{service.price}</span>
-                      </div>
-                    </div>
-                    <div className="service-showcase-body">
-                      <h6 className="fw-bold">{service.title}</h6>
-                      <p className="text-muted small mb-2">{service.description}</p>
-                      {selectedService?.id === service.id && (
-                        <div className="service-showcase-details animate-slideUp">
-                          <ul className="list-unstyled mb-2">
-                            {service.features.map((feature, i) => (
-                              <li key={i} className="small mb-1">
-                                <i className="bi bi-check-circle-fill text-success me-2"></i>
-                                {feature}
-                              </li>
-                            ))}
-                          </ul>
-                          <Link to="/dashboard/book-service" className="btn btn-accent btn-sm w-100">
-                            <i className="bi bi-calendar-plus me-1"></i>
-                            Book Now
-                          </Link>
+            <div className="dashboard-services-scroll">
+              <div className="dashboard-services-track">
+                {[...services, ...services, ...services].map((service, index) => (
+                  <div className="dashboard-services-item" key={index}>
+                    <div
+                      className="service-showcase-card"
+                      onClick={() => setSelectedService(service)}
+                    >
+                      <div className="service-showcase-img">
+                        <img src={service.image} alt={service.title} />
+                        <div className="service-showcase-overlay">
+                          <span className="service-showcase-price">{service.price}</span>
                         </div>
-                      )}
-                      {!selectedService?.id === service.id && (
+                      </div>
+                      <div className="service-showcase-body">
+                        <h6 className="fw-bold">{service.title}</h6>
+                        <p className="text-muted small mb-2">{service.description?.substring(0, 80)}...</p>
                         <small className="text-accent fw-500">
                           <i className="bi bi-info-circle me-1"></i>Tap for details
                         </small>
-                      )}
-                      {selectedService?.id !== service.id && (
-                        <small className="text-accent fw-500 d-block mt-1">
-                          <i className="bi bi-info-circle me-1"></i>Tap for details
-                        </small>
-                      )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
+
+          {/* Service Detail Modal */}
+          {selectedService && (
+            <div className="service-modal-overlay" onClick={() => setSelectedService(null)}>
+              <div className="service-modal" onClick={(e) => e.stopPropagation()}>
+                <button className="service-modal-close" onClick={() => setSelectedService(null)}>
+                  <i className="bi bi-x-lg"></i>
+                </button>
+                <div className="service-modal-img">
+                  <img src={selectedService.image} alt={selectedService.title} />
+                  <div className="service-modal-price">{selectedService.price}</div>
+                </div>
+                <div className="service-modal-body">
+                  <h4 className="fw-bold mb-2">{selectedService.title}</h4>
+                  <p className="mb-3">{selectedService.description}</p>
+                  <h6 className="fw-bold mb-2">Features:</h6>
+                  <ul className="list-unstyled mb-3">
+                    {selectedService.features.map((feature, i) => (
+                      <li key={i} className="mb-1">
+                        <i className="bi bi-check-circle-fill text-success me-2"></i>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link to="/dashboard/book-service" className="btn btn-accent w-100" onClick={() => setSelectedService(null)}>
+                    <i className="bi bi-calendar-plus me-2"></i>
+                    Book Now
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="row g-4">
             {/* Recent Bookings */}
