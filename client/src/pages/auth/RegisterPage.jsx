@@ -76,7 +76,11 @@ const RegisterPage = () => {
       toast.success('Account created! Please login.')
       navigate('/login')
     } catch (error) {
-      // Error is handled by auth context
+      const msg = error.response?.data?.message || ''
+      if (msg.includes('already registered') || msg.includes('already taken')) {
+        toast.error(msg + ' Redirecting to login...')
+        setTimeout(() => navigate('/login'), 2000)
+      }
     } finally {
       setLoading(false)
     }

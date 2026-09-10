@@ -57,12 +57,19 @@ const register = async (req, res) => {
 
     const existingEmail = await User.findOne({ where: { email } });
     if (existingEmail) {
-      return res.status(400).json({ success: false, message: 'Email already registered' });
+      return res.status(400).json({ success: false, message: 'Email already registered. Please login instead.' });
     }
 
     const existingUsername = await User.findOne({ where: { username } });
     if (existingUsername) {
-      return res.status(400).json({ success: false, message: 'Username already taken' });
+      return res.status(400).json({ success: false, message: 'Username already taken. Please choose another.' });
+    }
+
+    if (phone) {
+      const existingPhone = await User.findOne({ where: { phone } });
+      if (existingPhone) {
+        return res.status(400).json({ success: false, message: 'Phone number already registered.' });
+      }
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -88,6 +95,10 @@ const register = async (req, res) => {
       }
     });
   } catch (error) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      const field = error.errors[0]?.path || 'field';
+      return res.status(400).json({ success: false, message: `This ${field} is already registered.` });
+    }
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };

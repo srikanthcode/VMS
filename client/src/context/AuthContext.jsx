@@ -28,8 +28,14 @@ export const AuthProvider = ({ children }) => {
       if (savedToken && savedUser) {
         try {
           const response = await api.auth.getProfile()
-          setUser(response.data.user || response.data)
-          setToken(savedToken)
+          const profileData = response.data?.user || response.data
+          if (profileData && profileData.isActive) {
+            setUser(profileData)
+            setToken(savedToken)
+          } else {
+            localStorage.removeItem('token')
+            localStorage.removeItem('user')
+          }
         } catch (error) {
           localStorage.removeItem('token')
           localStorage.removeItem('user')
