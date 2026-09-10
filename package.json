@@ -1,9 +1,14 @@
 {
   "name": "vehicle-management-system",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Vehicle Management System",
+  "main": "server/index.js",
   "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "install-all": "cd client && npm install && cd ../server && npm install",
+    "build": "cd client && npm install && npm run build",
+    "seed": "cd server && npm run seed",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

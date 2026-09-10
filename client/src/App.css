@@ -171,6 +171,28 @@ p, span, label, li {
   color: #ffffff;
 }
 
+.form-select option,
+.form-control option {
+  background: #1e1e3a;
+  color: #e0e0e0;
+}
+
+[data-theme="light"] .form-select option,
+[data-theme="light"] .form-control option {
+  background: #ffffff;
+  color: #1a1a2e;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+}
+
+[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: none;
+}
+
 .card {
   background: #1e1e3a;
   border-color: #2a2a4a;
@@ -189,6 +211,30 @@ p, span, label, li {
 
 .bg-light {
   background-color: #2a2a4a !important;
+  color: #e0e0e0;
+}
+
+.bg-light h6,
+.bg-light span {
+  color: #e0e0e0;
+}
+
+.bg-light span.fw-bold {
+  color: #ffffff;
+}
+
+[data-theme="light"] .bg-light {
+  background-color: #f8f9fa !important;
+  color: #1a1a2e;
+}
+
+[data-theme="light"] .bg-light h6,
+[data-theme="light"] .bg-light span {
+  color: #1a1a2e;
+}
+
+[data-theme="light"] .bg-light span.fw-bold {
+  color: #1a1a2e;
 }
 
 .badge {
@@ -454,10 +500,6 @@ p, span, label, li {
 
 [data-theme="light"] .about-cta-box i {
   color: #e94560;
-}
-
-[data-theme="light"] .bg-light {
-  background-color: #f8f9fa !important;
 }
 
 [data-theme="light"] .table th {
@@ -1116,14 +1158,41 @@ body {
 
 .form-custom .form-control:focus,
 .form-custom .form-select:focus {
-  border-color: var(--accent);
+  border-color: #e94560;
   box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.1);
+}
+
+.form-check-input {
+  background-color: #1e1e3a;
+  border-color: #3a3a5a;
+}
+
+.form-check-input:checked {
+  background-color: #e94560;
+  border-color: #e94560;
+}
+
+.form-check-label {
+  color: #e0e0e0;
+}
+
+[data-theme="light"] .form-check-input {
+  background-color: #ffffff;
+  border-color: #dee2e6;
+}
+
+[data-theme="light"] .form-check-label {
+  color: #495057;
 }
 
 .form-custom .form-label {
   font-weight: 500;
-  color: var(--primary);
+  color: #e0e0e0;
   margin-bottom: 0.5rem;
+}
+
+[data-theme="light"] .form-custom .form-label {
+  color: var(--primary);
 }
 
 /* Badges */

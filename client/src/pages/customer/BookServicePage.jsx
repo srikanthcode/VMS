@@ -255,18 +255,18 @@ const BookServicePage = () => {
                 {selectedService && (
                   <div className="col-12">
                     <div className="bg-light rounded-3 p-3">
-                      <h6 className="fw-bold mb-2">Booking Summary</h6>
+                      <h6 className="fw-bold mb-2" style={{color: 'var(--text-primary)'}}>Booking Summary</h6>
                       <div className="d-flex justify-content-between">
-                        <span>Service:</span>
-                        <span className="fw-bold">{selectedService.name}</span>
+                        <span style={{color: 'var(--text-secondary)'}}>Service:</span>
+                        <span className="fw-bold" style={{color: 'var(--text-primary)'}}>{selectedService.name}</span>
                       </div>
                       <div className="d-flex justify-content-between">
-                        <span>Estimated Cost:</span>
+                        <span style={{color: 'var(--text-secondary)'}}>Estimated Cost:</span>
                         <span className="fw-bold text-primary">₹{selectedService.price}</span>
                       </div>
                       <div className="d-flex justify-content-between">
-                        <span>Duration:</span>
-                        <span>{selectedService.duration || '60'} minutes</span>
+                        <span style={{color: 'var(--text-secondary)'}}>Duration:</span>
+                        <span style={{color: 'var(--text-secondary)'}}>{selectedService.duration || '60'} minutes</span>
                       </div>
                     </div>
                   </div>
