@@ -1552,7 +1552,7 @@ body {
 
 /* Quick Features */
 .quick-features {
-  background: var(--bg-white);
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
   padding: 2rem 0;
   margin-top: -3rem;
   position: relative;
@@ -2058,7 +2058,7 @@ body {
 }
 
 .features-scroll-item .quick-feature-item {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 0.6rem 1.2rem;
   white-space: nowrap;
@@ -2069,7 +2069,7 @@ body {
 }
 
 .features-scroll-item .quick-feature-item:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.15);
   transform: translateY(-1px);
 }
 
@@ -2086,7 +2086,7 @@ body {
 }
 
 .features-scroll-item .quick-feature-item p {
-  color: #b8c5d6;
+  color: #d0d8e4;
   margin: 0;
   font-size: 0.7rem;
 }
@@ -2114,6 +2114,23 @@ body {
 
 [data-theme="light"] .features-scroll-item .quick-feature-item p {
   color: #495057;
+}
+
+/* Hero Outline Button */
+.btn-hero-outline {
+  color: #ffffff;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 600;
+  transition: all 0.3s ease;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.btn-hero-outline:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #ffffff;
+  color: #ffffff;
+  transform: translateY(-2px);
 }
 
 /* Pickup & Drop Section */

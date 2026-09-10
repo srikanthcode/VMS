@@ -85,7 +85,7 @@ const HeroCarousel = () => {
                 <i className="bi bi-calendar-check me-2"></i>
                 {slides[currentSlide].btn1Text}
               </Link>
-              <Link to={slides[currentSlide].btn2Link} className="btn btn-outline-light btn-lg px-4">
+              <Link to={slides[currentSlide].btn2Link} className="btn btn-hero-outline btn-lg px-4">
                 {slides[currentSlide].btn2Text}
               </Link>
             </div>
