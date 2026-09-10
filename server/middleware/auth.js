@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'vms-secret-key-2026';
+const JWT_SECRET = process.env.JWT_SECRET || 'vms-secret-key-2024';
 
 const authenticate = async (req, res, next) => {
   try {

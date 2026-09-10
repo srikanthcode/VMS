@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const { User } = require('../models');
+const { Op } = require('sequelize');
 const { JWT_SECRET } = require('../middleware/auth');
 
 const resetTokens = {};
@@ -109,7 +110,7 @@ const login = async (req, res) => {
 
     const user = await User.findOne({
       where: {
-        [require('sequelize').Op.or]: [
+        [Op.or]: [
           { username: username },
           { email: username }
         ]

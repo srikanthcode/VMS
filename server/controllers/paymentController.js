@@ -1,4 +1,5 @@
 const { Payment, Bill, Booking, User, Vehicle } = require('../models');
+const { Op } = require('sequelize');
 const { generateTransactionId } = require('../utils/helpers');
 
 const getPayments = async (req, res) => {
@@ -12,11 +13,11 @@ const getPayments = async (req, res) => {
       });
       const bookingIds = bookings.map(b => b.id);
       const bills = await Bill.findAll({
-        where: { bookingId: { [require('sequelize').Op.in]: bookingIds } },
+        where: { bookingId: { [Op.in]: bookingIds } },
         attributes: ['id']
       });
       const billIds = bills.map(b => b.id);
-      where.billId = { [require('sequelize').Op.in]: billIds };
+      where.billId = { [Op.in]: billIds };
     }
 
     const payments = await Payment.findAll({

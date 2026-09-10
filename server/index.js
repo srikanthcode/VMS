@@ -154,7 +154,8 @@ const startServer = async () => {
   try {
     await sequelize.authenticate();
     console.log('Database connected.');
-    await sequelize.sync({ alter: true });
+    const syncOptions = process.env.DATABASE_URL ? { alter: true } : {};
+    await sequelize.sync(syncOptions);
     console.log('Database synced.');
     await autoSeed();
     app.listen(PORT, () => {

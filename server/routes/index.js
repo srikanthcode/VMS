@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
-const { handleValidation } = require('../middleware/validation');
 const { Op } = require('sequelize');
 
 const authController = require('../controllers/authController');
@@ -25,7 +24,8 @@ const {
   billValidation,
   reviewValidation,
   serviceValidation,
-  mechanicValidation
+  mechanicValidation,
+  handleValidation
 } = require('../middleware/validation');
 
 // Auth routes

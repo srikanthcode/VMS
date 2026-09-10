@@ -1,4 +1,5 @@
 const { PickupRequest, Booking, User, Vehicle, ServiceType } = require('../models');
+const { Op } = require('sequelize');
 
 const createPickupRequest = async (req, res) => {
   try {
