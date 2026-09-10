@@ -2294,9 +2294,15 @@ body {
   font-size: 0.82rem;
 }
 
-.service-showcase-details .text-accent,
 .service-showcase-details .btn-accent {
-  color: var(--accent) !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.service-showcase-details .btn-accent:hover {
+  background: var(--accent-hover);
+  color: #ffffff !important;
 }
 
 [data-theme="light"] .service-showcase-card {
