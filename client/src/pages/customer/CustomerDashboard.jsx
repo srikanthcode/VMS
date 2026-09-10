@@ -51,7 +51,7 @@ const CustomerDashboard = () => {
   useEffect(() => {
     timerRef.current = setInterval(() => {
       setActiveService(prev => (prev + 1) % services.length)
-    }, 3000)
+    }, 4000)
     return () => clearInterval(timerRef.current)
   }, [])
 
@@ -64,7 +64,7 @@ const CustomerDashboard = () => {
     setShowModal(null)
     timerRef.current = setInterval(() => {
       setActiveService(prev => (prev + 1) % services.length)
-    }, 3000)
+    }, 4000)
   }
 
   const fetchDashboardData = async () => {
