@@ -264,16 +264,16 @@ const CustomerDashboard = () => {
             </div>
             <div className="svc-modal-content">
               <h4 className="fw-bold">{showModal.title}</h4>
-              <p className="mb-3">{showModal.description}</p>
+              <p className="mb-2">{showModal.description?.substring(0, 100)}...</p>
               <div className="svc-modal-features">
                 {showModal.features.map((f, i) => (
-                  <div key={i} className="svc-modal-feature" style={{ animationDelay: `${0.2 + i * 0.1}s` }}>
+                  <div key={i} className="svc-modal-feature" style={{ animationDelay: `${0.15 + i * 0.08}s` }}>
                     <i className="bi bi-check-circle-fill"></i>
                     <span>{f}</span>
                   </div>
                 ))}
               </div>
-              <Link to="/dashboard/book-service" className="btn btn-accent w-100 mt-3" onClick={closeServiceModal}>
+              <Link to="/dashboard/book-service" className="btn btn-accent w-100 mt-2" onClick={closeServiceModal}>
                 <i className="bi bi-calendar-plus me-2"></i>Book Now
               </Link>
             </div>
