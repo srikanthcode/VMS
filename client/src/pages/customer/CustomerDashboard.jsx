@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import DashboardLayout from '../../components/DashboardLayout'
 import StatsCard from '../../components/StatsCard'
@@ -40,11 +40,32 @@ const CustomerDashboard = () => {
   const [recentBookings, setRecentBookings] = useState([])
   const [recentNotifications, setRecentNotifications] = useState([])
   const [loading, setLoading] = useState(true)
-  const [selectedService, setSelectedService] = useState(null)
+  const [activeService, setActiveService] = useState(0)
+  const [showModal, setShowModal] = useState(false)
+  const timerRef = useRef(null)
 
   useEffect(() => {
     fetchDashboardData()
   }, [])
+
+  useEffect(() => {
+    timerRef.current = setInterval(() => {
+      setActiveService(prev => (prev + 1) % services.length)
+    }, 3000)
+    return () => clearInterval(timerRef.current)
+  }, [])
+
+  const openServiceModal = (service) => {
+    setShowModal(service)
+    clearInterval(timerRef.current)
+  }
+
+  const closeServiceModal = () => {
+    setShowModal(null)
+    timerRef.current = setInterval(() => {
+      setActiveService(prev => (prev + 1) % services.length)
+    }, 3000)
+  }
 
   const fetchDashboardData = async () => {
     try {
@@ -94,7 +115,35 @@ const CustomerDashboard = () => {
             <p className="text-muted mb-0">Here's what's happening with your vehicles</p>
           </div>
 
-          {/* Stats */}
+          {/* Our Services - Big Cards with Auto Highlight */}
+          <div className="mb-4">
+            <h5 className="fw-bold mb-3">Our Services</h5>
+            <div className="row g-4">
+              {services.map((service, index) => (
+                <div className="col-lg-4 col-md-6" key={service.id}>
+                  <div
+                    className={`dashboard-service-card ${activeService === index ? 'active-highlight' : ''}`}
+                    onClick={() => openServiceModal(service)}
+                  >
+                    <div className="dashboard-service-img">
+                      <img src={service.image} alt={service.title} />
+                      <div className="dashboard-service-price">{service.price}</div>
+                      {activeService === index && <div className="dashboard-service-pulse"></div>}
+                    </div>
+                    <div className="dashboard-service-body">
+                      <h5 className="fw-bold mb-1">{service.title}</h5>
+                      <p className="mb-2">{service.description?.substring(0, 90)}...</p>
+                      <small className="tap-details">
+                        <i className="bi bi-info-circle me-1"></i>Tap for details
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Stats - Below Services */}
           <div className="row g-4 mb-4">
             <div className="col-lg-3 col-md-6">
               <StatsCard
@@ -111,58 +160,6 @@ const CustomerDashboard = () => {
                 value={stats.activeBookings}
                 color="info"
               />
-            </div>
-          </div>
-
-          {/* Our Services - Professional Display */}
-          <div className="mb-4">
-            <h5 className="fw-bold mb-3">Our Services</h5>
-            <div className="row g-4">
-              {services.map((service) => (
-                <div className="col-lg-4 col-md-6" key={service.id}>
-                  <div
-                    className="service-showcase-card"
-                    onClick={() => setSelectedService(selectedService?.id === service.id ? null : service)}
-                  >
-                    <div className="service-showcase-img">
-                      <img src={service.image} alt={service.title} />
-                      <div className="service-showcase-overlay">
-                        <span className="service-showcase-price">{service.price}</span>
-                      </div>
-                    </div>
-                    <div className="service-showcase-body">
-                      <h6 className="fw-bold">{service.title}</h6>
-                      <p className="text-muted small mb-2">{service.description}</p>
-                      {selectedService?.id === service.id && (
-                        <div className="service-showcase-details animate-slideUp">
-                          <ul className="list-unstyled mb-2">
-                            {service.features.map((feature, i) => (
-                              <li key={i} className="small mb-1">
-                                <i className="bi bi-check-circle-fill text-success me-2"></i>
-                                {feature}
-                              </li>
-                            ))}
-                          </ul>
-                          <Link to="/dashboard/book-service" className="btn btn-accent btn-sm w-100">
-                            <i className="bi bi-calendar-plus me-1"></i>
-                            Book Now
-                          </Link>
-                        </div>
-                      )}
-                      {!selectedService?.id === service.id && (
-                        <small className="text-accent fw-500">
-                          <i className="bi bi-info-circle me-1"></i>Tap for details
-                        </small>
-                      )}
-                      {selectedService?.id !== service.id && (
-                        <small className="text-accent fw-500 d-block mt-1">
-                          <i className="bi bi-info-circle me-1"></i>Tap for details
-                        </small>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
 
@@ -252,6 +249,36 @@ const CustomerDashboard = () => {
             </div>
           </div>
         </>
+      )}
+
+      {/* Auto Service Modal */}
+      {showModal && (
+        <div className="svc-modal-overlay" onClick={closeServiceModal}>
+          <div className="svc-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="svc-modal-close" onClick={closeServiceModal}>
+              <i className="bi bi-x-lg"></i>
+            </button>
+            <div className="svc-modal-img">
+              <img src={showModal.image} alt={showModal.title} />
+              <div className="svc-modal-badge">{showModal.price}</div>
+            </div>
+            <div className="svc-modal-content">
+              <h4 className="fw-bold">{showModal.title}</h4>
+              <p className="mb-3">{showModal.description}</p>
+              <div className="svc-modal-features">
+                {showModal.features.map((f, i) => (
+                  <div key={i} className="svc-modal-feature" style={{ animationDelay: `${0.2 + i * 0.1}s` }}>
+                    <i className="bi bi-check-circle-fill"></i>
+                    <span>{f}</span>
+                  </div>
+                ))}
+              </div>
+              <Link to="/dashboard/book-service" className="btn btn-accent w-100 mt-3" onClick={closeServiceModal}>
+                <i className="bi bi-calendar-plus me-2"></i>Book Now
+              </Link>
+            </div>
+          </div>
+        </div>
       )}
     </DashboardLayout>
   )
