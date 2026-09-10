@@ -37,45 +37,6 @@ const HomePage = () => {
     { icon: 'bi-cash-stack', title: 'Affordable Pricing', description: 'Best prices with no hidden charges' }
   ]
 
-  const serviceShowcase = [
-    {
-      icon: 'bi-person-gear',
-      title: 'Expert Mechanics',
-      price: '499',
-      pricePrefix: 'Starting',
-      description: 'Our certified mechanics bring years of experience in servicing all types of vehicles. From routine maintenance to complex repairs, your vehicle is in safe hands.',
-      image: '/images/expert-mechanics.jpg',
-      gradient: 'linear-gradient(135deg, #e94560 0%, #0f3460 100%)'
-    },
-    {
-      icon: 'bi-tools',
-      title: 'Professional Bike Service',
-      price: '399',
-      pricePrefix: 'Starting',
-      description: 'Complete bike servicing with oil change, brake adjustment, chain lubrication, engine tuning and thorough safety inspection - all at your doorstep.',
-      image: '/images/professional-bike-service.jpg',
-      gradient: 'linear-gradient(135deg, #0f3460 0%, #28a745 100%)'
-    },
-    {
-      icon: 'bi-truck',
-      title: 'Pickup & Drop Available',
-      price: 'FREE',
-      pricePrefix: '',
-      description: 'No time to visit us? We pick up your vehicle from your location and deliver it back after service. Free pickup & drop within 10 km radius.',
-      image: '/images/pickup-drop.webp',
-      gradient: 'linear-gradient(135deg, #17a2b8 0%, #e94560 100%)'
-    },
-    {
-      icon: 'bi-shield-check',
-      title: 'Genuine Parts Guarantee',
-      price: '',
-      pricePrefix: '',
-      description: 'We use only 100% genuine OEM parts with manufacturer warranty. No fake or duplicate parts - guaranteed quality for your vehicle.',
-      image: '/images/basic-service.jpg',
-      gradient: 'linear-gradient(135deg, #28a745 0%, #0f3460 100%)'
-    }
-  ]
-
   const whyChooseUs = [
     { icon: 'bi-lightning-charge', title: 'Fast & Reliable Service', description: 'Quick and dependable vehicle servicing with guaranteed quality results', gradient: 'linear-gradient(135deg, #e94560 0%, #0f3460 100%)' },
     { icon: 'bi-person-gear', title: 'Expert Mechanics', description: 'Certified professionals delivering complete vehicle care with precision', gradient: 'linear-gradient(135deg, #0f3460 0%, #28a745 100%)' },
@@ -96,10 +57,10 @@ const HomePage = () => {
       <HeroCarousel />
 
       {/* Quick Features - Auto Scroll */}
-      <div className="quick-features overflow-hidden py-3">
+      <div className="quick-features overflow-hidden py-4">
         <div className="features-scroll-wrapper">
           <div className="features-scroll-track">
-            {[...features, ...features, ...features, ...features].map((feature, index) => (
+            {[...features, ...features, ...features].map((feature, index) => (
               <div key={index} className="features-scroll-item">
                 <div className="quick-feature-item">
                   <i className={`bi ${feature.icon}`}></i>
@@ -114,46 +75,8 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Service Showcase Cards - Auto Scroll */}
-      <section className="section service-showcase-section overflow-hidden">
-        <div className="container">
-          <div className="text-center mb-5">
-            <h2 className="section-title">Why Choose Our Service</h2>
-            <p className="section-subtitle">
-              Premium vehicle care with transparent pricing and expert professionals
-            </p>
-          </div>
-        </div>
-        <div className="showcase-scroll-wrapper">
-          <div className="showcase-scroll-track">
-            {[...serviceShowcase, ...serviceShowcase, ...serviceShowcase].map((service, index) => (
-              <div key={index} className="showcase-scroll-item">
-                <div className="service-showcase-card">
-                  <div className="service-showcase-img">
-                    <img src={service.image} alt={service.title} />
-                    <div className="service-showcase-overlay" style={{ background: service.gradient }}>
-                      {service.pricePrefix && <small className="d-block">{service.pricePrefix}</small>}
-                      <strong>{service.price ? `₹${service.price}` : service.price}</strong>
-                    </div>
-                  </div>
-                  <div className="service-showcase-body">
-                    <h6>{service.title}</h6>
-                    <p>{service.description}</p>
-                    <div className="service-showcase-details">
-                      <Link to="/services" className="btn btn-accent btn-sm w-100">
-                        Tap for details <i className="bi bi-arrow-right ms-1"></i>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Services Auto-Scroll Section */}
-      <section className="section bg-white overflow-hidden">
+      {/* Services Section */}
+      <section className="section bg-white">
         <div className="container">
           <div className="text-center mb-5">
             <h2 className="section-title">Our Services</h2>
@@ -161,39 +84,38 @@ const HomePage = () => {
               We offer comprehensive vehicle maintenance and repair services
             </p>
           </div>
-        </div>
 
-        {loading ? (
-          <div className="text-center p-5">
-            <div className="spinner-border"></div>
-          </div>
-        ) : (
-          <div className="services-scroll-wrapper">
-            <div className="services-scroll-track">
-              {(services.length > 0 ? services : [
-                { id: 1, name: 'Basic Service', price: 599, description: 'Essential maintenance for your vehicle including oil change and filter replacement' },
-                { id: 2, name: 'Premium Service', price: 1299, description: 'Comprehensive service with engine tune-up and complete fluid check' },
-                { id: 3, name: 'Major Service', price: 2499, description: 'Complete overhaul with major repairs and part replacements' },
-                { id: 4, name: 'Oil Change', price: 299, description: 'Quick engine oil change with premium quality oil' },
-                { id: 5, name: 'Brake Service', price: 499, description: 'Brake pad replacement and brake system inspection' },
-                { id: 6, name: 'Wheel Alignment', price: 399, description: 'Precision wheel alignment for smooth driving' }
-              ]).concat(services.length > 0 ? services : [
-                { id: 7, name: 'Basic Service', price: 599, description: 'Essential maintenance for your vehicle including oil change and filter replacement' },
-                { id: 8, name: 'Premium Service', price: 1299, description: 'Comprehensive service with engine tune-up and complete fluid check' },
-                { id: 9, name: 'Major Service', price: 2499, description: 'Complete overhaul with major repairs and part replacements' },
-                { id: 10, name: 'Oil Change', price: 299, description: 'Quick engine oil change with premium quality oil' },
-                { id: 11, name: 'Brake Service', price: 499, description: 'Brake pad replacement and brake system inspection' },
-                { id: 12, name: 'Wheel Alignment', price: 399, description: 'Precision wheel alignment for smooth driving' }
-              ]).map((service, index) => (
-                <div key={index} className="services-scroll-item">
-                  <ServiceCard service={service} />
-                </div>
-              ))}
+          {loading ? (
+            <div className="text-center p-5">
+              <div className="spinner-border"></div>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="row g-4">
+              {services.length > 0 ? (
+                services.map((service) => (
+                  <div key={service.id} className="col-lg-4 col-md-6">
+                    <ServiceCard service={service} />
+                  </div>
+                ))
+              ) : (
+                <>
+                  {[
+                    { name: 'Basic Service', price: 599, description: 'Essential maintenance for your vehicle including oil change and filter replacement' },
+                    { name: 'Premium Service', price: 1299, description: 'Comprehensive service with engine tune-up and complete fluid check' },
+                    { name: 'Major Service', price: 2499, description: 'Complete overhaul with major repairs and part replacements' },
+                    { name: 'Oil Change', price: 299, description: 'Quick engine oil change with premium quality oil' },
+                    { name: 'Brake Service', price: 499, description: 'Brake pad replacement and brake system inspection' },
+                    { name: 'Wheel Alignment', price: 399, description: 'Precision wheel alignment for smooth driving' }
+                  ].map((service, index) => (
+                    <div key={index} className="col-lg-4 col-md-6">
+                      <ServiceCard service={{ ...service, _id: index }} />
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
 
-        <div className="container">
           <div className="text-center mt-4">
             <Link to="/services" className="btn btn-accent">
               View All Services <i className="bi bi-arrow-right ms-2"></i>
