@@ -5,16 +5,42 @@ import StatsCard from '../../components/StatsCard'
 import StatusBadge from '../../components/StatusBadge'
 import api from '../../services/api'
 
+const services = [
+  {
+    id: 1,
+    title: 'Expert Mechanics',
+    description: 'Our certified mechanics bring years of experience in servicing all types of vehicles. From routine maintenance to complex repairs, your vehicle is in safe hands.',
+    image: '/images/expert-mechanics.jpg',
+    features: ['Certified & Trained Staff', 'All Vehicle Brands', 'Genuine Spare Parts', 'Warranty on Services'],
+    price: 'Starting ₹499'
+  },
+  {
+    id: 2,
+    title: 'Professional Bike Service',
+    description: 'Complete bike servicing with oil change, brake adjustment, chain lubrication, engine tuning and thorough safety inspection — all at your doorstep.',
+    image: '/images/professional-bike-service.jpg',
+    features: ['Full Engine Service', 'Oil & Filter Change', 'Brake & Chain Care', 'Performance Check'],
+    price: 'Starting ₹399'
+  },
+  {
+    id: 3,
+    title: 'Pickup & Drop Available',
+    description: 'No time to visit us? We pick up your vehicle from your location and deliver it back after service. Free pickup & drop within 10 km radius.',
+    image: '/images/pickup-drop.webp',
+    features: ['Free Within 10 km', 'Real-time Tracking', 'Same Day Return', 'Insured Transport'],
+    price: 'FREE'
+  }
+]
+
 const CustomerDashboard = () => {
   const [stats, setStats] = useState({
     totalVehicles: 0,
-    activeBookings: 0,
-    completedServices: 0,
-    pendingPayments: 0
+    activeBookings: 0
   })
   const [recentBookings, setRecentBookings] = useState([])
   const [recentNotifications, setRecentNotifications] = useState([])
   const [loading, setLoading] = useState(true)
+  const [selectedService, setSelectedService] = useState(null)
 
   useEffect(() => {
     fetchDashboardData()
@@ -34,9 +60,7 @@ const CustomerDashboard = () => {
 
       setStats({
         totalVehicles: Array.isArray(vehicles) ? vehicles.length : 0,
-        activeBookings: Array.isArray(bookings) ? bookings.filter(b => ['PENDING', 'CONFIRMED', 'SERVICE_IN_PROGRESS'].includes(b.status)).length : 0,
-        completedServices: Array.isArray(bookings) ? bookings.filter(b => b.status === 'COMPLETED').length : 0,
-        pendingPayments: Array.isArray(bookings) ? bookings.filter(b => b.paymentStatus !== 'PAID' && b.status === 'COMPLETED').length : 0
+        activeBookings: Array.isArray(bookings) ? bookings.filter(b => ['PENDING', 'CONFIRMED', 'SERVICE_IN_PROGRESS'].includes(b.status)).length : 0
       })
 
       setRecentBookings(Array.isArray(bookings) ? bookings.slice(0, 5) : [])
@@ -88,21 +112,57 @@ const CustomerDashboard = () => {
                 color="info"
               />
             </div>
-            <div className="col-lg-3 col-md-6">
-              <StatsCard
-                icon="bi-check-circle"
-                title="Completed Services"
-                value={stats.completedServices}
-                color="success"
-              />
-            </div>
-            <div className="col-lg-3 col-md-6">
-              <StatsCard
-                icon="bi-credit-card"
-                title="Pending Payments"
-                value={stats.pendingPayments}
-                color="warning"
-              />
+          </div>
+
+          {/* Our Services - Professional Display */}
+          <div className="mb-4">
+            <h5 className="fw-bold mb-3">Our Services</h5>
+            <div className="row g-4">
+              {services.map((service) => (
+                <div className="col-lg-4 col-md-6" key={service.id}>
+                  <div
+                    className="service-showcase-card"
+                    onClick={() => setSelectedService(selectedService?.id === service.id ? null : service)}
+                  >
+                    <div className="service-showcase-img">
+                      <img src={service.image} alt={service.title} />
+                      <div className="service-showcase-overlay">
+                        <span className="service-showcase-price">{service.price}</span>
+                      </div>
+                    </div>
+                    <div className="service-showcase-body">
+                      <h6 className="fw-bold">{service.title}</h6>
+                      <p className="text-muted small mb-2">{service.description}</p>
+                      {selectedService?.id === service.id && (
+                        <div className="service-showcase-details animate-slideUp">
+                          <ul className="list-unstyled mb-2">
+                            {service.features.map((feature, i) => (
+                              <li key={i} className="small mb-1">
+                                <i className="bi bi-check-circle-fill text-success me-2"></i>
+                                {feature}
+                              </li>
+                            ))}
+                          </ul>
+                          <Link to="/dashboard/book-service" className="btn btn-accent btn-sm w-100">
+                            <i className="bi bi-calendar-plus me-1"></i>
+                            Book Now
+                          </Link>
+                        </div>
+                      )}
+                      {!selectedService?.id === service.id && (
+                        <small className="text-accent fw-500">
+                          <i className="bi bi-info-circle me-1"></i>Tap for details
+                        </small>
+                      )}
+                      {selectedService?.id !== service.id && (
+                        <small className="text-accent fw-500 d-block mt-1">
+                          <i className="bi bi-info-circle me-1"></i>Tap for details
+                        </small>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -189,42 +249,6 @@ const CustomerDashboard = () => {
                   </div>
                 )}
               </div>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="row g-4 mt-2">
-            <div className="col-lg-3 col-md-6">
-              <Link to="/dashboard/vehicles/add" className="text-decoration-none">
-                <div className="card-custom p-4 text-center">
-                  <i className="bi bi-plus-circle display-4 text-primary"></i>
-                  <h6 className="mt-2 mb-0">Add Vehicle</h6>
-                </div>
-              </Link>
-            </div>
-            <div className="col-lg-3 col-md-6">
-              <Link to="/dashboard/book-service" className="text-decoration-none">
-                <div className="card-custom p-4 text-center">
-                  <i className="bi bi-calendar-plus display-4 text-success"></i>
-                  <h6 className="mt-2 mb-0">Book Service</h6>
-                </div>
-              </Link>
-            </div>
-            <div className="col-lg-3 col-md-6">
-              <Link to="/dashboard/bills" className="text-decoration-none">
-                <div className="card-custom p-4 text-center">
-                  <i className="bi bi-receipt display-4 text-warning"></i>
-                  <h6 className="mt-2 mb-0">View Bills</h6>
-                </div>
-              </Link>
-            </div>
-            <div className="col-lg-3 col-md-6">
-              <Link to="/dashboard/service-history" className="text-decoration-none">
-                <div className="card-custom p-4 text-center">
-                  <i className="bi bi-clock-history display-4 text-info"></i>
-                  <h6 className="mt-2 mb-0">Service History</h6>
-                </div>
-              </Link>
             </div>
           </div>
         </>

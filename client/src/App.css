@@ -2220,3 +2220,140 @@ body {
   transform: rotate(-15deg);
   pointer-events: none;
 }
+
+/* Service Showcase Cards */
+.service-showcase-card {
+  background: var(--bg-white);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid var(--border);
+}
+
+.service-showcase-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--accent);
+}
+
+.service-showcase-img {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.service-showcase-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.service-showcase-card:hover .service-showcase-img img {
+  transform: scale(1.08);
+}
+
+.service-showcase-overlay {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--accent);
+  color: white;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.service-showcase-body {
+  padding: 1.25rem;
+}
+
+.service-showcase-body h6 {
+  color: var(--text-primary);
+  font-size: 1.05rem;
+  margin-bottom: 0.4rem;
+}
+
+.service-showcase-body p {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.service-showcase-details {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.service-showcase-details li {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.service-showcase-details .text-accent,
+.service-showcase-details .btn-accent {
+  color: var(--accent) !important;
+}
+
+[data-theme="light"] .service-showcase-card {
+  background: #ffffff;
+  border-color: #e9ecef;
+}
+
+[data-theme="light"] .service-showcase-body h6 {
+  color: #1a1a2e;
+}
+
+[data-theme="light"] .service-showcase-body p {
+  color: #6c757d;
+}
+
+[data-theme="light"] .service-showcase-details li {
+  color: #495057;
+}
+
+[data-theme="light"] .service-showcase-overlay {
+  background: #e94560;
+}
+
+/* Quick Actions */
+.quick-action-card {
+  background: var(--bg-white);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+  border: 1px solid var(--border);
+  text-decoration: none;
+}
+
+.quick-action-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--accent);
+}
+
+.quick-action-card i {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.quick-action-card h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin: 0;
+}
+
+[data-theme="light"] .quick-action-card {
+  background: #ffffff;
+  border-color: #e9ecef;
+}
+
+[data-theme="light"] .quick-action-card h6 {
+  color: #1a1a2e;
+}
