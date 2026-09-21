@@ -21,14 +21,15 @@ const MechanicDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await api.bookings.getAll({ status: 'SERVICE_IN_PROGRESS' })
+      const response = await api.mechanics.getMyBookings()
       const bookings = response.data.bookings || response.data || []
       
+      const today = new Date().toISOString().split('T')[0]
       setStats({
-        assignedToday: bookings.filter(b => b.status === 'CONFIRMED').length,
+        assignedToday: bookings.filter(b => b.preferredDate === today && b.status === 'CONFIRMED').length,
         inProgress: bookings.filter(b => b.status === 'SERVICE_IN_PROGRESS').length,
-        completedToday: bookings.filter(b => b.status === 'COMPLETED').length,
-        pending: bookings.filter(b => b.status === 'PENDING').length
+        completedToday: bookings.filter(b => b.preferredDate === today && b.status === 'COMPLETED').length,
+        pending: bookings.filter(b => b.status === 'CONFIRMED').length
       })
 
       setAssignments(bookings.slice(0, 10))

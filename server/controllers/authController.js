@@ -219,9 +219,13 @@ const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+
     const user = await User.findOne({ where: { email } });
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(400).json({ success: false, message: 'No account found with this email address' });
     }
 
     const otp = generateOTP();

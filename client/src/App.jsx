@@ -165,6 +165,7 @@ function App() {
 
         {/* Mechanic Routes */}
         <Route path="/mechanic/dashboard" element={<MechanicRoute><MechanicDashboard /></MechanicRoute>} />
+        <Route path="/mechanic/bookings" element={<MechanicRoute><MechanicDashboard /></MechanicRoute>} />
 
         {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />

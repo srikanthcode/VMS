@@ -78,6 +78,7 @@ const mechanics = {
   update: (id, data) => apiClient.put(`/mechanics/${id}`, data),
   toggleStatus: (id) => apiClient.put(`/mechanics/${id}/toggle-status`),
   getBookings: (id, params) => apiClient.get(`/mechanics/${id}/bookings`, { params }),
+  getMyBookings: (params) => apiClient.get('/mechanics/bookings', { params }),
   updateProgress: (id, data) => apiClient.put(`/mechanics/bookings/${id}/progress`, data)
 }
 

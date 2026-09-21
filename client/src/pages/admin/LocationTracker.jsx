@@ -158,7 +158,7 @@ const LocationTracker = () => {
               center={center}
               zoom={13}
               className="leaflet-map"
-              whenCreated={() => setMapReady(true)}
+              ref={(map) => { if (map) setMapReady(true) }}
             >
               <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

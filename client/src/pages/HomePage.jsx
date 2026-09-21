@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import HeroCarousel from '../components/HeroCarousel'
 import ServiceCard from '../components/ServiceCard'
@@ -15,7 +15,7 @@ const HomePage = () => {
     fetchData()
   }, [])
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [servicesRes, reviewsRes] = await Promise.all([
         api.services.getAll({ limit: 6 }),
@@ -28,7 +28,7 @@ const HomePage = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   const features = [
     { icon: 'bi-person-gear', title: 'Expert Mechanics', description: 'Certified professionals with years of experience' },

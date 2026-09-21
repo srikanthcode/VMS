@@ -185,6 +185,7 @@ router.get('/mechanics/:id', authenticate, mechanicController.getMechanic);
 router.post('/mechanics', authenticate, authorize('ADMIN'), mechanicValidation, handleValidation, mechanicController.createMechanic);
 router.put('/mechanics/:id', authenticate, authorize('ADMIN'), mechanicController.updateMechanic);
 router.put('/mechanics/:id/toggle-status', authenticate, authorize('ADMIN'), mechanicController.toggleMechanicStatus);
+router.get('/mechanics/bookings', authenticate, authorize('MECHANIC'), mechanicController.getMechanicBookings);
 router.get('/mechanics/:id/bookings', authenticate, mechanicController.getMechanicBookings);
 router.put('/mechanics/bookings/:id/progress', authenticate, authorize('MECHANIC'), mechanicController.updateServiceProgress);
 
@@ -230,6 +231,19 @@ router.get('/reports/bookings', authenticate, authorize('ADMIN'), reportControll
 router.get('/reports/customers', authenticate, authorize('ADMIN'), reportController.getCustomerReport);
 router.get('/reports/mechanics', authenticate, authorize('ADMIN'), reportController.getMechanicReport);
 router.get('/reports/dashboard', authenticate, authorize('ADMIN'), reportController.getDashboardStats);
+
+// Contact route
+router.post('/contact', async (req, res) => {
+  try {
+    const { name, email, subject, message } = req.body;
+    if (!name || !email || !subject || !message) {
+      return res.status(400).json({ success: false, message: 'All fields are required' });
+    }
+    res.json({ success: true, message: 'Message received. We will get back to you soon.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});
 
 // Location routes
 router.put('/location/update', authenticate, async (req, res) => {

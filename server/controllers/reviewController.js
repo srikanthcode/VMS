@@ -50,9 +50,10 @@ const getMyReviews = async (req, res) => {
 const createReview = async (req, res) => {
   try {
     const { bookingId, rating, comment } = req.body;
+    const bookingIdInt = parseInt(bookingId);
 
     const booking = await Booking.findOne({
-      where: { id: bookingId, userId: req.user.id }
+      where: { id: bookingIdInt, userId: req.user.id }
     });
 
     if (!booking) {
@@ -63,14 +64,14 @@ const createReview = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Can only review completed bookings' });
     }
 
-    const existingReview = await Review.findOne({ where: { bookingId } });
+    const existingReview = await Review.findOne({ where: { bookingId: bookingIdInt } });
     if (existingReview) {
       return res.status(400).json({ success: false, message: 'Review already exists for this booking' });
     }
 
     const review = await Review.create({
       userId: req.user.id,
-      bookingId,
+      bookingId: bookingIdInt,
       rating,
       comment
     });
