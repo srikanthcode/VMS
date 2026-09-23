@@ -46,7 +46,7 @@ const Footer = () => {
             <ul className="list-unstyled">
               <li className="mb-2">
                 <i className="bi bi-geo-alt me-2"></i>
-                123 Service Street, Auto Nagar
+                Village Road, Pallikaranai, Chennai - 600100
               </li>
               <li className="mb-2">
                 <i className="bi bi-telephone me-2"></i>

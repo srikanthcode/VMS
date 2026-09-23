@@ -3,8 +3,10 @@ import Footer from '../components/Footer'
 import api from '../services/api'
 import toast from 'react-hot-toast'
 
-const OFFICE_LAT = 17.4435
-const OFFICE_LNG = 78.4763
+const OFFICE_ADDRESS = 'Village Road, Pallikaranai, Chennai, Tamil Nadu 600100'
+const OFFICE_LAT = 12.9684
+const OFFICE_LNG = 80.2440
+const MAP_QUERY = encodeURIComponent(`${OFFICE_ADDRESS} (${OFFICE_LAT},${OFFICE_LNG})`)
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
@@ -56,7 +58,7 @@ const ContactPage = () => {
   }
 
   const contactInfo = [
-    { icon: 'bi-geo-alt', title: 'Address', value: '123 Service Street, Auto Nagar, City - 500001' },
+    { icon: 'bi-geo-alt', title: 'Address', value: OFFICE_ADDRESS },
     { icon: 'bi-telephone', title: 'Phone', value: '+91 98765 43210' },
     { icon: 'bi-envelope', title: 'Email', value: 'info@vms.com' },
     { icon: 'bi-clock', title: 'Working Hours', value: 'Mon - Sat: 8:00 AM - 8:00 PM' }
@@ -201,7 +203,7 @@ const ContactPage = () => {
                   <div className="rounded overflow-hidden" style={{ height: '260px', position: 'relative', background: '#e9ecef' }}>
                     <iframe
                       title="VMS Location - Google Maps"
-                      src={`https://www.google.com/maps?q=${OFFICE_LAT},${OFFICE_LNG}&z=15&output=embed`}
+                      src={`https://www.google.com/maps?q=${MAP_QUERY}&z=15&output=embed`}
                       width="100%"
                       height="100%"
                       style={{ border: 0, display: 'block' }}
@@ -213,7 +215,7 @@ const ContactPage = () => {
                   <div className="d-flex justify-content-between align-items-center mt-2">
                     <small className="text-muted">Live Google Map</small>
                     <a
-                      href={`https://www.google.com/maps?q=${OFFICE_LAT},${OFFICE_LNG}`}
+                      href={`https://www.google.com/maps?q=${MAP_QUERY}`}
                       target="_blank"
                       rel="noreferrer"
                       className="small text-decoration-none"
