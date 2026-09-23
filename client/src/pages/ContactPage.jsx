@@ -1,19 +1,10 @@
 import { useState } from 'react'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
 import Footer from '../components/Footer'
 import api from '../services/api'
 import toast from 'react-hot-toast'
 
-delete L.Icon.Default.prototype._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png'
-})
-
-const OFFICE_POSITION = [17.4435, 78.4763]
+const OFFICE_LAT = 17.4435
+const OFFICE_LNG = 78.4763
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
@@ -201,42 +192,35 @@ const ContactPage = () => {
                   </div>
                 </div>
 
-                {/* Real Map */}
+                {/* Google Map */}
                 <div className="card-custom p-4 mt-4">
                   <h5 className="fw-bold mb-3">
                     <i className="bi bi-geo-alt me-2"></i>
                     Our Location
                   </h5>
-                  <div className="rounded overflow-hidden" style={{ height: '220px', zIndex: 1 }}>
-                    <MapContainer
-                      center={OFFICE_POSITION}
-                      zoom={14}
-                      style={{ height: '100%', width: '100%' }}
-                      scrollWheelZoom={false}
-                    >
-                      <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      />
-                      <Marker position={OFFICE_POSITION}>
-                        <Popup>
-                          <strong>VMS Service Center</strong>
-                          <br />
-                          123 Service Street, Auto Nagar
-                          <br />
-                          Mon - Sat: 8:00 AM - 8:00 PM
-                        </Popup>
-                      </Marker>
-                    </MapContainer>
+                  <div className="rounded overflow-hidden" style={{ height: '260px', position: 'relative', background: '#e9ecef' }}>
+                    <iframe
+                      title="VMS Location - Google Maps"
+                      src={`https://www.google.com/maps?q=${OFFICE_LAT},${OFFICE_LNG}&z=15&output=embed`}
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0, display: 'block' }}
+                      allowFullScreen=""
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                    ></iframe>
                   </div>
-                  <a
-                    href={`https://www.openstreetmap.org/?mlat=${OFFICE_POSITION[0]}&mlon=${OFFICE_POSITION[1]}#map=15/${OFFICE_POSITION[0]}/${OFFICE_POSITION[1]}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="d-inline-block mt-2 small text-decoration-none"
-                  >
-                    Open in OpenStreetMap <i className="bi bi-box-arrow-up-right ms-1"></i>
-                  </a>
+                  <div className="d-flex justify-content-between align-items-center mt-2">
+                    <small className="text-muted">Live Google Map</small>
+                    <a
+                      href={`https://www.google.com/maps?q=${OFFICE_LAT},${OFFICE_LNG}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="small text-decoration-none"
+                    >
+                      Open in Google Maps <i className="bi bi-box-arrow-up-right ms-1"></i>
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
