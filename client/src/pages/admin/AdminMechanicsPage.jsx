@@ -4,6 +4,7 @@ import DataTable from '../../components/DataTable'
 import Modal from '../../components/Modal'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
+import { getPhoneError, normalizePhone } from '../../utils/phoneValidator'
 
 const AdminMechanicsPage = () => {
   const [mechanics, setMechanics] = useState([])
@@ -76,6 +77,8 @@ const AdminMechanicsPage = () => {
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid'
     }
+    const phoneError = getPhoneError(formData.phone)
+    if (phoneError) newErrors.phone = phoneError
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -86,11 +89,12 @@ const AdminMechanicsPage = () => {
 
     setFormLoading(true)
     try {
+      const payload = { ...formData, phone: normalizePhone(formData.phone) }
       if (selectedMechanic) {
-        await api.mechanics.update(selectedMechanic.id, formData)
+        await api.mechanics.update(selectedMechanic.id, payload)
         toast.success('Mechanic updated successfully')
       } else {
-        await api.mechanics.create(formData)
+        await api.mechanics.create(payload)
         toast.success('Mechanic created successfully')
       }
       setShowModal(false)
@@ -189,13 +193,16 @@ const AdminMechanicsPage = () => {
               {errors.email && <div className="invalid-feedback">{errors.email}</div>}
             </div>
             <div className="col-md-6">
-              <label className="form-label">Phone</label>
+              <label className="form-label">Phone *</label>
               <input
                 type="tel"
-                className="form-control"
+                className={`form-control ${errors.phone ? 'is-invalid' : ''}`}
                 value={formData.phone}
-                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value.replace(/\D/g, '').slice(0, 15) }))}
+                placeholder="10-digit phone number"
               />
+              {errors.phone && <div className="invalid-feedback">{errors.phone}</div>}
+              <small className="text-muted">Must be exactly 10 digits</small>
             </div>
           </div>
         </form>

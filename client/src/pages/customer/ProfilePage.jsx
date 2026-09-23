@@ -3,6 +3,7 @@ import DashboardLayout from '../../components/DashboardLayout'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
+import { getPhoneError, normalizePhone } from '../../utils/phoneValidator'
 
 const ProfilePage = () => {
   const { user, updateUser } = useAuth()
@@ -34,11 +35,8 @@ const ProfilePage = () => {
   const validateForm = () => {
     const newErrors = {}
     if (!formData.name.trim()) newErrors.name = 'Name is required'
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone is required'
-    } else if (!/^[6-9]\d{9}$/.test(formData.phone)) {
-      newErrors.phone = 'Invalid phone number'
-    }
+    const phoneError = getPhoneError(formData.phone)
+    if (phoneError) newErrors.phone = phoneError
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -78,8 +76,9 @@ const ProfilePage = () => {
 
     setLoading(true)
     try {
-      const response = await api.auth.updateProfile(formData)
-      updateUser(response.data.user || { ...user, ...formData })
+      const payload = { ...formData, phone: normalizePhone(formData.phone) }
+      const response = await api.auth.updateProfile(payload)
+      updateUser(response.data.user || { ...user, ...payload })
       toast.success('Profile updated successfully!')
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update profile')

@@ -2,6 +2,13 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
+import {
+  COUNTRY_CODES,
+  getExpectedLength,
+  getPhoneError,
+  getPhoneStatus,
+  normalizePhone
+} from '../../utils/phoneValidator'
 
 const RegisterPage = () => {
   const navigate = useNavigate()
@@ -13,8 +20,18 @@ const RegisterPage = () => {
     password: '',
     confirmPassword: ''
   })
+  const [countryCode, setCountryCode] = useState('+91')
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
+  const [phoneTouched, setPhoneTouched] = useState(false)
+
+  const expectedLen = getExpectedLength(countryCode)
+  const phoneStatus = getPhoneStatus(formData.phone, countryCode)
+
+  // Real-time phone validation while typing
+  const livePhoneError = getPhoneError(formData.phone, countryCode, {
+    showRequired: phoneTouched
+  })
 
   const validateForm = () => {
     const newErrors = {}
@@ -31,10 +48,9 @@ const RegisterPage = () => {
       newErrors.email = 'Email is invalid'
     }
 
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required'
-    } else if (!/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) {
-      newErrors.phone = 'Enter a valid 10-digit phone number'
+    const phoneError = getPhoneError(formData.phone, countryCode, { showRequired: true })
+    if (phoneError) {
+      newErrors.phone = phoneError
     }
 
     if (!formData.password) {
@@ -61,8 +77,23 @@ const RegisterPage = () => {
     }
   }
 
+  const handlePhoneChange = (e) => {
+    const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, expectedLen + 2)
+    setFormData(prev => ({ ...prev, phone: digitsOnly }))
+    setPhoneTouched(true)
+    if (errors.phone) setErrors(prev => ({ ...prev, phone: '' }))
+  }
+
+  const handleCountryChange = (e) => {
+    const newCode = e.target.value
+    setCountryCode(newCode)
+    setPhoneTouched(true)
+    if (errors.phone) setErrors(prev => ({ ...prev, phone: '' }))
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setPhoneTouched(true)
     if (!validateForm()) return
 
     setLoading(true)
@@ -70,7 +101,8 @@ const RegisterPage = () => {
       await register({
         username: formData.username,
         email: formData.email,
-        phone: formData.phone,
+        phone: normalizePhone(formData.phone, countryCode),
+        countryCode,
         password: formData.password
       })
       toast.success('Account created! Please login.')
@@ -85,6 +117,9 @@ const RegisterPage = () => {
       setLoading(false)
     }
   }
+
+  const showPhoneError = errors.phone || (phoneTouched && livePhoneError)
+  const phoneIsComplete = phoneStatus.valid
 
   return (
     <div className="auth-page">
@@ -138,19 +173,65 @@ const RegisterPage = () => {
           <div className="mb-2">
             <label className="form-label">Phone Number</label>
             <div className="input-group input-group-sm">
-              <span className="input-group-text">
-                <i className="bi bi-phone"></i>
-              </span>
+              <select
+                className={`form-select ${showPhoneError ? 'is-invalid' : ''}`}
+                style={{ maxWidth: '120px', minWidth: '100px' }}
+                value={countryCode}
+                onChange={handleCountryChange}
+                aria-label="Country code"
+              >
+                {COUNTRY_CODES.map((c, i) => (
+                  <option key={`${c.code}-${c.country}-${i}`} value={c.code}>
+                    {c.code} {c.country}
+                  </option>
+                ))}
+              </select>
               <input
                 type="tel"
-                className={`form-control ${errors.phone ? 'is-invalid' : ''}`}
+                inputMode="numeric"
+                className={`form-control ${showPhoneError ? 'is-invalid' : phoneIsComplete ? 'is-valid' : ''}`}
                 name="phone"
                 value={formData.phone}
-                onChange={handleChange}
-                placeholder="Enter 10-digit phone number"
+                onChange={handlePhoneChange}
+                onFocus={() => setPhoneTouched(true)}
+                placeholder={`Enter ${expectedLen} digits`}
+                maxLength={expectedLen + 2}
+                aria-describedby="phoneHelp"
               />
-              {errors.phone && <div className="invalid-feedback">{errors.phone}</div>}
+              <span
+                className={`input-group-text ${
+                  phoneStatus.color === 'success'
+                    ? 'bg-success text-white'
+                    : phoneStatus.color === 'danger'
+                    ? 'bg-danger text-white'
+                    : phoneStatus.color === 'warning'
+                    ? 'bg-warning'
+                    : ''
+                }`}
+                style={{ minWidth: '58px', justifyContent: 'center', fontSize: '0.8rem' }}
+              >
+                {phoneStatus.current}/{expectedLen}
+              </span>
             </div>
+
+            {showPhoneError ? (
+              <div className="text-danger mt-1" style={{ fontSize: '0.78rem' }}>
+                <i className="bi bi-exclamation-circle me-1"></i>
+                {showPhoneError}
+              </div>
+            ) : phoneIsComplete ? (
+              <div className="text-success mt-1" style={{ fontSize: '0.78rem' }}>
+                <i className="bi bi-check-circle me-1"></i>
+                Valid phone number
+              </div>
+            ) : (
+              <div className="text-muted mt-1" id="phoneHelp" style={{ fontSize: '0.78rem' }}>
+                {countryCode} requires exactly {expectedLen} digits
+                {formData.phone.length > 0 && !phoneIsComplete
+                  ? ` — ${expectedLen - phoneStatus.current} more needed`
+                  : ''}
+              </div>
+            )}
           </div>
 
           <div className="mb-2">

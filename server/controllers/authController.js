@@ -4,6 +4,7 @@ const nodemailer = require('nodemailer');
 const { User } = require('../models');
 const { Op } = require('sequelize');
 const { JWT_SECRET } = require('../middleware/auth');
+const { isValidPhone, normalizePhone } = require('../utils/phoneValidator');
 
 const resetTokens = {};
 const otpStore = {};
@@ -56,6 +57,16 @@ const register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Username, email and password are required' });
     }
 
+    if (!phone) {
+      return res.status(400).json({ success: false, message: 'Phone number is required' });
+    }
+    const cc = req.body.countryCode || '';
+    if (!isValidPhone(phone, cc)) {
+      const expected = (cc && require('../utils/phoneValidator').COUNTRY_PHONE_LENGTHS[String(cc).replace(/\D/g, '')]) || 10;
+      return res.status(400).json({ success: false, message: `Phone number must be exactly ${expected} digits` });
+    }
+    const normalizedPhone = normalizePhone(phone, cc);
+
     const existingEmail = await User.findOne({ where: { email } });
     if (existingEmail) {
       return res.status(400).json({ success: false, message: 'Email already registered. Please login instead.' });
@@ -66,11 +77,9 @@ const register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Username already taken. Please choose another.' });
     }
 
-    if (phone) {
-      const existingPhone = await User.findOne({ where: { phone } });
-      if (existingPhone) {
-        return res.status(400).json({ success: false, message: 'Phone number already registered.' });
-      }
+    const existingPhone = await User.findOne({ where: { phone: normalizedPhone } });
+    if (existingPhone) {
+      return res.status(400).json({ success: false, message: 'Phone number already registered.' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -78,7 +87,7 @@ const register = async (req, res) => {
       username,
       name: username,
       email,
-      phone: phone || '',
+      phone: normalizedPhone,
       password: hashedPassword,
       role: 'CUSTOMER'
     });
@@ -173,7 +182,16 @@ const updateProfile = async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    await user.update({ name, phone });
+    let updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (phone !== undefined) {
+      if (!isValidPhone(phone)) {
+        return res.status(400).json({ success: false, message: 'Phone number must be exactly 10 digits' });
+      }
+      updateData.phone = normalizePhone(phone);
+    }
+
+    await user.update(updateData);
 
     res.json({
       success: true,

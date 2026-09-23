@@ -27,6 +27,7 @@ const {
   mechanicValidation,
   handleValidation
 } = require('../middleware/validation');
+const { isValidPhone, normalizePhone } = require('../utils/phoneValidator');
 
 // Auth routes
 router.post('/auth/register', registerValidation, handleValidation, authController.register);
@@ -116,11 +117,17 @@ router.put('/customers/:id', authenticate, authorize('ADMIN'), async (req, res) 
     }
 
     const { name, phone, isActive } = req.body;
-    await customer.update({
+    let updateData = {
       name: name || customer.name,
-      phone: phone || customer.phone,
       isActive: isActive !== undefined ? isActive : customer.isActive
-    });
+    };
+    if (phone !== undefined && phone !== '') {
+      if (!isValidPhone(phone)) {
+        return res.status(400).json({ success: false, message: 'Phone number must be exactly 10 digits' });
+      }
+      updateData.phone = normalizePhone(phone);
+    }
+    await customer.update(updateData);
 
     res.json({
       success: true,

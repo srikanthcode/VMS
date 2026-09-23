@@ -4,6 +4,7 @@ import DataTable from '../../components/DataTable'
 import Modal from '../../components/Modal'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
+import { getPhoneError, normalizePhone } from '../../utils/phoneValidator'
 
 const AdminCustomersPage = () => {
   const [customers, setCustomers] = useState([])
@@ -11,7 +12,7 @@ const AdminCustomersPage = () => {
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 })
   const [showModal, setShowModal] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState(null)
-  const [formData, setFormData] = useState({ username: '', name: '', email: '', phone: '', role: 'CUSTOMER' })
+  const [formData, setFormData] = useState({ username: '', name: '', email: '', phone: '', password: '', role: 'CUSTOMER' })
   const [formLoading, setFormLoading] = useState(false)
   const [errors, setErrors] = useState({})
 
@@ -38,7 +39,7 @@ const AdminCustomersPage = () => {
 
   const handleAdd = () => {
     setSelectedCustomer(null)
-    setFormData({ username: '', name: '', email: '', phone: '', role: 'CUSTOMER' })
+    setFormData({ username: '', name: '', email: '', phone: '', password: '', role: 'CUSTOMER' })
     setShowModal(true)
   }
 
@@ -67,6 +68,18 @@ const AdminCustomersPage = () => {
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid'
     }
+    const phoneError = getPhoneError(formData.phone)
+    if (phoneError) newErrors.phone = phoneError
+    if (!selectedCustomer) {
+      if (!formData.username.trim()) {
+        newErrors.username = 'Username is required'
+      }
+      if (!formData.password) {
+        newErrors.password = 'Password is required'
+      } else if (formData.password.length < 6) {
+        newErrors.password = 'Password must be at least 6 characters'
+      }
+    }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -77,11 +90,13 @@ const AdminCustomersPage = () => {
 
     setFormLoading(true)
     try {
+      const payload = { ...formData, phone: normalizePhone(formData.phone) }
       if (selectedCustomer) {
-        await api.customers.update(selectedCustomer.id, formData)
+        const { password, ...updateData } = payload
+        await api.customers.update(selectedCustomer.id, updateData)
         toast.success('Customer updated successfully')
       } else {
-        await api.customers.create(formData)
+        await api.customers.create(payload)
         toast.success('Customer created successfully')
       }
       setShowModal(false)
@@ -180,14 +195,30 @@ const AdminCustomersPage = () => {
             {errors.email && <div className="invalid-feedback">{errors.email}</div>}
           </div>
           <div className="mb-3">
-            <label className="form-label">Phone</label>
+            <label className="form-label">Phone *</label>
             <input
               type="tel"
-              className="form-control"
+              className={`form-control ${errors.phone ? 'is-invalid' : ''}`}
               value={formData.phone}
-              onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+              onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value.replace(/\D/g, '').slice(0, 15) }))}
+              placeholder="10-digit phone number"
             />
+            {errors.phone && <div className="invalid-feedback">{errors.phone}</div>}
+            <small className="text-muted">Must be exactly 10 digits</small>
           </div>
+          {!selectedCustomer && (
+            <div className="mb-3">
+              <label className="form-label">Password *</label>
+              <input
+                type="password"
+                className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+                value={formData.password}
+                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                placeholder="Min 6 characters"
+              />
+              {errors.password && <div className="invalid-feedback">{errors.password}</div>}
+            </div>
+          )}
           <div className="mb-3">
             <label className="form-label">Role</label>
             <select

@@ -1,12 +1,23 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
+const { isValidPhone } = require('../utils/phoneValidator');
 
 const User = sequelize.define('User', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   username: { type: DataTypes.STRING, allowNull: true, unique: true },
   name: { type: DataTypes.STRING, allowNull: true },
   email: { type: DataTypes.STRING, allowNull: false, unique: true, validate: { isEmail: true } },
-  phone: { type: DataTypes.STRING, allowNull: true },
+  phone: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      isValidPhone(value) {
+        if (value && !isValidPhone(value)) {
+          throw new Error('Phone number must be exactly 10 digits');
+        }
+      }
+    }
+  },
   password: { type: DataTypes.STRING, allowNull: false },
   role: { type: DataTypes.ENUM('ADMIN', 'CUSTOMER', 'MECHANIC'), defaultValue: 'CUSTOMER' },
   avatar: { type: DataTypes.STRING, allowNull: true },

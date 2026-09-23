@@ -2,6 +2,7 @@ const { User, Booking, Vehicle, ServiceType } = require('../models');
 const bcrypt = require('bcryptjs');
 const { emitToUser, emitToAdmins, emitToMechanics, emitBroadcast } = require('../socket');
 const { createNotification } = require('./notificationController');
+const { isValidPhone, normalizePhone } = require('../utils/phoneValidator');
 
 const getMechanics = async (req, res) => {
   try {
@@ -37,6 +38,10 @@ const createMechanic = async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
 
+    if (!phone || !isValidPhone(phone)) {
+      return res.status(400).json({ success: false, message: 'Phone number must be exactly 10 digits' });
+    }
+
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'Email already registered' });
@@ -47,7 +52,7 @@ const createMechanic = async (req, res) => {
     const mechanic = await User.create({
       name,
       email,
-      phone,
+      phone: normalizePhone(phone),
       password: hashedPassword,
       role: 'MECHANIC'
     });
@@ -88,11 +93,18 @@ const updateMechanic = async (req, res) => {
       }
     }
 
-    await mechanic.update({
+    let updateData = {
       name: name || mechanic.name,
-      email: email || mechanic.email,
-      phone: phone || mechanic.phone
-    });
+      email: email || mechanic.email
+    };
+    if (phone !== undefined && phone !== '') {
+      if (!isValidPhone(phone)) {
+        return res.status(400).json({ success: false, message: 'Phone number must be exactly 10 digits' });
+      }
+      updateData.phone = normalizePhone(phone);
+    }
+
+    await mechanic.update(updateData);
 
     res.json({
       success: true,

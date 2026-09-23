@@ -1,7 +1,18 @@
 const { body, validationResult } = require('express-validator');
+const { isValidPhone, normalizePhone } = require('../utils/phoneValidator');
 
 const registerValidation = [
+  body('username').trim().notEmpty().withMessage('Username is required'),
   body('email').isEmail().withMessage('Valid email is required'),
+  body('phone').trim().notEmpty().withMessage('Phone number is required'),
+  body('phone').custom((value, { req }) => {
+    const cc = req.body.countryCode || '';
+    if (!isValidPhone(value, cc)) {
+      const expected = (cc && require('../utils/phoneValidator').COUNTRY_PHONE_LENGTHS[String(cc).replace(/\D/g, '')]) || 10;
+      throw new Error(`Phone number must be exactly ${expected} digits`);
+    }
+    return true;
+  }),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
 ];
 
@@ -46,7 +57,13 @@ const serviceValidation = [
 const mechanicValidation = [
   body('name').trim().notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Valid email is required'),
-  body('phone').trim().notEmpty().withMessage('Phone is required')
+  body('phone').trim().notEmpty().withMessage('Phone is required'),
+  body('phone').custom((value) => {
+    if (!isValidPhone(value)) {
+      throw new Error('Phone number must be exactly 10 digits');
+    }
+    return true;
+  })
 ];
 
 const handleValidation = (req, res, next) => {
