@@ -145,6 +145,10 @@ const location = {
   getUser: (id) => apiClient.get(`/location/user/${id}`)
 }
 
+const contact = {
+  send: (data) => apiClient.post('/contact', data)
+}
+
 const api = {
   auth,
   vehicles,
@@ -159,7 +163,8 @@ const api = {
   customers,
   pickups,
   reports,
-  location
+  location,
+  contact
 }
 
 export default api
