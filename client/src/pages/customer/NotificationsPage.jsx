@@ -11,6 +11,14 @@ const NotificationsPage = () => {
 
   useEffect(() => {
     fetchNotifications()
+    const onNotification = () => fetchNotifications()
+    const onClear = () => setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
+    window.addEventListener('vms:notification', onNotification)
+    window.addEventListener('vms:notifications-cleared', onClear)
+    return () => {
+      window.removeEventListener('vms:notification', onNotification)
+      window.removeEventListener('vms:notifications-cleared', onClear)
+    }
   }, [])
 
   const fetchNotifications = async () => {

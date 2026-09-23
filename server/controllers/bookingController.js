@@ -1,5 +1,7 @@
 const { Booking, Vehicle, ServiceType, User, BookingStatusHistory, Bill, Payment } = require('../models');
-const { generateBookingId } = require('../utils/helpers');
+const { generateBookingId } = require('./../utils/helpers');
+const { emitToUser, emitToAdmins, emitToMechanics, emitBroadcast } = require('../socket');
+const { createNotification } = require('./notificationController');
 
 const getBookings = async (req, res) => {
   try {
@@ -131,6 +133,15 @@ const createBooking = async (req, res) => {
       ]
     });
 
+    emitBroadcast('booking:created', fullBooking);
+    emitToAdmins('booking:created', fullBooking);
+    await createNotification(
+      req.user.id,
+      'Booking Created',
+      `Your booking ${booking.bookingId} has been created and is pending confirmation.`,
+      'BOOKING'
+    );
+
     res.status(201).json({ success: true, data: fullBooking });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
@@ -197,6 +208,14 @@ const cancelBooking = async (req, res) => {
       updatedBy: req.user.id
     });
 
+    emitBroadcast('booking:updated', booking);
+    emitToAdmins('booking:updated', booking);
+    emitToMechanics('booking:updated', booking);
+    if (booking.userId) {
+      emitToUser(booking.userId, 'booking:updated', booking);
+      await createNotification(booking.userId, 'Booking Cancelled', `Booking ${booking.bookingId} has been cancelled.`, 'BOOKING');
+    }
+
     res.json({ success: true, message: 'Booking cancelled successfully', data: booking });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
@@ -231,6 +250,22 @@ const updateStatus = async (req, res) => {
       updatedBy: req.user.id
     });
 
+    emitBroadcast('booking:updated', booking);
+    emitToAdmins('booking:updated', booking);
+    emitToMechanics('booking:updated', booking);
+    if (booking.userId) {
+      emitToUser(booking.userId, 'booking:updated', booking);
+      await createNotification(
+        booking.userId,
+        'Booking Update',
+        `Booking ${booking.bookingId} status changed to ${status.replace(/_/g, ' ').toLowerCase()}.`,
+        'BOOKING'
+      );
+    }
+    if (booking.mechanicId) {
+      emitToUser(booking.mechanicId, 'booking:updated', booking);
+    }
+
     res.json({ success: true, data: booking });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
@@ -259,6 +294,15 @@ const assignMechanic = async (req, res) => {
       notes: `Assigned to mechanic ${mechanic.name}`,
       updatedBy: req.user.id
     });
+
+    emitBroadcast('booking:updated', booking);
+    emitToAdmins('booking:updated', booking);
+    emitToUser(mechanicId, 'booking:assigned', booking);
+    if (booking.userId) {
+      emitToUser(booking.userId, 'booking:updated', booking);
+      await createNotification(booking.userId, 'Mechanic Assigned', `${mechanic.name} has been assigned to booking ${booking.bookingId}.`, 'BOOKING');
+    }
+    await createNotification(mechanicId, 'New Assignment', `You have been assigned booking ${booking.bookingId}.`, 'BOOKING');
 
     res.json({ success: true, data: booking });
   } catch (error) {

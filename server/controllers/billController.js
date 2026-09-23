@@ -1,6 +1,8 @@
 const { Bill, Booking, Payment, User, Vehicle, ServiceType } = require('../models');
 const { Op } = require('sequelize');
 const { generateInvoiceNumber } = require('../utils/helpers');
+const { emitToUser, emitToAdmins, emitBroadcast } = require('../socket');
+const { createNotification } = require('./notificationController');
 
 const getBills = async (req, res) => {
   try {
@@ -110,6 +112,18 @@ const createBill = async (req, res) => {
         }
       ]
     });
+
+    emitBroadcast('bill:created', fullBill);
+    emitToAdmins('bill:created', fullBill);
+    if (booking.userId) {
+      emitToUser(booking.userId, 'bill:created', fullBill);
+      await createNotification(
+        booking.userId,
+        'Bill Generated',
+        `A bill of ₹${grandTotal.toFixed(2)} has been generated for booking ${booking.bookingId}.`,
+        'PAYMENT'
+      );
+    }
 
     res.status(201).json({ success: true, data: fullBill });
   } catch (error) {

@@ -1,9 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import DashboardLayout from '../../components/DashboardLayout'
 import StatsCard from '../../components/StatsCard'
 import StatusBadge from '../../components/StatusBadge'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
+
+const formatBookingRef = (booking) => {
+  if (booking?.bookingId) return `#${booking.bookingId}`
+  if (booking?.id != null) return `#${String(booking.id).padStart(6, '0')}`
+  return '#N/A'
+}
 
 const MechanicDashboard = () => {
   const [stats, setStats] = useState({
@@ -15,21 +21,17 @@ const MechanicDashboard = () => {
   const [assignments, setAssignments] = useState([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchDashboardData()
-  }, [])
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       const response = await api.mechanics.getMyBookings()
       const bookings = response.data.bookings || response.data || []
-      
+
       const today = new Date().toISOString().split('T')[0]
       setStats({
-        assignedToday: bookings.filter(b => b.preferredDate === today && b.status === 'CONFIRMED').length,
-        inProgress: bookings.filter(b => b.status === 'SERVICE_IN_PROGRESS').length,
+        assignedToday: bookings.filter(b => b.preferredDate === today && ['CONFIRMED', 'PENDING'].includes(b.status)).length,
+        inProgress: bookings.filter(b => ['INSPECTION', 'SERVICE_IN_PROGRESS'].includes(b.status)).length,
         completedToday: bookings.filter(b => b.preferredDate === today && b.status === 'COMPLETED').length,
-        pending: bookings.filter(b => b.status === 'CONFIRMED').length
+        pending: bookings.filter(b => b.status === 'PENDING').length
       })
 
       setAssignments(bookings.slice(0, 10))
@@ -38,15 +40,25 @@ const MechanicDashboard = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchDashboardData()
+  }, [fetchDashboardData])
+
+  useEffect(() => {
+    const handler = () => fetchDashboardData()
+    window.addEventListener('vms:booking', handler)
+    return () => window.removeEventListener('vms:booking', handler)
+  }, [fetchDashboardData])
 
   const handleUpdateProgress = async (bookingId, status) => {
     try {
-      await api.bookings.updateStatus(bookingId, { status })
+      await api.mechanics.updateProgress(bookingId, { status })
       toast.success('Status updated successfully')
       fetchDashboardData()
     } catch (error) {
-      toast.error('Failed to update status')
+      toast.error(error.response?.data?.message || 'Failed to update status')
     }
   }
 
@@ -110,15 +122,15 @@ const MechanicDashboard = () => {
               <tbody>
                 {assignments.map((booking) => (
                   <tr key={booking.id}>
-                    <td>#{booking.id?.slice(-6).toUpperCase()}</td>
-                    <td>{booking.customer?.name || 'N/A'}</td>
-                    <td>{booking.vehicle?.vehicleNumber || 'N/A'}</td>
-                    <td>{booking.service?.name || 'N/A'}</td>
+                    <td>{formatBookingRef(booking)}</td>
+                    <td>{booking.user?.name || booking.customer?.name || 'N/A'}</td>
+                    <td>{booking.Vehicle?.vehicleNumber || booking.vehicle?.vehicleNumber || 'N/A'}</td>
+                    <td>{booking.ServiceType?.name || booking.service?.name || 'N/A'}</td>
                     <td>{formatDate(booking.preferredDate)}</td>
                     <td><StatusBadge status={booking.status} /></td>
                     <td>
                       <div className="d-flex gap-1">
-                        {booking.status === 'CONFIRMED' && (
+                        {['CONFIRMED', 'PENDING'].includes(booking.status) && (
                           <button
                             className="btn btn-sm btn-outline-info"
                             onClick={() => handleUpdateProgress(booking.id, 'SERVICE_IN_PROGRESS')}

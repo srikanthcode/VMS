@@ -25,14 +25,26 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchDashboardData()
+    const handler = () => fetchDashboardData()
+    window.addEventListener('vms:booking', handler)
+    window.addEventListener('vms:payment', handler)
+    window.addEventListener('vms:bill', handler)
+    window.addEventListener('vms:review', handler)
+    return () => {
+      window.removeEventListener('vms:booking', handler)
+      window.removeEventListener('vms:payment', handler)
+      window.removeEventListener('vms:bill', handler)
+      window.removeEventListener('vms:review', handler)
+    }
   }, [])
 
   const fetchDashboardData = async () => {
     try {
-      const [dashboardRes, bookingsRes, revenueRes] = await Promise.all([
+      const [dashboardRes, bookingsRes, revenueRes, servicesRes] = await Promise.all([
         api.reports.dashboard().catch(() => ({ data: {} })),
         api.bookings.getAll({ limit: 10 }).catch(() => ({ data: [] })),
-        api.reports.revenue({ period: 'monthly' }).catch(() => ({ data: {} }))
+        api.reports.revenue({ period: 'monthly' }).catch(() => ({ data: {} })),
+        api.services.getAll().catch(() => ({ data: [] }))
       ])
 
       const dashboard = dashboardRes.data
@@ -46,26 +58,35 @@ const AdminDashboard = () => {
       })
 
       const bookingData = bookingsRes.data
-      setRecentBookings(bookingData.bookings || bookingData || [])
+      const allBookings = bookingData.bookings || bookingData || []
+      setRecentBookings(allBookings)
 
       const revenueBreakdown = revenueRes.data
       setRevenueData(revenueBreakdown.breakdown || revenueBreakdown.data || [])
 
-      // Mock service and booking stats
-      setServiceStats([
-        { name: 'Basic Service', count: 45 },
-        { name: 'Premium Service', count: 32 },
-        { name: 'Major Service', count: 18 },
-        { name: 'Oil Change', count: 65 },
-        { name: 'Brake Service', count: 28 }
-      ])
+      const servicesList = servicesRes.data.services || servicesRes.data || []
+      const counts = {}
+      allBookings.forEach(b => {
+        const name = b.ServiceType?.name || 'Other'
+        counts[name] = (counts[name] || 0) + 1
+      })
+      const realServiceStats = Object.entries(counts).map(([name, count]) => ({ name, count }))
+      setServiceStats(
+        realServiceStats.length > 0
+          ? realServiceStats
+          : servicesList.slice(0, 5).map(s => ({ name: s.name, count: 0 }))
+      )
 
+      const statusCounts = { PENDING: 0, CONFIRMED: 0, SERVICE_IN_PROGRESS: 0, COMPLETED: 0, CANCELLED: 0 }
+      allBookings.forEach(b => {
+        if (statusCounts[b.status] != null) statusCounts[b.status]++
+      })
       setBookingStatus([
-        { status: 'PENDING', count: dashboard.pendingBookings || 12 },
-        { status: 'CONFIRMED', count: dashboard.activeBookings || 8 },
-        { status: 'SERVICE_IN_PROGRESS', count: 5 },
-        { status: 'COMPLETED', count: dashboard.completedBookings || 45 },
-        { status: 'CANCELLED', count: 3 }
+        { status: 'PENDING', count: dashboard.pendingBookings || statusCounts.PENDING },
+        { status: 'CONFIRMED', count: dashboard.activeBookings || statusCounts.CONFIRMED },
+        { status: 'SERVICE_IN_PROGRESS', count: statusCounts.SERVICE_IN_PROGRESS },
+        { status: 'COMPLETED', count: dashboard.completedBookings || statusCounts.COMPLETED },
+        { status: 'CANCELLED', count: statusCounts.CANCELLED }
       ])
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error)

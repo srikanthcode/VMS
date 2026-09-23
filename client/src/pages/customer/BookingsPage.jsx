@@ -15,6 +15,9 @@ const BookingsPage = () => {
 
   useEffect(() => {
     fetchBookings()
+    const handler = () => fetchBookings()
+    window.addEventListener('vms:booking', handler)
+    return () => window.removeEventListener('vms:booking', handler)
   }, [])
 
   const fetchBookings = async () => {

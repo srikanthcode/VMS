@@ -1,10 +1,13 @@
 const { Notification } = require('../models');
+const { emitToUser } = require('../socket');
 
 const getNotifications = async (req, res) => {
   try {
+    const limit = parseInt(req.query.limit) || 50;
     const notifications = await Notification.findAll({
       where: { userId: req.user.id },
-      order: [['createdAt', 'DESC']]
+      order: [['createdAt', 'DESC']],
+      limit: Math.min(limit, 100)
     });
 
     res.json({ success: true, data: notifications });
@@ -24,6 +27,7 @@ const markAsRead = async (req, res) => {
     }
 
     await notification.update({ isRead: true });
+    emitToUser(req.user.id, 'notification:updated', notification);
 
     res.json({ success: true, data: notification });
   } catch (error) {
@@ -37,6 +41,7 @@ const markAllAsRead = async (req, res) => {
       { isRead: true },
       { where: { userId: req.user.id, isRead: false } }
     );
+    emitToUser(req.user.id, 'notification:all-read', { userId: req.user.id });
 
     res.json({ success: true, message: 'All notifications marked as read' });
   } catch (error) {
@@ -52,6 +57,9 @@ const createNotification = async (userId, title, message, type = 'GENERAL') => {
       message,
       type
     });
+    emitToUser(userId, 'notification:new', notification);
+    const count = await Notification.count({ where: { userId, isRead: false } });
+    emitToUser(userId, 'notification:unread-count', { count });
     return notification;
   } catch (error) {
     console.error('Error creating notification:', error);

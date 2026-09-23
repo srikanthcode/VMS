@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate, authorize, optionalAuth } = require('../middleware/auth');
 const { Op } = require('sequelize');
 
 const authController = require('../controllers/authController');
@@ -179,15 +179,15 @@ router.put('/bookings/:id/cancel', authenticate, bookingController.cancelBooking
 router.put('/bookings/:id/status', authenticate, authorize('ADMIN'), bookingController.updateStatus);
 router.put('/bookings/:id/assign', authenticate, authorize('ADMIN'), bookingController.assignMechanic);
 
-// Mechanic routes
+// Mechanic routes (static paths must come before /:id)
 router.get('/mechanics', authenticate, mechanicController.getMechanics);
-router.get('/mechanics/:id', authenticate, mechanicController.getMechanic);
+router.get('/mechanics/bookings', authenticate, authorize('MECHANIC'), mechanicController.getMechanicBookings);
 router.post('/mechanics', authenticate, authorize('ADMIN'), mechanicValidation, handleValidation, mechanicController.createMechanic);
+router.put('/mechanics/bookings/:id/progress', authenticate, authorize('MECHANIC'), mechanicController.updateServiceProgress);
+router.get('/mechanics/:id/bookings', authenticate, authorize('ADMIN', 'MECHANIC'), mechanicController.getMechanicBookings);
+router.get('/mechanics/:id', authenticate, mechanicController.getMechanic);
 router.put('/mechanics/:id', authenticate, authorize('ADMIN'), mechanicController.updateMechanic);
 router.put('/mechanics/:id/toggle-status', authenticate, authorize('ADMIN'), mechanicController.toggleMechanicStatus);
-router.get('/mechanics/bookings', authenticate, authorize('MECHANIC'), mechanicController.getMechanicBookings);
-router.get('/mechanics/:id/bookings', authenticate, mechanicController.getMechanicBookings);
-router.put('/mechanics/bookings/:id/progress', authenticate, authorize('MECHANIC'), mechanicController.updateServiceProgress);
 
 // Bill routes
 router.get('/bills', authenticate, billController.getBills);
@@ -212,7 +212,7 @@ router.get('/notifications/unread-count', authenticate, notificationController.g
 router.put('/notifications/:id/read', authenticate, notificationController.markAsRead);
 
 // Review routes
-router.get('/reviews', reviewController.getReviews);
+router.get('/reviews', optionalAuth, reviewController.getReviews);
 router.get('/reviews/my', authenticate, reviewController.getMyReviews);
 router.post('/reviews', authenticate, reviewValidation, handleValidation, reviewController.createReview);
 router.put('/reviews/:id', authenticate, reviewController.updateReview);
@@ -245,16 +245,33 @@ router.post('/contact', async (req, res) => {
   }
 });
 
-// Location routes
+// Location routes (admin only for tracking others)
 router.put('/location/update', authenticate, async (req, res) => {
   try {
     const { latitude, longitude } = req.body;
+    if (latitude == null || longitude == null || isNaN(parseFloat(latitude)) || isNaN(parseFloat(longitude))) {
+      return res.status(400).json({ success: false, message: 'Valid latitude and longitude are required' });
+    }
     const { User } = require('../models');
+    const lat = parseFloat(latitude);
+    const lng = parseFloat(longitude);
 
     await User.update(
-      { latitude, longitude, lastLocationUpdate: new Date() },
+      { latitude: lat, longitude: lng, lastLocationUpdate: new Date() },
       { where: { id: req.user.id } }
     );
+
+    const { emitToAdmins, emitBroadcast } = require('../socket');
+    const payload = {
+      userId: req.user.id,
+      name: req.user.name,
+      role: req.user.role,
+      latitude: lat,
+      longitude: lng,
+      lastLocationUpdate: new Date().toISOString()
+    };
+    emitToAdmins('location:updated', payload);
+    emitBroadcast('location:updated', payload);
 
     res.json({ success: true, message: 'Location updated' });
   } catch (error) {
@@ -262,7 +279,7 @@ router.put('/location/update', authenticate, async (req, res) => {
   }
 });
 
-router.get('/location/track', authenticate, async (req, res) => {
+router.get('/location/track', authenticate, authorize('ADMIN', 'MECHANIC'), async (req, res) => {
   try {
     const { User } = require('../models');
 
@@ -280,7 +297,7 @@ router.get('/location/track', authenticate, async (req, res) => {
   }
 });
 
-router.get('/location/user/:id', authenticate, async (req, res) => {
+router.get('/location/user/:id', authenticate, authorize('ADMIN', 'MECHANIC'), async (req, res) => {
   try {
     const { User } = require('../models');
 

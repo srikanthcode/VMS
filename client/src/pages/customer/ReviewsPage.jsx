@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import DashboardLayout from '../../components/DashboardLayout'
 import ReviewCard from '../../components/ReviewCard'
 import LoadingSpinner from '../../components/LoadingSpinner'
@@ -18,9 +19,24 @@ const ReviewsPage = () => {
   })
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
+  const [searchParams] = useSearchParams()
+
+  useEffect(() => {
+    const prefill = searchParams.get('booking')
+    if (prefill) {
+      setFormData(prev => ({ ...prev, bookingId: prefill }))
+      setShowForm(true)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     fetchData()
+  }, [])
+
+  useEffect(() => {
+    const handler = () => fetchData()
+    window.addEventListener('vms:review', handler)
+    return () => window.removeEventListener('vms:review', handler)
   }, [])
 
   const fetchData = async () => {
@@ -202,7 +218,7 @@ const ReviewsPage = () => {
           title="No Reviews Yet"
           message="Share your experience by leaving a review for completed services"
           actionText="Write a Review"
-          actionLink="#"
+          actionLink="/dashboard/bookings"
         />
       )}
     </DashboardLayout>

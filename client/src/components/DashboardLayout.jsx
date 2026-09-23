@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
+import api from '../services/api'
 
 const DashboardLayout = ({ children, role = 'customer', links = [] }) => {
   const { user, logout } = useAuth()
@@ -9,6 +10,40 @@ const DashboardLayout = ({ children, role = 'customer', links = [] }) => {
   const location = useLocation()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      try {
+        const res = await api.notifications.unreadCount()
+        setUnreadCount(res.data.count || 0)
+      } catch {
+        setUnreadCount(0)
+      }
+    }
+    fetchCount()
+
+    const onCount = (e) => {
+      if (e.detail?.count != null) setUnreadCount(e.detail.count)
+    }
+    const onNotification = async () => {
+      try {
+        const res = await api.notifications.unreadCount()
+        setUnreadCount(res.data.count || 0)
+      } catch {}
+    }
+    const onClear = () => setUnreadCount(0)
+
+    window.addEventListener('vms:unread-count', onCount)
+    window.addEventListener('vms:notification', onNotification)
+    window.addEventListener('vms:notifications-cleared', onClear)
+
+    return () => {
+      window.removeEventListener('vms:unread-count', onCount)
+      window.removeEventListener('vms:notification', onNotification)
+      window.removeEventListener('vms:notifications-cleared', onClear)
+    }
+  }, [])
 
   const defaultLinks = {
     customer: [
@@ -127,8 +162,20 @@ const DashboardLayout = ({ children, role = 'customer', links = [] }) => {
               <input type="text" className="form-control" placeholder="Search..." />
             </div>
 
-            <Link to={role === 'admin' ? '/admin/dashboard' : '/dashboard/notifications'} className="btn btn-outline-secondary position-relative">
+            <Link
+              to={role === 'admin' ? '/admin/dashboard' : '/dashboard/notifications'}
+              className="btn btn-outline-secondary position-relative"
+              title="Notifications"
+            >
               <i className="bi bi-bell"></i>
+              {unreadCount > 0 && (
+                <span
+                  className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                  style={{ fontSize: '0.65rem' }}
+                >
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
             </Link>
 
             <div className="dropdown">

@@ -124,8 +124,8 @@ const AuditLog = sequelize.define('AuditLog', {
 // Associations
 User.hasMany(Vehicle, { foreignKey: 'userId' });
 Vehicle.belongsTo(User, { as: 'owner', foreignKey: 'userId' });
-User.hasMany(Booking, { foreignKey: 'userId' });
-Booking.belongsTo(User, { foreignKey: 'userId' });
+User.hasMany(Booking, { as: 'bookings', foreignKey: 'userId' });
+Booking.belongsTo(User, { as: 'user', foreignKey: 'userId' });
 Vehicle.hasMany(Booking, { foreignKey: 'vehicleId' });
 Booking.belongsTo(Vehicle, { foreignKey: 'vehicleId' });
 ServiceType.hasMany(Booking, { foreignKey: 'serviceTypeId' });

@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 
 const AdminLoginPage = () => {
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { login, logout } = useAuth()
   const [formData, setFormData] = useState({
     username: '',
     password: ''
@@ -43,6 +43,7 @@ const AdminLoginPage = () => {
       if (userData.role === 'ADMIN') {
         navigate('/admin/dashboard')
       } else {
+        logout()
         toast.error('You are not authorized as admin')
       }
     } catch (error) {

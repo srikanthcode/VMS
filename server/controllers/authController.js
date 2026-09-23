@@ -196,6 +196,13 @@ const changePassword = async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
 
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Old and new passwords are required' });
+    }
+    if (String(newPassword).length < 6) {
+      return res.status(400).json({ success: false, message: 'New password must be at least 6 characters' });
+    }
+
     const user = await User.findByPk(req.user.id);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
@@ -232,7 +239,8 @@ const forgotPassword = async (req, res) => {
     otpStore[email] = {
       otp,
       expiresAt: Date.now() + 600000,
-      verified: false
+      verified: false,
+      attempts: 0
     };
 
     try {
@@ -240,7 +248,11 @@ const forgotPassword = async (req, res) => {
       res.json({ success: true, message: 'OTP sent to your email', data: { email } });
     } catch (emailError) {
       console.error('Email error:', emailError);
-      res.json({ success: true, message: 'OTP generated (email service not configured)', data: { email, otp } });
+      res.json({
+        success: true,
+        message: 'OTP generated (email service not configured)',
+        data: { email, otp: process.env.NODE_ENV === 'production' ? undefined : otp }
+      });
     }
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
@@ -250,6 +262,10 @@ const forgotPassword = async (req, res) => {
 const verifyOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: 'Email and OTP are required' });
+    }
 
     const otpData = otpStore[email];
     if (!otpData) {
@@ -261,7 +277,13 @@ const verifyOTP = async (req, res) => {
       return res.status(400).json({ success: false, message: 'OTP expired. Please request a new one.' });
     }
 
-    if (otpData.otp !== otp) {
+    if ((otpData.attempts || 0) >= 5) {
+      delete otpStore[email];
+      return res.status(400).json({ success: false, message: 'Too many attempts. Please request a new OTP.' });
+    }
+
+    if (String(otpData.otp) !== String(otp)) {
+      otpData.attempts = (otpData.attempts || 0) + 1;
       return res.status(400).json({ success: false, message: 'Invalid OTP' });
     }
 
@@ -276,6 +298,13 @@ const verifyOTP = async (req, res) => {
 const resetPassword = async (req, res) => {
   try {
     const { email, newPassword } = req.body;
+
+    if (!email || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Email and new password are required' });
+    }
+    if (String(newPassword).length < 6) {
+      return res.status(400).json({ success: false, message: 'New password must be at least 6 characters' });
+    }
 
     const otpData = otpStore[email];
     if (!otpData || !otpData.verified) {

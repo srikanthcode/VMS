@@ -45,7 +45,42 @@ const LocationTracker = () => {
 
   useEffect(() => {
     fetchLocations()
+    const onLocation = (e) => {
+      const payload = e.detail
+      if (!payload) return
+      setUsers(prev => {
+        const exists = prev.some(u => u.id === payload.userId)
+        if (!exists) {
+          return [...prev, {
+            id: payload.userId,
+            name: payload.name || 'User',
+            role: payload.role,
+            latitude: payload.latitude,
+            longitude: payload.longitude,
+            lastLocationUpdate: payload.lastLocationUpdate
+          }]
+        }
+        return prev.map(u => u.id === payload.userId
+          ? {
+              ...u,
+              latitude: payload.latitude,
+              longitude: payload.longitude,
+              lastLocationUpdate: payload.lastLocationUpdate,
+              name: payload.name || u.name,
+              role: payload.role || u.role
+            }
+          : u
+        )
+      })
+      setCenter([payload.latitude, payload.longitude])
+    }
+
+    window.addEventListener('vms:location', onLocation)
+    const poll = setInterval(fetchLocations, 10000)
+
     return () => {
+      window.removeEventListener('vms:location', onLocation)
+      clearInterval(poll)
       if (watchIdRef.current) {
         navigator.geolocation.clearWatch(watchIdRef.current)
       }
@@ -89,7 +124,10 @@ const LocationTracker = () => {
         try {
           await api.location.update({ latitude, longitude })
           setCenter([latitude, longitude])
-          fetchLocations()
+          setUsers(prev => prev.map(u => u.id === user?.id
+            ? { ...u, latitude, longitude, lastLocationUpdate: new Date().toISOString() }
+            : u
+          ).filter(Boolean))
         } catch (error) {
           console.error('Failed to update location:', error)
         }

@@ -108,7 +108,7 @@ const HomePage = () => {
                     { name: 'Wheel Alignment', price: 399, description: 'Precision wheel alignment for smooth driving' }
                   ].map((service, index) => (
                     <div key={index} className="col-lg-4 col-md-6">
-                      <ServiceCard service={{ ...service, _id: index }} />
+                      <ServiceCard service={{ ...service, id: service.id || index + 1 }} />
                     </div>
                   ))}
                 </>
@@ -260,7 +260,7 @@ const HomePage = () => {
 
           <div className="container">
             <div className="text-center mt-4">
-              <Link to="/reviews" className="btn btn-accent">
+              <Link to="/dashboard/reviews" className="btn btn-accent">
                 View All Reviews <i className="bi bi-arrow-right ms-2"></i>
               </Link>
             </div>

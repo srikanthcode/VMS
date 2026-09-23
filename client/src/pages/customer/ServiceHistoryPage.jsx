@@ -68,7 +68,7 @@ const ServiceHistoryPage = () => {
                   <tr key={booking.id}>
                     <td>
                       <Link to={`/dashboard/bookings/${booking.id}`} className="text-decoration-none">
-                        #{booking.id?.slice(-6).toUpperCase()}
+                        #{booking.bookingId || String(booking.id).padStart(6, '0')}
                       </Link>
                     </td>
                     <td>{booking.Vehicle?.vehicleNumber || 'N/A'}</td>

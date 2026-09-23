@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
+import { SocketProvider } from './context/SocketContext'
 import { Toaster } from 'react-hot-toast'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap-icons/font/bootstrap-icons.css'
@@ -16,30 +17,32 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <App />
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 3000,
-              style: {
-                background: '#1a1a2e',
-                color: '#fff',
-                borderRadius: '8px',
-              },
-              success: {
-                iconTheme: {
-                  primary: '#28a745',
-                  secondary: '#fff',
+          <SocketProvider>
+            <App />
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 3000,
+                style: {
+                  background: '#1a1a2e',
+                  color: '#fff',
+                  borderRadius: '8px',
                 },
-              },
-              error: {
-                iconTheme: {
-                  primary: '#dc3545',
-                  secondary: '#fff',
+                success: {
+                  iconTheme: {
+                    primary: '#28a745',
+                    secondary: '#fff',
+                  },
                 },
-              },
-            }}
-          />
+                error: {
+                  iconTheme: {
+                    primary: '#dc3545',
+                    secondary: '#fff',
+                  },
+                },
+              }}
+            />
+          </SocketProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

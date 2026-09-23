@@ -1,4 +1,6 @@
 const { Review, User, Booking, Vehicle, ServiceType } = require('../models');
+const { emitBroadcast, emitToAdmins, emitToUser } = require('../socket');
+const { createNotification } = require('./notificationController');
 
 const getReviews = async (req, res) => {
   try {
@@ -89,6 +91,9 @@ const createReview = async (req, res) => {
       ]
     });
 
+    emitBroadcast('review:created', fullReview);
+    emitToAdmins('review:created', fullReview);
+
     res.status(201).json({ success: true, data: fullReview });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
@@ -103,7 +108,7 @@ const updateReview = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Review not found' });
     }
 
-    if (req.user.role === 'CUSTOMER' && review.userId !== req.user.id) {
+    if (req.user.role !== 'ADMIN' && review.userId !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
@@ -113,6 +118,8 @@ const updateReview = async (req, res) => {
       rating: rating || review.rating,
       comment: comment || review.comment
     });
+
+    emitBroadcast('review:updated', review);
 
     res.json({ success: true, data: review });
   } catch (error) {
@@ -128,11 +135,13 @@ const deleteReview = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Review not found' });
     }
 
-    if (req.user.role === 'CUSTOMER' && review.userId !== req.user.id) {
+    if (req.user.role !== 'ADMIN' && review.userId !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
     await review.destroy();
+
+    emitBroadcast('review:deleted', { id: review.id, bookingId: review.bookingId });
 
     res.json({ success: true, message: 'Review deleted successfully' });
   } catch (error) {
@@ -150,6 +159,9 @@ const adminReply = async (req, res) => {
     }
 
     await review.update({ adminReply });
+
+    emitToUser(review.userId, 'review:replied', review);
+    emitBroadcast('review:updated', review);
 
     res.json({ success: true, data: review });
   } catch (error) {

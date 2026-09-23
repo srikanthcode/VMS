@@ -4,12 +4,14 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
 const path = require('path');
+const http = require('http');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
 const { sequelize, User, Vehicle, ServiceType, Booking, Bill, Payment, Notification, Review, BookingStatusHistory } = require('./models');
 const { generateBookingId, generateInvoiceNumber } = require('./utils/helpers');
 const routes = require('./routes');
+const { initSocket } = require('./socket');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -23,7 +25,7 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.length === 0) {
       callback(null, true);
     } else {
       callback(null, true);
@@ -44,14 +46,19 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.use('/api', (req, res) => {
+  res.status(404).json({ success: false, message: 'API endpoint not found' });
+});
+
 app.get('*', (req, res) => {
-  if (!req.path.startsWith('/api')) {
-    res.sendFile(path.join(__dirname, '..', 'client', 'dist', 'index.html'));
-  }
+  res.sendFile(path.join(__dirname, '..', 'client', 'dist', 'index.html'));
 });
 
 app.use((err, req, res, next) => {
   console.error('Error:', err);
+  if (res.headersSent) {
+    return next(err);
+  }
   if (err.name === 'SequelizeValidationError') {
     return res.status(400).json({ success: false, message: 'Validation error', errors: err.errors.map(e => ({ field: e.path, message: e.message })) });
   }
@@ -158,9 +165,14 @@ const startServer = async () => {
     await sequelize.sync(syncOptions);
     console.log('Database synced.');
     await autoSeed();
-    app.listen(PORT, () => {
+
+    const server = http.createServer(app);
+    initSocket(server);
+
+    server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`API available at http://localhost:${PORT}/api`);
+      console.log(`WebSocket ready on port ${PORT}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);

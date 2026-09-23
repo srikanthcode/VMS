@@ -1,6 +1,8 @@
 const { Payment, Bill, Booking, User, Vehicle } = require('../models');
 const { Op } = require('sequelize');
 const { generateTransactionId } = require('../utils/helpers');
+const { emitToUser, emitToAdmins, emitBroadcast } = require('../socket');
+const { createNotification } = require('./notificationController');
 
 const getPayments = async (req, res) => {
   try {
@@ -49,6 +51,11 @@ const processPayment = async (req, res) => {
   try {
     const { billId, paymentMethod } = req.body;
 
+    const validMethods = ['CASH', 'CARD', 'UPI', 'NET_BANKING'];
+    if (!paymentMethod || !validMethods.includes(paymentMethod)) {
+      return res.status(400).json({ success: false, message: 'Valid payment method is required (CASH, CARD, UPI, NET_BANKING)' });
+    }
+
     const bill = await Bill.findByPk(billId, {
       include: [{ model: Booking }]
     });
@@ -88,6 +95,18 @@ const processPayment = async (req, res) => {
       });
     }
 
+    emitBroadcast('payment:updated', payment);
+    emitToAdmins('payment:updated', payment);
+    if (bill.Booking?.userId) {
+      emitToUser(bill.Booking.userId, 'payment:updated', payment);
+      await createNotification(
+        bill.Booking.userId,
+        'Payment Successful',
+        `Payment of ₹${bill.grandTotal} received for invoice ${bill.invoiceNumber}.`,
+        'PAYMENT'
+      );
+    }
+
     res.json({ success: true, data: payment });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
@@ -115,6 +134,10 @@ const getPaymentByBill = async (req, res) => {
 
     if (!payment) {
       return res.status(404).json({ success: false, message: 'Payment not found' });
+    }
+
+    if (req.user.role === 'CUSTOMER' && payment.Bill?.Booking?.userId !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
     res.json({ success: true, data: payment });

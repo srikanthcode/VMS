@@ -12,15 +12,22 @@ const AdminBookingsPage = () => {
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 })
   const [statusFilter, setStatusFilter] = useState('ALL')
+  const [searchTerm, setSearchTerm] = useState('')
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [selectedBooking, setSelectedBooking] = useState(null)
   const [selectedMechanic, setSelectedMechanic] = useState('')
   const [assigning, setAssigning] = useState(false)
 
   useEffect(() => {
-    fetchBookings()
+    fetchBookings(searchTerm)
     fetchMechanics()
   }, [pagination.page, statusFilter])
+
+  useEffect(() => {
+    const handler = () => fetchBookings(searchTerm)
+    window.addEventListener('vms:booking', handler)
+    return () => window.removeEventListener('vms:booking', handler)
+  }, [searchTerm])
 
   const fetchBookings = async (search = '') => {
     try {
@@ -39,6 +46,12 @@ const AdminBookingsPage = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSearch = (search) => {
+    setSearchTerm(search)
+    setPagination(prev => ({ ...prev, page: 1 }))
+    fetchBookings(search)
   }
 
   const fetchMechanics = async () => {
@@ -159,7 +172,7 @@ const AdminBookingsPage = () => {
         loading={loading}
         pagination={pagination}
         onPageChange={(page) => setPagination(prev => ({ ...prev, page }))}
-        onSearch={(search) => fetchBookings(search)}
+        onSearch={(search) => handleSearch(search)}
       />
 
       <Modal

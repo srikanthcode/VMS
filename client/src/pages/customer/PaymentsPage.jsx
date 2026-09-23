@@ -136,7 +136,7 @@ const PaymentsPage = () => {
               <tbody>
                 {payments.map((payment) => (
                   <tr key={payment.id}>
-                    <td>#{payment.id?.slice(-6).toUpperCase()}</td>
+                    <td>#{payment.transactionId || String(payment.id).padStart(6, '0')}</td>
                     <td>#{payment.Bill?.invoiceNumber || payment.Bill?.id || 'N/A'}</td>
                     <td className="fw-bold">₹{payment.amount}</td>
                     <td>

@@ -1,5 +1,7 @@
 const { PickupRequest, Booking, User, Vehicle, ServiceType } = require('../models');
 const { Op } = require('sequelize');
+const { emitToUser, emitToAdmins, emitBroadcast } = require('../socket');
+const { createNotification } = require('./notificationController');
 
 const createPickupRequest = async (req, res) => {
   try {
@@ -42,6 +44,10 @@ const createPickupRequest = async (req, res) => {
         }
       ]
     });
+
+    emitBroadcast('pickup:created', fullPickup);
+    emitToAdmins('pickup:created', fullPickup);
+    await createNotification(req.user.id, 'Pickup Requested', 'Your pickup request has been submitted.', 'BOOKING');
 
     res.status(201).json({ success: true, data: fullPickup });
   } catch (error) {
@@ -98,6 +104,17 @@ const updatePickupStatus = async (req, res) => {
       await Booking.update({ status: 'VEHICLE_PICKED_UP' }, { where: { id: pickup.bookingId } });
     } else if (status === 'SCHEDULED') {
       await Booking.update({ status: 'PICKUP_SCHEDULED' }, { where: { id: pickup.bookingId } });
+    }
+
+    const booking = await Booking.findByPk(pickup.bookingId);
+    emitBroadcast('pickup:updated', pickup);
+    emitToAdmins('pickup:updated', pickup);
+    if (booking) {
+      emitBroadcast('booking:updated', booking);
+      if (booking.userId) {
+        emitToUser(booking.userId, 'booking:updated', booking);
+        await createNotification(booking.userId, 'Pickup Update', `Your pickup is now ${status.replace(/_/g, ' ').toLowerCase()}.`, 'BOOKING');
+      }
     }
 
     res.json({ success: true, data: pickup });

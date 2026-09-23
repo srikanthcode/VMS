@@ -2,16 +2,33 @@ import { useState } from 'react'
 import DashboardLayout from '../../components/DashboardLayout'
 import toast from 'react-hot-toast'
 
+const STORAGE_KEY = 'vms_admin_settings'
+
 const AdminSettingsPage = () => {
-  const [formData, setFormData] = useState({
-    companyName: 'Vehicle Management System',
-    address: '123 Service Street, Auto Nagar, City - 500001',
-    phone: '+91 98765 43210',
-    email: 'info@vms.com',
-    businessHours: 'Mon - Sat: 8:00 AM - 8:00 PM',
-    currency: 'INR',
-    taxRate: 18,
-    pickupCharge: 100
+  const [formData, setFormData] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) return { ...{
+        companyName: 'Vehicle Management System',
+        address: '123 Service Street, Auto Nagar, City - 500001',
+        phone: '+91 98765 43210',
+        email: 'info@vms.com',
+        businessHours: 'Mon - Sat: 8:00 AM - 8:00 PM',
+        currency: 'INR',
+        taxRate: 18,
+        pickupCharge: 100
+      }, ...JSON.parse(saved) }
+    } catch {}
+    return {
+      companyName: 'Vehicle Management System',
+      address: '123 Service Street, Auto Nagar, City - 500001',
+      phone: '+91 98765 43210',
+      email: 'info@vms.com',
+      businessHours: 'Mon - Sat: 8:00 AM - 8:00 PM',
+      currency: 'INR',
+      taxRate: 18,
+      pickupCharge: 100
+    }
   })
   const [loading, setLoading] = useState(false)
 
@@ -24,8 +41,8 @@ const AdminSettingsPage = () => {
     e.preventDefault()
     setLoading(true)
     try {
-      // Simulated API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(formData))
+      await new Promise(resolve => setTimeout(resolve, 300))
       toast.success('Settings saved successfully!')
     } catch (error) {
       toast.error('Failed to save settings')

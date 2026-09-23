@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 
 const MechanicLoginPage = () => {
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { login, logout } = useAuth()
   const [formData, setFormData] = useState({
     username: '',
     password: ''
@@ -43,6 +43,7 @@ const MechanicLoginPage = () => {
       if (userData.role === 'MECHANIC') {
         navigate('/mechanic/dashboard')
       } else {
+        logout()
         toast.error('You are not authorized as mechanic')
       }
     } catch (error) {

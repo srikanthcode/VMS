@@ -49,6 +49,18 @@ const CustomerDashboard = () => {
   }, [])
 
   useEffect(() => {
+    const handler = () => fetchDashboardData()
+    window.addEventListener('vms:booking', handler)
+    window.addEventListener('vms:notification', handler)
+    window.addEventListener('vms:bill', handler)
+    return () => {
+      window.removeEventListener('vms:booking', handler)
+      window.removeEventListener('vms:notification', handler)
+      window.removeEventListener('vms:bill', handler)
+    }
+  }, [])
+
+  useEffect(() => {
     timerRef.current = setInterval(() => {
       setActiveService(prev => (prev + 1) % services.length)
     }, 4000)
@@ -191,7 +203,7 @@ const CustomerDashboard = () => {
                           <tr key={booking.id}>
                             <td>
                               <Link to={`/dashboard/bookings/${booking.id}`} className="text-decoration-none">
-                                #{booking.id?.slice(-6).toUpperCase()}
+                                #{booking.bookingId || String(booking.id).padStart(6, '0')}
                               </Link>
                             </td>
                             <td>{booking.ServiceType?.name || 'N/A'}</td>

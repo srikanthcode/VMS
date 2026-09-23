@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
 
@@ -7,13 +7,7 @@ const NotificationDropdown = () => {
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    fetchNotifications()
-    const interval = setInterval(fetchNotifications, 30000)
-    return () => clearInterval(interval)
-  }, [])
-
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true)
       const [notiRes, countRes] = await Promise.all([
@@ -27,7 +21,32 @@ const NotificationDropdown = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchNotifications()
+    const interval = setInterval(fetchNotifications, 15000)
+
+    const onNotification = () => fetchNotifications()
+    const onCount = (e) => {
+      if (e.detail?.count != null) setUnreadCount(e.detail.count)
+    }
+    const onClear = () => {
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
+      setUnreadCount(0)
+    }
+
+    window.addEventListener('vms:notification', onNotification)
+    window.addEventListener('vms:unread-count', onCount)
+    window.addEventListener('vms:notifications-cleared', onClear)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('vms:notification', onNotification)
+      window.removeEventListener('vms:unread-count', onCount)
+      window.removeEventListener('vms:notifications-cleared', onClear)
+    }
+  }, [fetchNotifications])
 
   const markAsRead = async (id) => {
     try {
@@ -38,6 +57,16 @@ const NotificationDropdown = () => {
       setUnreadCount(prev => Math.max(0, prev - 1))
     } catch (error) {
       console.error('Failed to mark notification as read:', error)
+    }
+  }
+
+  const markAllAsRead = async () => {
+    try {
+      await api.notifications.markAllRead()
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
+      setUnreadCount(0)
+    } catch (error) {
+      console.error('Failed to mark all as read:', error)
     }
   }
 
@@ -70,9 +99,13 @@ const NotificationDropdown = () => {
         <div className="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
           <h6 className="mb-0">Notifications</h6>
           {unreadCount > 0 && (
-            <Link to="/dashboard/notifications" className="text-decoration-none small">
+            <button
+              type="button"
+              className="btn btn-link btn-sm text-decoration-none p-0 small"
+              onClick={markAllAsRead}
+            >
               Mark all read
-            </Link>
+            </button>
           )}
         </div>
 

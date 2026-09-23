@@ -1,5 +1,7 @@
 const { User, Booking, Vehicle, ServiceType } = require('../models');
 const bcrypt = require('bcryptjs');
+const { emitToUser, emitToAdmins, emitToMechanics, emitBroadcast } = require('../socket');
+const { createNotification } = require('./notificationController');
 
 const getMechanics = async (req, res) => {
   try {
@@ -165,7 +167,7 @@ const updateServiceProgress = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Booking not found or not assigned to you' });
     }
 
-    const validStatuses = ['INSPECTION', 'SERVICE_IN_PROGRESS', 'READY_FOR_DELIVERY'];
+    const validStatuses = ['INSPECTION', 'SERVICE_IN_PROGRESS', 'READY_FOR_DELIVERY', 'COMPLETED'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ success: false, message: 'Invalid status for mechanic' });
     }
@@ -179,6 +181,19 @@ const updateServiceProgress = async (req, res) => {
       notes: notes || `Status updated by mechanic`,
       updatedBy: req.user.id
     });
+
+    emitBroadcast('booking:updated', booking);
+    emitToAdmins('booking:updated', booking);
+    emitToMechanics('booking:updated', booking);
+    if (booking.userId) {
+      emitToUser(booking.userId, 'booking:updated', booking);
+      await createNotification(
+        booking.userId,
+        'Service Update',
+        `Booking ${booking.bookingId} is now ${status.replace(/_/g, ' ').toLowerCase()}.`,
+        'SERVICE'
+      );
+    }
 
     res.json({ success: true, data: booking });
   } catch (error) {
