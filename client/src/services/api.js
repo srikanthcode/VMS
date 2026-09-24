@@ -141,7 +141,9 @@ const reports = {
 
 const location = {
   update: (data) => apiClient.put('/location/update', data),
-  trackAll: () => apiClient.get('/location/track'),
+  stop: (data) => apiClient.post('/location/stop', data),
+  trackAll: (params) => apiClient.get('/location/track', { params }),
+  trackCustomers: () => apiClient.get('/location/customers'),
   getUser: (id) => apiClient.get(`/location/user/${id}`)
 }
 

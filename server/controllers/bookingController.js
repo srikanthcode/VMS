@@ -88,7 +88,21 @@ const getBooking = async (req, res) => {
 
 const createBooking = async (req, res) => {
   try {
-    const { vehicleId, serviceTypeId, preferredDate, preferredTime, pickupRequired, pickupAddress, pickupLandmark, pickupTime, pickupContact, additionalNotes } = req.body;
+    const {
+      vehicleId,
+      serviceTypeId,
+      preferredDate,
+      preferredTime,
+      pickupRequired,
+      pickupAddress,
+      pickupLandmark,
+      pickupTime,
+      pickupContact,
+      pickupLatitude,
+      pickupLongitude,
+      shareLiveLocation,
+      additionalNotes
+    } = req.body;
 
     const vehicle = await Vehicle.findOne({ where: { id: vehicleId, userId: req.user.id } });
     if (!vehicle) {
@@ -114,6 +128,9 @@ const createBooking = async (req, res) => {
       pickupLandmark,
       pickupTime,
       pickupContact,
+      pickupLatitude: pickupLatitude != null && !isNaN(parseFloat(pickupLatitude)) ? parseFloat(pickupLatitude) : null,
+      pickupLongitude: pickupLongitude != null && !isNaN(parseFloat(pickupLongitude)) ? parseFloat(pickupLongitude) : null,
+      shareLiveLocation: Boolean(shareLiveLocation),
       additionalNotes,
       estimatedPrice: serviceType.price
     });

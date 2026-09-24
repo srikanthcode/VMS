@@ -34,6 +34,7 @@ import PaymentsPage from './pages/customer/PaymentsPage'
 import InvoicesPage from './pages/customer/InvoicesPage'
 import NotificationsPage from './pages/customer/NotificationsPage'
 import ReviewsPage from './pages/customer/ReviewsPage'
+import ShareLocationPage from './pages/customer/ShareLocationPage'
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -48,10 +49,11 @@ import AdminInvoicesPage from './pages/admin/AdminInvoicesPage'
 import AdminReviewsPage from './pages/admin/AdminReviewsPage'
 import AdminReportsPage from './pages/admin/AdminReportsPage'
 import AdminSettingsPage from './pages/admin/AdminSettingsPage'
-import LocationTracker from './pages/admin/LocationTracker'
+import AdminLocationPage from './pages/admin/AdminLocationPage'
 
 // Mechanic Pages
 import MechanicDashboard from './pages/mechanic/MechanicDashboard'
+import MechanicLocationPage from './pages/mechanic/MechanicLocationPage'
 
 // Loading
 import LoadingSpinner from './components/LoadingSpinner'
@@ -147,6 +149,7 @@ function App() {
         <Route path="/dashboard/invoices" element={<ProtectedRoute><InvoicesPage /></ProtectedRoute>} />
         <Route path="/dashboard/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
         <Route path="/dashboard/reviews" element={<ProtectedRoute><ReviewsPage /></ProtectedRoute>} />
+        <Route path="/dashboard/share-location" element={<ProtectedRoute><ShareLocationPage /></ProtectedRoute>} />
 
         {/* Admin Routes */}
         <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
@@ -160,12 +163,13 @@ function App() {
         <Route path="/admin/invoices" element={<AdminRoute><AdminInvoicesPage /></AdminRoute>} />
         <Route path="/admin/reviews" element={<AdminRoute><AdminReviewsPage /></AdminRoute>} />
         <Route path="/admin/reports" element={<AdminRoute><AdminReportsPage /></AdminRoute>} />
-        <Route path="/admin/location" element={<AdminRoute><LocationTracker /></AdminRoute>} />
+        <Route path="/admin/location" element={<AdminRoute><AdminLocationPage /></AdminRoute>} />
         <Route path="/admin/settings" element={<AdminRoute><AdminSettingsPage /></AdminRoute>} />
 
         {/* Mechanic Routes */}
         <Route path="/mechanic/dashboard" element={<MechanicRoute><MechanicDashboard /></MechanicRoute>} />
         <Route path="/mechanic/bookings" element={<MechanicRoute><MechanicDashboard /></MechanicRoute>} />
+        <Route path="/mechanic/location" element={<MechanicRoute><MechanicLocationPage /></MechanicRoute>} />
 
         {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />

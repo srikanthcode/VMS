@@ -52,6 +52,7 @@ const DashboardLayout = ({ children, role = 'customer', links = [] }) => {
       { path: '/dashboard/vehicles', label: 'My Vehicles', icon: 'bi-car-front' },
       { path: '/dashboard/book-service', label: 'Book Service', icon: 'bi-calendar-plus' },
       { path: '/dashboard/bookings', label: 'My Bookings', icon: 'bi-calendar-check' },
+      { path: '/dashboard/share-location', label: 'Share Location', icon: 'bi-broadcast' },
       { path: '/dashboard/service-history', label: 'Service History', icon: 'bi-clock-history' },
       { path: '/dashboard/bills', label: 'Bills', icon: 'bi-receipt' },
       { path: '/dashboard/payments', label: 'Payments', icon: 'bi-credit-card' },
@@ -76,7 +77,8 @@ const DashboardLayout = ({ children, role = 'customer', links = [] }) => {
     ],
     mechanic: [
       { path: '/mechanic/dashboard', label: 'Dashboard', icon: 'bi-speedometer2' },
-      { path: '/mechanic/bookings', label: 'My Assignments', icon: 'bi-calendar-check' }
+      { path: '/mechanic/bookings', label: 'My Assignments', icon: 'bi-calendar-check' },
+      { path: '/mechanic/location', label: 'Customer Location', icon: 'bi-geo-alt' }
     ]
   }
 

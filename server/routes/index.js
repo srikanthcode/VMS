@@ -252,35 +252,77 @@ router.post('/contact', async (req, res) => {
   }
 });
 
-// Location routes (admin only for tracking others)
+// Location routes (real-time live tracking for Pickup & Drop)
 router.put('/location/update', authenticate, async (req, res) => {
   try {
-    const { latitude, longitude } = req.body;
+    const { latitude, longitude, bookingId } = req.body;
     if (latitude == null || longitude == null || isNaN(parseFloat(latitude)) || isNaN(parseFloat(longitude))) {
       return res.status(400).json({ success: false, message: 'Valid latitude and longitude are required' });
     }
-    const { User } = require('../models');
+    const { User, Booking } = require('../models');
     const lat = parseFloat(latitude);
     const lng = parseFloat(longitude);
+    if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+      return res.status(400).json({ success: false, message: 'Invalid coordinates' });
+    }
 
     await User.update(
       { latitude: lat, longitude: lng, lastLocationUpdate: new Date() },
       { where: { id: req.user.id } }
     );
 
-    const { emitToAdmins, emitBroadcast } = require('../socket');
+    if (bookingId && req.user.role === 'CUSTOMER') {
+      const booking = await Booking.findOne({ where: { id: bookingId, userId: req.user.id } });
+      if (booking && booking.pickupRequired) {
+        await booking.update({ pickupLatitude: lat, pickupLongitude: lng, shareLiveLocation: true });
+      }
+    }
+
+    const { emitLocationUpdate } = require('../socket');
     const payload = {
       userId: req.user.id,
+      id: req.user.id,
       name: req.user.name,
       role: req.user.role,
+      avatar: req.user.avatar || null,
       latitude: lat,
       longitude: lng,
+      bookingId: bookingId || null,
       lastLocationUpdate: new Date().toISOString()
     };
-    emitToAdmins('location:updated', payload);
-    emitBroadcast('location:updated', payload);
+    emitLocationUpdate(payload);
 
-    res.json({ success: true, message: 'Location updated' });
+    res.json({ success: true, message: 'Location updated', data: payload });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});
+
+router.post('/location/stop', authenticate, async (req, res) => {
+  try {
+    const { User, Booking } = require('../models');
+    await User.update(
+      { lastLocationUpdate: null },
+      { where: { id: req.user.id } }
+    );
+    if (req.body.bookingId && req.user.role === 'CUSTOMER') {
+      await Booking.update(
+        { shareLiveLocation: false },
+        { where: { id: req.body.bookingId, userId: req.user.id } }
+      );
+    }
+    const { emitLocationUpdate } = require('../socket');
+    emitLocationUpdate({
+      userId: req.user.id,
+      id: req.user.id,
+      name: req.user.name,
+      role: req.user.role,
+      latitude: null,
+      longitude: null,
+      sharing: false,
+      lastLocationUpdate: new Date().toISOString()
+    });
+    res.json({ success: true, message: 'Location sharing stopped' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
@@ -290,15 +332,35 @@ router.get('/location/track', authenticate, authorize('ADMIN', 'MECHANIC'), asyn
   try {
     const { User } = require('../models');
 
+    const where = {
+      latitude: { [Op.ne]: null },
+      longitude: { [Op.ne]: null }
+    };
+    if (req.query.role) where.role = req.query.role;
+
     const users = await User.findAll({
-      where: {
-        latitude: { [Op.ne]: null },
-        longitude: { [Op.ne]: null }
-      },
-      attributes: ['id', 'name', 'role', 'latitude', 'longitude', 'lastLocationUpdate', 'avatar']
+      where,
+      attributes: ['id', 'name', 'role', 'latitude', 'longitude', 'lastLocationUpdate', 'avatar', 'phone']
     });
 
     res.json({ success: true, data: users });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});
+
+router.get('/location/customers', authenticate, authorize('ADMIN', 'MECHANIC'), async (req, res) => {
+  try {
+    const { User } = require('../models');
+    const customers = await User.findAll({
+      where: {
+        role: 'CUSTOMER',
+        latitude: { [Op.ne]: null },
+        longitude: { [Op.ne]: null }
+      },
+      attributes: ['id', 'name', 'role', 'latitude', 'longitude', 'lastLocationUpdate', 'avatar', 'phone']
+    });
+    res.json({ success: true, data: customers });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }

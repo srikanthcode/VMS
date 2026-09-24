@@ -109,6 +109,10 @@ export const SocketProvider = ({ children }) => {
       window.dispatchEvent(new CustomEvent('vms:location', { detail: payload }))
     })
 
+    s.on('customer:location', (payload) => {
+      window.dispatchEvent(new CustomEvent('vms:customer-location', { detail: payload }))
+    })
+
     s.on('pickup:created', (payload) => {
       window.dispatchEvent(new CustomEvent('vms:pickup', { detail: { type: 'created', payload } }))
     })

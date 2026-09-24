@@ -62,6 +62,9 @@ const Booking = sequelize.define('Booking', {
   pickupLandmark: { type: DataTypes.STRING, allowNull: true },
   pickupTime: { type: DataTypes.STRING, allowNull: true },
   pickupContact: { type: DataTypes.STRING, allowNull: true },
+  pickupLatitude: { type: DataTypes.DECIMAL(10, 8), allowNull: true },
+  pickupLongitude: { type: DataTypes.DECIMAL(11, 8), allowNull: true },
+  shareLiveLocation: { type: DataTypes.BOOLEAN, defaultValue: false },
   additionalNotes: { type: DataTypes.TEXT, allowNull: true },
   status: {
     type: DataTypes.ENUM('PENDING', 'CONFIRMED', 'PICKUP_SCHEDULED', 'VEHICLE_PICKED_UP', 'INSPECTION', 'SERVICE_IN_PROGRESS', 'READY_FOR_DELIVERY', 'OUT_FOR_DELIVERY', 'COMPLETED', 'CANCELLED'),
@@ -121,7 +124,11 @@ const PickupRequest = sequelize.define('PickupRequest', {
   landmark: { type: DataTypes.STRING, allowNull: true },
   preferredTime: { type: DataTypes.STRING, allowNull: false },
   contactNumber: { type: DataTypes.STRING, allowNull: false },
-  status: { type: DataTypes.ENUM('PENDING', 'SCHEDULED', 'PICKED_UP'), defaultValue: 'PENDING' }
+  status: { type: DataTypes.ENUM('PENDING', 'SCHEDULED', 'PICKED_UP'), defaultValue: 'PENDING' },
+  pickupLatitude: { type: DataTypes.DECIMAL(10, 8), allowNull: true },
+  pickupLongitude: { type: DataTypes.DECIMAL(11, 8), allowNull: true },
+  dropLatitude: { type: DataTypes.DECIMAL(10, 8), allowNull: true },
+  dropLongitude: { type: DataTypes.DECIMAL(11, 8), allowNull: true }
 });
 
 const AuditLog = sequelize.define('AuditLog', {

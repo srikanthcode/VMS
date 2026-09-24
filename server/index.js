@@ -161,7 +161,9 @@ const startServer = async () => {
   try {
     await sequelize.authenticate();
     console.log('Database connected.');
-    const syncOptions = process.env.DATABASE_URL ? { alter: true } : {};
+    const syncOptions = process.env.DATABASE_URL || process.env.NODE_ENV === 'production'
+      ? { alter: true }
+      : { alter: true };
     await sequelize.sync(syncOptions);
     console.log('Database synced.');
     await autoSeed();

@@ -10,7 +10,6 @@ export default defineConfig({
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
           charts: ['chart.js', 'react-chartjs-2'],
-          maps: ['leaflet', 'react-leaflet'],
           ui: ['bootstrap', 'react-hot-toast', 'socket.io-client', 'axios']
         }
       }

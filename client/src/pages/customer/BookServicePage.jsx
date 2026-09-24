@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import DashboardLayout from '../../components/DashboardLayout'
+import LiveLocationShare from '../../components/LiveLocationShare'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
 
@@ -16,11 +17,13 @@ const BookServicePage = () => {
     preferredTime: '',
     pickupRequired: false,
     pickupAddress: '',
+    shareLiveLocation: false,
     additionalNotes: ''
   })
   const [vehicles, setVehicles] = useState([])
   const [services, setServices] = useState([])
   const [selectedService, setSelectedService] = useState(null)
+  const [livePosition, setLivePosition] = useState(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
@@ -88,6 +91,24 @@ const BookServicePage = () => {
 
     setSubmitting(true)
     try {
+      let pickupLat = livePosition?.latitude
+      let pickupLng = livePosition?.longitude
+
+      if (formData.pickupRequired && formData.shareLiveLocation && !pickupLat) {
+        try {
+          const pos = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: true,
+              timeout: 10000
+            })
+          })
+          pickupLat = pos.coords.latitude
+          pickupLng = pos.coords.longitude
+        } catch {
+          toast.error('Allow location access to share pickup pin')
+        }
+      }
+
       await api.bookings.create({
         vehicleId: formData.vehicleId,
         serviceTypeId: formData.serviceTypeId,
@@ -95,10 +116,13 @@ const BookServicePage = () => {
         preferredTime: formData.preferredTime,
         pickupRequired: formData.pickupRequired,
         pickupAddress: formData.pickupAddress,
+        pickupLatitude: pickupLat,
+        pickupLongitude: pickupLng,
+        shareLiveLocation: Boolean(formData.shareLiveLocation),
         additionalNotes: formData.additionalNotes
       })
       toast.success('Booking created successfully!')
-      navigate('/dashboard/bookings')
+      navigate(formData.shareLiveLocation ? '/dashboard/share-location' : '/dashboard/bookings')
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to create booking')
     } finally {
@@ -224,18 +248,45 @@ const BookServicePage = () => {
                 </div>
 
                 {formData.pickupRequired && (
-                  <div className="col-12">
-                    <label className="form-label">Pickup Address *</label>
-                    <textarea
-                      className={`form-control ${errors.pickupAddress ? 'is-invalid' : ''}`}
-                      name="pickupAddress"
-                      rows="2"
-                      value={formData.pickupAddress}
-                      onChange={handleChange}
-                      placeholder="Enter your pickup address"
-                    ></textarea>
-                    {errors.pickupAddress && <div className="invalid-feedback">{errors.pickupAddress}</div>}
-                  </div>
+                  <>
+                    <div className="col-12">
+                      <label className="form-label">Pickup Address *</label>
+                      <textarea
+                        className={`form-control ${errors.pickupAddress ? 'is-invalid' : ''}`}
+                        name="pickupAddress"
+                        rows="2"
+                        value={formData.pickupAddress}
+                        onChange={handleChange}
+                        placeholder="Enter your pickup address"
+                      ></textarea>
+                      {errors.pickupAddress && <div className="invalid-feedback">{errors.pickupAddress}</div>}
+                    </div>
+
+                    <div className="col-12">
+                      <div className="form-check">
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          id="shareLiveLocation"
+                          name="shareLiveLocation"
+                          checked={formData.shareLiveLocation}
+                          onChange={handleChange}
+                        />
+                        <label className="form-check-label" htmlFor="shareLiveLocation">
+                          Share my live Google Maps location for pickup & drop
+                        </label>
+                      </div>
+                      <small className="text-muted">
+                        Admin & mechanic will see your real-time location until pickup is complete.
+                      </small>
+                    </div>
+
+                    {formData.shareLiveLocation && (
+                      <div className="col-12">
+                        <LiveLocationShare compact />
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {/* Notes */}

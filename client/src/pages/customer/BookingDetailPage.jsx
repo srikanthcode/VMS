@@ -4,6 +4,8 @@ import DashboardLayout from '../../components/DashboardLayout'
 import BookingTimeline from '../../components/BookingTimeline'
 import StatusBadge from '../../components/StatusBadge'
 import LoadingSpinner from '../../components/LoadingSpinner'
+import LiveLocationShare from '../../components/LiveLocationShare'
+import GoogleMapsView from '../../components/GoogleMapsView'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
 
@@ -138,6 +140,38 @@ const BookingDetailPage = () => {
               )}
             </div>
           </div>
+
+          {/* Pickup & Live Location */}
+          {booking.pickupRequired && (
+            <div className="card-custom p-4 mb-4">
+              <h5 className="fw-bold mb-3">
+                <i className="bi bi-truck me-2"></i>
+                Pickup & Drop
+              </h5>
+              <p className="mb-2">
+                <span className="text-muted">Address:</span>{' '}
+                <strong>{booking.pickupAddress || 'Not provided'}</strong>
+              </p>
+              {booking.pickupLatitude && booking.pickupLongitude && (
+                <div style={{ height: 220, borderRadius: 12, overflow: 'hidden', marginBottom: 12 }}>
+                  <GoogleMapsView
+                    markers={[{
+                      id: 'pickup',
+                      name: 'Pickup Location',
+                      role: 'CUSTOMER',
+                      latitude: booking.pickupLatitude,
+                      longitude: booking.pickupLongitude
+                    }]}
+                    center={{ lat: booking.pickupLatitude, lng: booking.pickupLongitude }}
+                    selectedId="pickup"
+                    height="100%"
+                    singleEmbed
+                  />
+                </div>
+              )}
+              <LiveLocationShare bookingId={booking.id} compact />
+            </div>
+          )}
 
           {/* Vehicle Info */}
           {booking.Vehicle && (

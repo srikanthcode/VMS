@@ -1,11 +1,11 @@
 const { PickupRequest, Booking, User, Vehicle, ServiceType } = require('../models');
 const { Op } = require('sequelize');
-const { emitToUser, emitToAdmins, emitBroadcast } = require('../socket');
+const { emitToUser, emitToAdmins, emitToMechanics, emitBroadcast } = require('../socket');
 const { createNotification } = require('./notificationController');
 
 const createPickupRequest = async (req, res) => {
   try {
-    const { bookingId, address, landmark, preferredTime, contactNumber } = req.body;
+    const { bookingId, address, landmark, preferredTime, contactNumber, latitude, longitude } = req.body;
 
     const booking = await Booking.findOne({
       where: { id: bookingId, userId: req.user.id }
@@ -29,7 +29,9 @@ const createPickupRequest = async (req, res) => {
       address,
       landmark,
       preferredTime,
-      contactNumber
+      contactNumber,
+      pickupLatitude: latitude != null && !isNaN(parseFloat(latitude)) ? parseFloat(latitude) : null,
+      pickupLongitude: longitude != null && !isNaN(parseFloat(longitude)) ? parseFloat(longitude) : null
     });
 
     const fullPickup = await PickupRequest.findByPk(pickup.id, {
@@ -47,6 +49,7 @@ const createPickupRequest = async (req, res) => {
 
     emitBroadcast('pickup:created', fullPickup);
     emitToAdmins('pickup:created', fullPickup);
+    emitToMechanics('pickup:created', fullPickup);
     await createNotification(req.user.id, 'Pickup Requested', 'Your pickup request has been submitted.', 'BOOKING');
 
     res.status(201).json({ success: true, data: fullPickup });

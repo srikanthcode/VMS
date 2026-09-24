@@ -1,85 +1,65 @@
 import { useState, useEffect, useRef } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
+import GoogleMapsView from '../../components/GoogleMapsView'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
 import './LocationTracker.css'
 
-delete L.Icon.Default.prototype._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png'
-})
-
-const createIcon = (color) => L.divIcon({
-  className: 'custom-marker',
-  html: `<div style="width:28px;height:28px;background:${color};border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center"><div style="width:8px;height:8px;background:white;border-radius:50%"></div></div>`,
-  iconSize: [28, 28],
-  iconAnchor: [14, 14],
-  popupAnchor: [0, -20]
-})
-
 const RoleColors = { ADMIN: '#e94560', MECHANIC: '#28a745', CUSTOMER: '#17a2b8' }
 
-const MapUpdater = ({ center }) => {
-  const map = useMap()
-  useEffect(() => {
-    if (center) {
-      map.setView(center, 15)
-    }
-  }, [center, map])
-  return null
-}
+const toUser = (payload) => ({
+  id: payload.userId ?? payload.id,
+  name: payload.name || 'User',
+  role: payload.role,
+  latitude: payload.latitude,
+  longitude: payload.longitude,
+  lastLocationUpdate: payload.lastLocationUpdate,
+  avatar: payload.avatar || null,
+  phone: payload.phone || null
+})
 
-const LocationTracker = () => {
+const LocationTracker = ({ title = 'Location Tracker', subtitle = 'Track all users in real-time', roleFilter = null }) => {
   const { user } = useAuth()
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [tracking, setTracking] = useState(false)
-  const [center, setCenter] = useState([20.5937, 78.9629])
-  const [mapReady, setMapReady] = useState(false)
+  const [selectedId, setSelectedId] = useState(null)
+  const [center, setCenter] = useState(null)
+  const [filter, setFilter] = useState(roleFilter || 'ALL')
   const watchIdRef = useRef(null)
+
+  const mergeUser = (next) => {
+    if (!next || next.id == null) return
+    setUsers(prev => {
+      const exists = prev.some(u => String(u.id) === String(next.id))
+      if (!exists) return [...prev, next]
+      return prev.map(u => String(u.id) === String(next.id) ? { ...u, ...next } : u)
+    })
+    if (next.latitude != null && next.longitude != null) {
+      setCenter({ lat: parseFloat(next.latitude), lng: parseFloat(next.longitude) })
+    }
+  }
 
   useEffect(() => {
     fetchLocations()
+
     const onLocation = (e) => {
       const payload = e.detail
       if (!payload) return
-      setUsers(prev => {
-        const exists = prev.some(u => u.id === payload.userId)
-        if (!exists) {
-          return [...prev, {
-            id: payload.userId,
-            name: payload.name || 'User',
-            role: payload.role,
-            latitude: payload.latitude,
-            longitude: payload.longitude,
-            lastLocationUpdate: payload.lastLocationUpdate
-          }]
-        }
-        return prev.map(u => u.id === payload.userId
-          ? {
-              ...u,
-              latitude: payload.latitude,
-              longitude: payload.longitude,
-              lastLocationUpdate: payload.lastLocationUpdate,
-              name: payload.name || u.name,
-              role: payload.role || u.role
-            }
-          : u
-        )
-      })
-      setCenter([payload.latitude, payload.longitude])
+      if (payload.latitude == null || payload.longitude == null) {
+        setUsers(prev => prev.filter(u => String(u.id) !== String(payload.userId ?? payload.id)))
+        return
+      }
+      mergeUser(toUser(payload))
     }
 
     window.addEventListener('vms:location', onLocation)
-    const poll = setInterval(fetchLocations, 10000)
+    window.addEventListener('vms:customer-location', onLocation)
+    const poll = setInterval(fetchLocations, 15000)
 
     return () => {
       window.removeEventListener('vms:location', onLocation)
+      window.removeEventListener('vms:customer-location', onLocation)
       clearInterval(poll)
       if (watchIdRef.current) {
         navigator.geolocation.clearWatch(watchIdRef.current)
@@ -87,22 +67,15 @@ const LocationTracker = () => {
     }
   }, [])
 
-  useEffect(() => {
-    if (mapReady) {
-      fetchLocations()
-    }
-  }, [mapReady])
-
   const fetchLocations = async () => {
     try {
-      const res = await api.location.trackAll()
+      const params = filter && filter !== 'ALL' ? { role: filter } : undefined
+      const res = await api.location.trackAll(params)
       const data = res.data || []
       setUsers(data)
-      if (data.length > 0) {
-        const withLocation = data.filter(u => u.latitude && u.longitude)
-        if (withLocation.length > 0) {
-          setCenter([parseFloat(withLocation[0].latitude), parseFloat(withLocation[0].longitude)])
-        }
+      if (!selectedId && data.length > 0) {
+        const first = data.find(u => u.latitude && u.longitude)
+        if (first) setSelectedId(first.id)
       }
     } catch (error) {
       console.error('Failed to fetch locations:', error)
@@ -111,23 +84,31 @@ const LocationTracker = () => {
     }
   }
 
+  useEffect(() => {
+    fetchLocations()
+  }, [filter])
+
   const startTracking = () => {
     if (!navigator.geolocation) {
       toast.error('Geolocation not supported')
       return
     }
     setTracking(true)
-    toast.success('Location tracking started')
+    toast.success('Sharing your live location')
     watchIdRef.current = navigator.geolocation.watchPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords
         try {
           await api.location.update({ latitude, longitude })
-          setCenter([latitude, longitude])
-          setUsers(prev => prev.map(u => u.id === user?.id
-            ? { ...u, latitude, longitude, lastLocationUpdate: new Date().toISOString() }
-            : u
-          ).filter(Boolean))
+          mergeUser({
+            id: user?.id,
+            name: user?.name,
+            role: user?.role,
+            latitude,
+            longitude,
+            lastLocationUpdate: new Date().toISOString()
+          })
+          setSelectedId(user?.id)
         } catch (error) {
           console.error('Failed to update location:', error)
         }
@@ -141,39 +122,77 @@ const LocationTracker = () => {
     )
   }
 
-  const stopTracking = () => {
+  const stopTracking = async () => {
     if (watchIdRef.current) {
       navigator.geolocation.clearWatch(watchIdRef.current)
       watchIdRef.current = null
     }
     setTracking(false)
-    toast.success('Location tracking stopped')
+    try {
+      await api.location.stop({})
+    } catch {}
+    toast.success('Location sharing stopped')
   }
 
   const centerOnUser = () => {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const { latitude, longitude } = pos.coords
-        setCenter([latitude, longitude])
+        setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+        if (user?.id) setSelectedId(user.id)
       },
       () => toast.error('Failed to get your location')
     )
   }
 
+  const filteredUsers = users.filter(u => {
+    if (roleFilter && u.role !== roleFilter) return false
+    if (filter && filter !== 'ALL' && u.role !== filter) return false
+    return u.latitude != null && u.longitude != null
+  })
+
+  const listUsers = users.filter(u => {
+    if (roleFilter && u.role !== roleFilter) return false
+    if (filter && filter !== 'ALL' && u.role !== filter) return false
+    return true
+  })
+
+  const googleMarkers = filteredUsers.map(u => ({
+    id: u.id,
+    userId: u.id,
+    name: u.name,
+    role: u.role,
+    latitude: u.latitude,
+    longitude: u.longitude,
+    lastLocationUpdate: u.lastLocationUpdate
+  }))
+
   return (
     <div className="location-tracker">
       <div className="location-header">
         <div>
-          <h4 style={{ margin: 0 }}>Location Tracker</h4>
-          <small style={{ color: 'var(--text-secondary, #8a94a6)' }}>Track all users in real-time</small>
+          <h4 style={{ margin: 0 }}>{title}</h4>
+          <small style={{ color: 'var(--text-secondary, #8a94a6)' }}>{subtitle}</small>
         </div>
-        <div className="d-flex gap-2">
+        <div className="d-flex gap-2 flex-wrap">
+          {!roleFilter && (
+            <select
+              className="form-select form-select-sm"
+              style={{ width: 'auto' }}
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            >
+              <option value="ALL">All roles</option>
+              <option value="CUSTOMER">Customers</option>
+              <option value="MECHANIC">Mechanics</option>
+              <option value="ADMIN">Admins</option>
+            </select>
+          )}
           <button
             className={`btn btn-sm ${tracking ? 'btn-danger' : 'btn-accent'}`}
             onClick={tracking ? stopTracking : startTracking}
           >
             <i className={`bi ${tracking ? 'bi-stop-circle' : 'bi-play-circle'} me-1`}></i>
-            {tracking ? 'Stop' : 'Track'}
+            {tracking ? 'Stop' : 'Share My Location'}
           </button>
           <button className="btn btn-sm btn-outline-accent" onClick={centerOnUser}>
             <i className="bi bi-crosshair"></i>
@@ -189,63 +208,36 @@ const LocationTracker = () => {
           {loading ? (
             <div className="map-loading">
               <div className="loading-spinner"></div>
-              <p>Loading map...</p>
+              <p>Loading Google Maps...</p>
             </div>
           ) : (
-            <MapContainer
+            <GoogleMapsView
+              markers={googleMarkers}
               center={center}
-              zoom={13}
-              className="leaflet-map"
-              ref={(map) => { if (map) setMapReady(true) }}
-            >
-              <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-              />
-              <MapUpdater center={center} />
-              {users.filter(u => u.latitude && u.longitude).map(u => (
-                <Marker
-                  key={u.id}
-                  position={[parseFloat(u.latitude), parseFloat(u.longitude)]}
-                  icon={createIcon(RoleColors[u.role] || '#6c757d')}
-                >
-                  <Popup>
-                    <div style={{ fontFamily: 'Inter, sans-serif', minWidth: '150px' }}>
-                      <h6 style={{ margin: 0, fontSize: '1rem' }}>{u.name}</h6>
-                      <span style={{
-                        display: 'inline-block',
-                        background: RoleColors[u.role],
-                        color: 'white',
-                        padding: '2px 8px',
-                        borderRadius: '10px',
-                        fontSize: '0.75rem',
-                        marginTop: '4px'
-                      }}>
-                        {u.role}
-                      </span>
-                      {u.lastLocationUpdate && (
-                        <p style={{ margin: '8px 0 0', fontSize: '0.75rem', color: '#666' }}>
-                          Updated: {new Date(u.lastLocationUpdate).toLocaleString()}
-                        </p>
-                      )}
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
+              selectedId={selectedId}
+              onSelect={(id) => setSelectedId(id)}
+              height="100%"
+              singleEmbed
+              className="google-map-view"
+            />
           )}
         </div>
 
         <div className="users-sidebar">
           <h6 style={{ marginBottom: '15px' }}>
             <i className="bi bi-people me-2"></i>
-            Users ({users.filter(u => u.latitude).length})
+            Live Users ({filteredUsers.length})
           </h6>
-          {users.map(u => (
+          {listUsers.map(u => (
             <div
               key={u.id}
-              className="user-card"
-              onClick={() => u.latitude && setCenter([parseFloat(u.latitude), parseFloat(u.longitude)])}
+              className={`user-card ${String(selectedId) === String(u.id) ? 'active' : ''}`}
+              onClick={() => {
+                if (u.latitude && u.longitude) {
+                  setSelectedId(u.id)
+                  setCenter({ lat: parseFloat(u.latitude), lng: parseFloat(u.longitude) })
+                }
+              }}
             >
               <div className="d-flex justify-content-between align-items-start">
                 <div>
@@ -257,19 +249,44 @@ const LocationTracker = () => {
                     {u.role}
                   </span>
                 </div>
-                {u.latitude && (
+                {u.latitude && u.longitude ? (
                   <span className="live-badge">
                     <i className="bi bi-circle-fill me-1"></i>Live
                   </span>
+                ) : (
+                  <span className="text-muted" style={{ fontSize: '0.7rem' }}>Offline</span>
                 )}
               </div>
+              {u.phone && (
+                <small className="update-time">
+                  <i className="bi bi-telephone me-1"></i>{u.phone}
+                </small>
+              )}
               {u.lastLocationUpdate && (
                 <small className="update-time">
                   {new Date(u.lastLocationUpdate).toLocaleString()}
                 </small>
               )}
+              {u.latitude && u.longitude && (
+                <a
+                  className="btn btn-sm btn-outline-primary mt-2 w-100"
+                  href={`https://www.google.com/maps?q=${u.latitude},${u.longitude}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <i className="bi bi-signpost-2 me-1"></i>
+                  Directions
+                </a>
+              )}
             </div>
           ))}
+          {listUsers.length === 0 && (
+            <div className="text-center py-4 text-muted">
+              <i className="bi bi-geo-alt display-6"></i>
+              <p className="small mt-2 mb-0">No one is sharing location right now</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
