@@ -11,7 +11,7 @@ const AdminServicesPage = () => {
   const [showModal, setShowModal] = useState(false)
   const [selectedService, setSelectedService] = useState(null)
   const [formData, setFormData] = useState({
-    name: '', description: '', price: '', duration: '', includes: ''
+    name: '', description: '', price: '', duration: '', includes: '', features: '', warranty: ''
   })
   const [formLoading, setFormLoading] = useState(false)
   const [errors, setErrors] = useState({})
@@ -33,7 +33,7 @@ const AdminServicesPage = () => {
 
   const handleAdd = () => {
     setSelectedService(null)
-    setFormData({ name: '', description: '', price: '', duration: '', includes: '' })
+    setFormData({ name: '', description: '', price: '', duration: '', includes: '', features: '', warranty: '' })
     setShowModal(true)
   }
 
@@ -44,7 +44,9 @@ const AdminServicesPage = () => {
       description: service.description,
       price: service.price,
       duration: service.duration || '',
-      includes: service.includes?.join(', ') || ''
+      includes: service.includes?.join(', ') || '',
+      features: service.features?.join(', ') || '',
+      warranty: service.warranty || ''
     })
     setShowModal(true)
   }
@@ -88,7 +90,9 @@ const AdminServicesPage = () => {
       const data = {
         ...formData,
         price: Number(formData.price),
-        includes: formData.includes ? formData.includes.split(',').map(i => i.trim()) : []
+        duration: formData.duration ? Number(formData.duration) : null,
+        includes: formData.includes ? formData.includes.split(',').map(i => i.trim()).filter(Boolean) : [],
+        features: formData.features ? formData.features.split(',').map(i => i.trim()).filter(Boolean) : []
       }
       if (selectedService) {
         await api.services.update(selectedService.id, data)
@@ -211,6 +215,26 @@ const AdminServicesPage = () => {
                 value={formData.includes}
                 onChange={(e) => setFormData(prev => ({ ...prev, includes: e.target.value }))}
                 placeholder="e.g., Oil change, Filter replacement"
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label">Features (comma separated)</label>
+              <input
+                type="text"
+                className="form-control"
+                value={formData.features}
+                onChange={(e) => setFormData(prev => ({ ...prev, features: e.target.value }))}
+                placeholder="e.g., 25-point inspection, Free pickup"
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label">Warranty</label>
+              <input
+                type="text"
+                className="form-control"
+                value={formData.warranty}
+                onChange={(e) => setFormData(prev => ({ ...prev, warranty: e.target.value }))}
+                placeholder="e.g., 6 months / 10,000 km"
               />
             </div>
             <div className="col-12">

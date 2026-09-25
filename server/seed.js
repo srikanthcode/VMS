@@ -33,12 +33,60 @@ const seed = async () => {
 
     console.log('Creating service types...');
     const services = await Promise.all([
-      ServiceType.create({ name: 'Basic Service', description: 'Oil change, filter replacement, general checkup', price: 49.99, duration: 60 }),
-      ServiceType.create({ name: 'Major Service', description: 'Complete engine service with all filters and fluids', price: 149.99, duration: 180 }),
-      ServiceType.create({ name: 'Brake Service', description: 'Brake pad replacement and brake fluid change', price: 89.99, duration: 90 }),
-      ServiceType.create({ name: 'AC Service', description: 'AC gas refill, filter cleaning, performance check', price: 69.99, duration: 60 }),
-      ServiceType.create({ name: 'Wheel Alignment', description: 'Four wheel alignment and balancing', price: 39.99, duration: 45 }),
-      ServiceType.create({ name: 'Battery Replacement', description: 'Battery testing and replacement with new battery', price: 129.99, duration: 30 })
+      ServiceType.create({
+        name: 'Basic Service',
+        description: 'Complete routine maintenance for everyday driving. Our certified technicians replace engine oil and the oil filter, top up all fluid levels, inspect belts, hoses and brakes, and finish with a 25-point safety check so your vehicle stays reliable, fuel-efficient and free of surprise breakdowns. Recommended every 5,000 km or 6 months.',
+        price: 49.99,
+        duration: 60,
+        warranty: '90 days / 3,000 km',
+        includes: JSON.stringify(['Engine oil replacement', 'New oil filter', 'Air filter cleaning', 'Coolant & brake fluid top-up', 'Battery and charging check', 'Brake pad and tyre inspection']),
+        features: JSON.stringify(['25-point safety inspection', 'Digital service report', 'Genuine OEM-grade parts', 'Free pickup & drop within 10 km'])
+      }),
+      ServiceType.create({
+        name: 'Major Service',
+        description: 'An extensive 60-point service designed for vehicles that have covered 40,000 to 60,000 km. It combines complete fluid replacement, all filter changes, detailed brake and suspension inspection, and a full OBD diagnostic scan to restore factory-level performance, comfort and long-term reliability.',
+        price: 149.99,
+        duration: 180,
+        warranty: '6 months / 10,000 km',
+        includes: JSON.stringify(['Engine oil and oil filter', 'Air, fuel and cabin filters', 'Coolant and brake fluid replacement', 'Brake pad inspection and adjustment', 'Suspension and steering check', 'Complete OBD diagnostic scan', 'Battery and alternator test', 'Wheel torque verification']),
+        features: JSON.stringify(['60-point vehicle inspection', 'Before and after inspection photos', 'Genuine OEM-grade parts', 'Free pickup & drop within 10 km'])
+      }),
+      ServiceType.create({
+        name: 'Brake Service',
+        description: 'Complete braking system care for confident, fade-free stopping. We measure pad and disc wear, replace worn pads, clean and lubricate the calipers, and flush the brake fluid so your braking response stays sharp and consistent in traffic, rain and downhill conditions.',
+        price: 89.99,
+        duration: 90,
+        warranty: '6 months / 10,000 km',
+        includes: JSON.stringify(['Front and rear brake pad inspection', 'Brake pad replacement', 'Disc surface measurement and cleaning', 'Brake fluid flush', 'Caliper lubrication', 'Parking brake adjustment', 'Post-service road test']),
+        features: JSON.stringify(['Digital inspection report', 'Genuine OEM-grade pads', 'Safety-critical workmanship warranty', 'Free pickup & drop within 10 km'])
+      }),
+      ServiceType.create({
+        name: 'AC Service',
+        description: 'Restore cooling performance and a clean, fresh cabin. Our AC specialists evacuate the old refrigerant, deep-clean the condenser and evaporator, replace the cabin filter and leak-test the entire system so your air conditioning stays cold, efficient and odour-free in every season.',
+        price: 69.99,
+        duration: 60,
+        warranty: '12 months on gas refill',
+        includes: JSON.stringify(['Refrigerant top-up or gas refill', 'Cabin and evaporator filter replacement', 'Condenser and evaporator cleaning', 'Leak and pressure testing', 'Drain line flush', 'Vent temperature verification']),
+        features: JSON.stringify(['Antibacterial cabin treatment', 'Faster cooling performance', 'Genuine OEM-grade refrigerant', '12-month cooling warranty'])
+      }),
+      ServiceType.create({
+        name: 'Wheel Alignment',
+        description: 'Precise four-wheel alignment and dynamic balancing that restores straight-line stability, removes steering-wheel pull and evens out uneven tyre wear. Our computerised alignment equipment applies manufacturer-recommended geometry for cars, SUVs and two-wheelers, and every job finishes with a verification road test.',
+        price: 39.99,
+        duration: 45,
+        warranty: '15 days free re-alignment',
+        includes: JSON.stringify(['Computerised four-wheel alignment', 'Toe, camber and caster correction', 'Front and rear geometry verification', 'Dynamic wheel balancing on all wheels', 'Tyre pressure correction', 'Before and after alignment report']),
+        features: JSON.stringify(['Manufacturer-spec alignment data', 'Steering pull and uneven wear correction', 'Completed in under 45 minutes', 'Free re-alignment within 15 days'])
+      }),
+      ServiceType.create({
+        name: 'Battery Replacement',
+        description: 'Reliable on-the-spot battery testing and replacement. We run a load and alternator test, confirm the health of your existing unit, install the correct capacity for your vehicle, activate the new warranty and recycle your old battery responsibly.',
+        price: 129.99,
+        duration: 30,
+        warranty: '1 year / 24,000 km',
+        includes: JSON.stringify(['Battery health and load test', 'Alternator and charging system check', 'New battery fitment and terminal protection', 'Old battery collection and recycling', 'Warranty registration support', 'Post-installation voltage check']),
+        features: JSON.stringify(['Same-day fitment', 'Old batteries recycled responsibly', 'No-cost installation', '1-year replacement warranty'])
+      })
     ]);
 
     console.log('Creating vehicles...');

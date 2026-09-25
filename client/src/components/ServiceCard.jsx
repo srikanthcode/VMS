@@ -49,16 +49,24 @@ const ServiceCard = ({ service }) => {
         )}
         <h5 className="card-title fw-bold mt-3">{service.name}</h5>
         <p className="card-text text-muted mb-3">
-          {service.description?.substring(0, 100)}
-          {service.description?.length > 100 ? '...' : ''}
+          {service.description?.substring(0, 110)}
+          {service.description?.length > 110 ? '...' : ''}
         </p>
-        <div className="d-flex justify-content-between align-items-center mb-3">
+        <div className="d-flex justify-content-between align-items-center mb-2">
           <span className="service-price">₹{service.price}</span>
           <small className="text-muted">
             <i className="bi bi-clock me-1"></i>
-            {service.estimatedDuration || '2-3 hours'}
+            {service.estimatedDuration || service.duration || '2-3 hours'}
           </small>
         </div>
+        {service.warranty && (
+          <div className="mb-3">
+            <small className="text-muted">
+              <i className="bi bi-shield-check me-1 text-success"></i>
+              Warranty: {service.warranty}
+            </small>
+          </div>
+        )}
         <Link to={`/services/${service.id}`} className="btn btn-accent w-100">
           View Details
         </Link>

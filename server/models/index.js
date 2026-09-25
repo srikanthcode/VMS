@@ -50,6 +50,9 @@ const ServiceType = sequelize.define('ServiceType', {
   price: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
   duration: { type: DataTypes.INTEGER, allowNull: true },
   image: { type: DataTypes.STRING, allowNull: true },
+  features: { type: DataTypes.TEXT, allowNull: true },
+  includes: { type: DataTypes.TEXT, allowNull: true },
+  warranty: { type: DataTypes.STRING, allowNull: true },
   isActive: { type: DataTypes.BOOLEAN, defaultValue: true }
 });
 

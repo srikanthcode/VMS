@@ -131,7 +131,7 @@ const ServiceDetailPage = () => {
 
                   <div className="d-flex justify-content-between align-items-center py-2 border-bottom">
                     <span className="text-muted">Duration</span>
-                    <span className="fw-bold">{service.estimatedDuration || '2-3 hours'}</span>
+                    <span className="fw-bold">{service.estimatedDuration || service.duration || '2-3 hours'}</span>
                   </div>
 
                   <div className="d-flex justify-content-between align-items-center py-2 border-bottom">
