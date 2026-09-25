@@ -36,7 +36,7 @@ const getMechanic = async (req, res) => {
 
 const createMechanic = async (req, res) => {
   try {
-    const { name, email, phone, password } = req.body;
+    const { name, email, phone, password, username } = req.body;
 
     if (!phone || !isValidPhone(phone)) {
       return res.status(400).json({ success: false, message: 'Phone number must be exactly 10 digits' });
@@ -47,9 +47,18 @@ const createMechanic = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email already registered' });
     }
 
+    let finalUsername = (username && String(username).trim()) || String(email).split('@')[0];
+    const usernameTaken = await User.findOne({ where: { username: finalUsername } });
+    if (usernameTaken) {
+      let suffix = 1;
+      while (await User.findOne({ where: { username: `${finalUsername}${suffix}` } })) suffix += 1;
+      finalUsername = `${finalUsername}${suffix}`;
+    }
+
     const hashedPassword = await bcrypt.hash(password || 'mechanic123', 10);
 
     const mechanic = await User.create({
+      username: finalUsername,
       name,
       email,
       phone: normalizePhone(phone),
@@ -61,6 +70,7 @@ const createMechanic = async (req, res) => {
       success: true,
       data: {
         id: mechanic.id,
+        username: mechanic.username,
         name: mechanic.name,
         email: mechanic.email,
         phone: mechanic.phone,
@@ -84,7 +94,7 @@ const updateMechanic = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Mechanic not found' });
     }
 
-    const { name, email, phone } = req.body;
+    const { name, email, phone, isActive } = req.body;
 
     if (email && email !== mechanic.email) {
       const existing = await User.findOne({ where: { email } });
@@ -97,6 +107,9 @@ const updateMechanic = async (req, res) => {
       name: name || mechanic.name,
       email: email || mechanic.email
     };
+    if (isActive !== undefined) {
+      updateData.isActive = Boolean(isActive);
+    }
     if (phone !== undefined && phone !== '') {
       if (!isValidPhone(phone)) {
         return res.status(400).json({ success: false, message: 'Phone number must be exactly 10 digits' });
@@ -110,6 +123,7 @@ const updateMechanic = async (req, res) => {
       success: true,
       data: {
         id: mechanic.id,
+        username: mechanic.username,
         name: mechanic.name,
         email: mechanic.email,
         phone: mechanic.phone,
@@ -117,6 +131,34 @@ const updateMechanic = async (req, res) => {
         isActive: mechanic.isActive
       }
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+const deleteMechanic = async (req, res) => {
+  try {
+    const mechanic = await User.findOne({
+      where: { id: req.params.id, role: 'MECHANIC' }
+    });
+
+    if (!mechanic) {
+      return res.status(404).json({ success: false, message: 'Mechanic not found' });
+    }
+
+    const bookingCount = await Booking.count({ where: { mechanicId: mechanic.id } });
+
+    if (bookingCount > 0) {
+      await mechanic.update({ isActive: false });
+      return res.json({
+        success: true,
+        message: 'Mechanic has active bookings and was deactivated instead',
+        data: { id: mechanic.id, username: mechanic.username, name: mechanic.name, isActive: mechanic.isActive }
+      });
+    }
+
+    await mechanic.destroy();
+    res.json({ success: true, message: 'Mechanic deleted successfully', data: { id: mechanic.id } });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
@@ -218,6 +260,7 @@ module.exports = {
   getMechanic,
   createMechanic,
   updateMechanic,
+  deleteMechanic,
   toggleMechanicStatus,
   getMechanicBookings,
   updateServiceProgress

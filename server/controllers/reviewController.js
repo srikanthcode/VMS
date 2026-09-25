@@ -112,12 +112,21 @@ const updateReview = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
-    const { rating, comment } = req.body;
+    const { rating, comment, adminReply: reply } = req.body;
 
-    await review.update({
+    const updateData = {
       rating: rating || review.rating,
       comment: comment || review.comment
-    });
+    };
+    if (req.user.role === 'ADMIN' && reply !== undefined) {
+      updateData.adminReply = reply;
+    }
+
+    await review.update(updateData);
+
+    if (req.user.role === 'ADMIN' && reply !== undefined && review.userId) {
+      emitToUser(review.userId, 'review:replied', review);
+    }
 
     emitBroadcast('review:updated', review);
 

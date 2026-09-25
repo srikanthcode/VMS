@@ -1,4 +1,4 @@
-const { Payment, Bill, Booking, User, Vehicle } = require('../models');
+﻿const { Payment, Bill, Booking, User, Vehicle } = require('../models');
 const { Op } = require('sequelize');
 const { generateTransactionId } = require('../utils/helpers');
 const { emitToUser, emitToAdmins, emitBroadcast } = require('../socket');
@@ -64,7 +64,7 @@ const processPayment = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Bill not found' });
     }
 
-    if (req.user.role === 'CUSTOMER' && bill.Booking.userId !== req.user.id) {
+    if (req.user.role === 'CUSTOMER' && (!bill.Booking || bill.Booking.userId !== req.user.id)) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
@@ -102,7 +102,7 @@ const processPayment = async (req, res) => {
       await createNotification(
         bill.Booking.userId,
         'Payment Successful',
-        `Payment of ₹${bill.grandTotal} received for invoice ${bill.invoiceNumber}.`,
+        `Payment of â‚¹${bill.grandTotal} received for invoice ${bill.invoiceNumber}.`,
         'PAYMENT'
       );
     }

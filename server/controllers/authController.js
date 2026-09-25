@@ -2,7 +2,6 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const { User } = require('../models');
-const { Op } = require('sequelize');
 const { JWT_SECRET } = require('../middleware/auth');
 const { isValidPhone, normalizePhone } = require('../utils/phoneValidator');
 
@@ -117,13 +116,17 @@ const login = async (req, res) => {
   try {
     const { username, password } = req.body;
 
+    if (!username || !password) {
+      return res.status(400).json({ success: false, message: 'Username and password are required' });
+    }
+
+    const identifier = String(username).trim();
+    if (!identifier || identifier.includes('@')) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials. Please enter your username.' });
+    }
+
     const user = await User.findOne({
-      where: {
-        [Op.or]: [
-          { username: username },
-          { email: username }
-        ]
-      }
+      where: { username: identifier }
     });
     if (!user) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });

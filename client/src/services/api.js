@@ -76,6 +76,7 @@ const mechanics = {
   getById: (id) => apiClient.get(`/mechanics/${id}`),
   create: (data) => apiClient.post('/mechanics', data),
   update: (id, data) => apiClient.put(`/mechanics/${id}`, data),
+  delete: (id) => apiClient.delete(`/mechanics/${id}`),
   toggleStatus: (id) => apiClient.put(`/mechanics/${id}/toggle-status`),
   getBookings: (id, params) => apiClient.get(`/mechanics/${id}/bookings`, { params }),
   getMyBookings: (params) => apiClient.get('/mechanics/bookings', { params }),

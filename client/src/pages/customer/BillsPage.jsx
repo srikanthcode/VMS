@@ -28,7 +28,7 @@ const BillsPage = () => {
 
   const handlePay = async (billId) => {
     try {
-      await api.payments.process({ billId, amount: bills.find(b => b.id === billId)?.grandTotal })
+      await api.payments.process({ billId, amount: bills.find(b => b.id === billId)?.grandTotal, paymentMethod: 'UPI' })
       toast.success('Payment successful!')
       fetchBills()
     } catch (error) {

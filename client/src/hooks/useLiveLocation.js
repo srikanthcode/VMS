@@ -3,6 +3,7 @@ import api from '../services/api'
 import { useSocket } from '../context/SocketContext'
 
 const SHARE_KEY = 'vms:location-sharing'
+const MIN_INTERVAL_MS = 3000
 
 export const useLiveLocation = ({ bookingId = null, intervalMs = 5000 } = {}) => {
   const { emit, connected } = useSocket()
@@ -12,29 +13,65 @@ export const useLiveLocation = ({ bookingId = null, intervalMs = 5000 } = {}) =>
   const [lastUpdated, setLastUpdated] = useState(null)
   const watchIdRef = useRef(null)
   const bookingRef = useRef(bookingId)
+  const lastSentRef = useRef(0)
+  const flushTimerRef = useRef(null)
+  const pendingRef = useRef(null)
+  const connectedRef = useRef(connected)
+  const emitRef = useRef(emit)
 
   bookingRef.current = bookingId
+  connectedRef.current = connected
+  emitRef.current = emit
 
-  const pushLocation = useCallback(async (latitude, longitude) => {
-    const payload = {
-      latitude,
-      longitude,
-      bookingId: bookingRef.current || undefined
+  const deliver = useCallback(async (payload) => {
+    if (connectedRef.current) {
+      emitRef.current('location:update', payload)
+      return
     }
-    setPosition({ latitude, longitude })
-    setLastUpdated(new Date())
-    setError(null)
-
-    if (connected) {
-      emit('location:update', payload)
-    }
-
     try {
       await api.location.update(payload)
     } catch (err) {
       console.error('Failed to persist location:', err)
     }
-  }, [connected, emit])
+  }, [])
+
+  const scheduleFlush = useCallback(() => {
+    if (flushTimerRef.current != null) return
+    const wait = Math.max(0, MIN_INTERVAL_MS - (Date.now() - lastSentRef.current))
+    flushTimerRef.current = setTimeout(() => {
+      flushTimerRef.current = null
+      const payload = pendingRef.current
+      if (!payload) return
+      pendingRef.current = null
+      lastSentRef.current = Date.now()
+      deliver(payload)
+    }, wait)
+  }, [deliver])
+
+  const pushLocation = useCallback((latitude, longitude, accuracy) => {
+    const payload = {
+      latitude,
+      longitude,
+      accuracy: typeof accuracy === 'number' && !Number.isNaN(accuracy) ? accuracy : undefined,
+      bookingId: bookingRef.current || undefined
+    }
+    setPosition({ latitude, longitude, accuracy: payload.accuracy })
+    setLastUpdated(new Date())
+    setError(null)
+    pendingRef.current = payload
+
+    if (Date.now() - lastSentRef.current >= MIN_INTERVAL_MS) {
+      if (flushTimerRef.current != null) {
+        clearTimeout(flushTimerRef.current)
+        flushTimerRef.current = null
+      }
+      pendingRef.current = null
+      lastSentRef.current = Date.now()
+      deliver(payload)
+    } else {
+      scheduleFlush()
+    }
+  }, [deliver, scheduleFlush])
 
   const startSharing = useCallback(() => {
     if (!navigator.geolocation) {
@@ -45,7 +82,7 @@ export const useLiveLocation = ({ bookingId = null, intervalMs = 5000 } = {}) =>
 
     setError(null)
     const send = (pos) => {
-      pushLocation(pos.coords.latitude, pos.coords.longitude)
+      pushLocation(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy)
     }
 
     navigator.geolocation.getCurrentPosition(send, (err) => {
@@ -54,7 +91,7 @@ export const useLiveLocation = ({ bookingId = null, intervalMs = 5000 } = {}) =>
 
     watchIdRef.current = navigator.geolocation.watchPosition(send, (err) => {
       setError(err.code === 1 ? 'Location permission denied' : 'Unable to get your location')
-    }, { enableHighAccuracy: true, maximumAge: intervalMs, timeout: 15000 })
+    }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 })
 
     localStorage.setItem(SHARE_KEY, '1')
     setSharing(true)
@@ -66,8 +103,15 @@ export const useLiveLocation = ({ bookingId = null, intervalMs = 5000 } = {}) =>
       navigator.geolocation.clearWatch(watchIdRef.current)
       watchIdRef.current = null
     }
+    if (flushTimerRef.current != null) {
+      clearTimeout(flushTimerRef.current)
+      flushTimerRef.current = null
+    }
+    pendingRef.current = null
     localStorage.removeItem(SHARE_KEY)
     setSharing(false)
+    setPosition(null)
+    setLastUpdated(null)
     try {
       await api.location.stop({ bookingId: bookingRef.current || undefined })
     } catch (err) {
@@ -91,6 +135,10 @@ export const useLiveLocation = ({ bookingId = null, intervalMs = 5000 } = {}) =>
       if (watchIdRef.current != null) {
         navigator.geolocation.clearWatch(watchIdRef.current)
         watchIdRef.current = null
+      }
+      if (flushTimerRef.current != null) {
+        clearTimeout(flushTimerRef.current)
+        flushTimerRef.current = null
       }
     }
   }, [])

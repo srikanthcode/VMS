@@ -1,4 +1,4 @@
-const { Bill, Booking, Payment, User, Vehicle, ServiceType } = require('../models');
+﻿const { Bill, Booking, Payment, User, Vehicle, ServiceType } = require('../models');
 const { Op } = require('sequelize');
 const { generateInvoiceNumber } = require('../utils/helpers');
 const { emitToUser, emitToAdmins, emitBroadcast } = require('../socket');
@@ -59,7 +59,7 @@ const getBill = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Bill not found' });
     }
 
-    if (req.user.role === 'CUSTOMER' && bill.Booking.userId !== req.user.id) {
+    if (req.user.role === 'CUSTOMER' && (!bill.Booking || bill.Booking.userId !== req.user.id)) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
@@ -120,7 +120,7 @@ const createBill = async (req, res) => {
       await createNotification(
         booking.userId,
         'Bill Generated',
-        `A bill of ₹${grandTotal.toFixed(2)} has been generated for booking ${booking.bookingId}.`,
+        `A bill of â‚¹${grandTotal.toFixed(2)} has been generated for booking ${booking.bookingId}.`,
         'PAYMENT'
       );
     }
@@ -152,7 +152,7 @@ const getBillByBooking = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Bill not found for this booking' });
     }
 
-    if (req.user.role === 'CUSTOMER' && bill.Booking.userId !== req.user.id) {
+    if (req.user.role === 'CUSTOMER' && (!bill.Booking || bill.Booking.userId !== req.user.id)) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 

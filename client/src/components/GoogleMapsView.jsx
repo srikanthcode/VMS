@@ -54,6 +54,7 @@ const GoogleMapsView = ({
   const infoRef = useRef(null)
   const [mode, setMode] = useState(API_KEY ? 'loading' : 'embed')
   const [embedCenter, setEmbedCenter] = useState(null)
+  const lastEmbedRef = useRef(null)
 
   const validMarkers = markers.filter((m) => isValid(m.latitude, m.longitude))
 
@@ -124,6 +125,7 @@ const GoogleMapsView = ({
             `<div style="font-family:Inter,sans-serif;min-width:140px">
               <strong>${m.name || 'User'}</strong><br/>
               <span style="display:inline-block;background:${RoleColors[m.role] || '#6c757d'};color:#fff;padding:1px 6px;border-radius:8px;font-size:11px;margin-top:4px">${m.role || ''}</span>
+              ${m.accuracy != null ? `<br/><small style="color:#666">Accuracy ±${Math.round(m.accuracy)}m</small>` : ''}
               ${m.lastLocationUpdate ? `<br/><small style="color:#666">Updated ${new Date(m.lastLocationUpdate).toLocaleString()}</small>` : ''}
             </div>`
           )
@@ -159,9 +161,28 @@ const GoogleMapsView = ({
     if (mode !== 'embed') return
     const selected = validMarkers.find((m) => String(m.id ?? m.userId) === String(selectedId))
     const target = selected || validMarkers[0]
-    if (target) {
-      setEmbedCenter({ lat: parseFloat(target.latitude), lng: parseFloat(target.longitude), name: target.name })
+    if (!target) return
+
+    const next = {
+      id: String(target.id ?? target.userId),
+      lat: parseFloat(target.latitude),
+      lng: parseFloat(target.longitude),
+      name: target.name,
+      accuracy: target.accuracy
     }
+
+    const previous = lastEmbedRef.current
+    if (previous && previous.id === next.id) {
+      const moved = Math.hypot(
+        (next.lat - previous.lat) * 111320,
+        (next.lng - previous.lng) * 111320 * Math.cos((next.lat * Math.PI) / 180)
+      )
+      const elapsed = Date.now() - previous.at
+      if (moved < 15 && elapsed < 2500) return
+    }
+
+    lastEmbedRef.current = { ...next, at: Date.now() }
+    setEmbedCenter(next)
   }, [mode, selectedId, JSON.stringify(validMarkers.map(m => ({
     id: m.id ?? m.userId,
     latitude: m.latitude,
@@ -195,7 +216,7 @@ const GoogleMapsView = ({
         src={embedSrc}
         style={{ width: '100%', height: '100%', border: 0 }}
         allowFullScreen
-        loading="lazy"
+        loading="eager"
         referrerPolicy="no-referrer-when-downgrade"
       />
       {embedCenter?.name && (
@@ -214,6 +235,9 @@ const GoogleMapsView = ({
         >
           <i className="bi bi-geo-alt-fill me-1" style={{ color: '#e94560' }}></i>
           {embedCenter.name}
+          {embedCenter.accuracy != null && (
+            <span style={{ opacity: 0.75, marginLeft: 6 }}>±{Math.round(embedCenter.accuracy)}m</span>
+          )}
         </div>
       )}
       {singleEmbed && validMarkers.length > 1 && (

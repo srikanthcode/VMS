@@ -73,18 +73,25 @@ router.post('/customers', authenticate, authorize('ADMIN'), registerValidation, 
   try {
     const bcrypt = require('bcryptjs');
     const { User } = require('../models');
-    const { name, email, phone, password } = req.body;
+    const { username, name, email, phone, password } = req.body;
+    const finalUsername = (username && String(username).trim()) || String(email).split('@')[0];
 
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'Email already registered' });
     }
 
+    const existingUsername = await User.findOne({ where: { username: finalUsername } });
+    if (existingUsername) {
+      return res.status(400).json({ success: false, message: 'Username already taken. Please choose another.' });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const customer = await User.create({
-      name,
+      username: finalUsername,
+      name: name || finalUsername,
       email,
-      phone,
+      phone: normalizePhone(phone),
       password: hashedPassword,
       role: 'CUSTOMER'
     });
@@ -116,11 +123,28 @@ router.put('/customers/:id', authenticate, authorize('ADMIN'), async (req, res) 
       return res.status(404).json({ success: false, message: 'Customer not found' });
     }
 
-    const { name, phone, isActive } = req.body;
+    const { username, name, email, phone, isActive } = req.body;
     let updateData = {
       name: name || customer.name,
       isActive: isActive !== undefined ? isActive : customer.isActive
     };
+
+    if (email && email !== customer.email) {
+      const emailTaken = await User.findOne({ where: { email } });
+      if (emailTaken) {
+        return res.status(400).json({ success: false, message: 'Email already registered' });
+      }
+      updateData.email = email;
+    }
+
+    if (username && username !== customer.username) {
+      const usernameTaken = await User.findOne({ where: { username } });
+      if (usernameTaken) {
+        return res.status(400).json({ success: false, message: 'Username already taken' });
+      }
+      updateData.username = username;
+    }
+
     if (phone !== undefined && phone !== '') {
       if (!isValidPhone(phone)) {
         return res.status(400).json({ success: false, message: 'Phone number must be exactly 10 digits' });
@@ -133,6 +157,7 @@ router.put('/customers/:id', authenticate, authorize('ADMIN'), async (req, res) 
       success: true,
       data: {
         id: customer.id,
+        username: customer.username,
         name: customer.name,
         email: customer.email,
         phone: customer.phone,
@@ -194,6 +219,7 @@ router.put('/mechanics/bookings/:id/progress', authenticate, authorize('MECHANIC
 router.get('/mechanics/:id/bookings', authenticate, authorize('ADMIN', 'MECHANIC'), mechanicController.getMechanicBookings);
 router.get('/mechanics/:id', authenticate, mechanicController.getMechanic);
 router.put('/mechanics/:id', authenticate, authorize('ADMIN'), mechanicController.updateMechanic);
+router.delete('/mechanics/:id', authenticate, authorize('ADMIN'), mechanicController.deleteMechanic);
 router.put('/mechanics/:id/toggle-status', authenticate, authorize('ADMIN'), mechanicController.toggleMechanicStatus);
 
 // Bill routes
@@ -255,7 +281,7 @@ router.post('/contact', async (req, res) => {
 // Location routes (real-time live tracking for Pickup & Drop)
 router.put('/location/update', authenticate, async (req, res) => {
   try {
-    const { latitude, longitude, bookingId } = req.body;
+    const { latitude, longitude, accuracy, bookingId } = req.body;
     if (latitude == null || longitude == null || isNaN(parseFloat(latitude)) || isNaN(parseFloat(longitude))) {
       return res.status(400).json({ success: false, message: 'Valid latitude and longitude are required' });
     }
@@ -265,9 +291,12 @@ router.put('/location/update', authenticate, async (req, res) => {
     if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
       return res.status(400).json({ success: false, message: 'Invalid coordinates' });
     }
+    const accuracyValue = accuracy != null && !isNaN(parseFloat(accuracy)) && parseFloat(accuracy) >= 0
+      ? parseFloat(accuracy)
+      : null;
 
     await User.update(
-      { latitude: lat, longitude: lng, lastLocationUpdate: new Date() },
+      { latitude: lat, longitude: lng, accuracy: accuracyValue, lastLocationUpdate: new Date() },
       { where: { id: req.user.id } }
     );
 
@@ -287,6 +316,7 @@ router.put('/location/update', authenticate, async (req, res) => {
       avatar: req.user.avatar || null,
       latitude: lat,
       longitude: lng,
+      accuracy: accuracyValue,
       bookingId: bookingId || null,
       lastLocationUpdate: new Date().toISOString()
     };
@@ -302,7 +332,7 @@ router.post('/location/stop', authenticate, async (req, res) => {
   try {
     const { User, Booking } = require('../models');
     await User.update(
-      { lastLocationUpdate: null },
+      { latitude: null, longitude: null, accuracy: null, lastLocationUpdate: null },
       { where: { id: req.user.id } }
     );
     if (req.body.bookingId && req.user.role === 'CUSTOMER') {
@@ -319,6 +349,7 @@ router.post('/location/stop', authenticate, async (req, res) => {
       role: req.user.role,
       latitude: null,
       longitude: null,
+      accuracy: null,
       sharing: false,
       lastLocationUpdate: new Date().toISOString()
     });
@@ -331,19 +362,25 @@ router.post('/location/stop', authenticate, async (req, res) => {
 router.get('/location/track', authenticate, authorize('ADMIN', 'MECHANIC'), async (req, res) => {
   try {
     const { User } = require('../models');
+    const maxAgeMinutes = parseInt(req.query.maxAge, 10) || 5;
+    const staleBefore = new Date(Date.now() - maxAgeMinutes * 60000);
 
     const where = {
       latitude: { [Op.ne]: null },
-      longitude: { [Op.ne]: null }
+      longitude: { [Op.ne]: null },
+      [Op.or]: [
+        { lastLocationUpdate: null },
+        { lastLocationUpdate: { [Op.gte]: staleBefore } }
+      ]
     };
     if (req.query.role) where.role = req.query.role;
 
     const users = await User.findAll({
       where,
-      attributes: ['id', 'name', 'role', 'latitude', 'longitude', 'lastLocationUpdate', 'avatar', 'phone']
+      attributes: ['id', 'name', 'role', 'latitude', 'longitude', 'accuracy', 'lastLocationUpdate', 'avatar', 'phone']
     });
 
-    res.json({ success: true, data: users });
+    res.json({ success: true, data: users, meta: { staleBefore: staleBefore.toISOString(), serverTime: new Date().toISOString() } });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
@@ -352,15 +389,20 @@ router.get('/location/track', authenticate, authorize('ADMIN', 'MECHANIC'), asyn
 router.get('/location/customers', authenticate, authorize('ADMIN', 'MECHANIC'), async (req, res) => {
   try {
     const { User } = require('../models');
+    const staleBefore = new Date(Date.now() - 5 * 60000);
     const customers = await User.findAll({
       where: {
         role: 'CUSTOMER',
         latitude: { [Op.ne]: null },
-        longitude: { [Op.ne]: null }
+        longitude: { [Op.ne]: null },
+        [Op.or]: [
+          { lastLocationUpdate: null },
+          { lastLocationUpdate: { [Op.gte]: staleBefore } }
+        ]
       },
-      attributes: ['id', 'name', 'role', 'latitude', 'longitude', 'lastLocationUpdate', 'avatar', 'phone']
+      attributes: ['id', 'name', 'role', 'latitude', 'longitude', 'accuracy', 'lastLocationUpdate', 'avatar', 'phone']
     });
-    res.json({ success: true, data: customers });
+    res.json({ success: true, data: customers, meta: { serverTime: new Date().toISOString() } });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
@@ -371,14 +413,14 @@ router.get('/location/user/:id', authenticate, authorize('ADMIN', 'MECHANIC'), a
     const { User } = require('../models');
 
     const user = await User.findByPk(req.params.id, {
-      attributes: ['id', 'name', 'role', 'latitude', 'longitude', 'lastLocationUpdate', 'avatar', 'phone']
+      attributes: ['id', 'name', 'role', 'latitude', 'longitude', 'accuracy', 'lastLocationUpdate', 'avatar', 'phone']
     });
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    res.json({ success: true, data: user });
+    res.json({ success: true, data: user, meta: { serverTime: new Date().toISOString() } });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }

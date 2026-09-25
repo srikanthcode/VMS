@@ -16,12 +16,17 @@ const ShareLocationPage = () => {
         const bookings = res.data.bookings || res.data || []
         const pickups = bookings.filter(b => b.pickupRequired && !['COMPLETED', 'CANCELLED'].includes(b.status))
         setPickupBookings(pickups)
-        if (pickups.length > 0) setActiveBookingId(pickups[0].id)
+        if (pickups.length > 0) {
+          setActiveBookingId(prev => (prev && pickups.some(b => b.id === prev) ? prev : pickups[0].id))
+        }
       } catch {
         setPickupBookings([])
       }
     }
     load()
+    const refresh = () => load()
+    window.addEventListener('vms:booking', refresh)
+    return () => window.removeEventListener('vms:booking', refresh)
   }, [])
 
   return (

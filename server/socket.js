@@ -13,6 +13,7 @@ const locationPayloadFromUser = (user) => ({
   avatar: user.avatar || null,
   latitude: user.latitude != null ? parseFloat(user.latitude) : null,
   longitude: user.longitude != null ? parseFloat(user.longitude) : null,
+  accuracy: user.accuracy != null ? parseFloat(user.accuracy) : null,
   lastLocationUpdate: user.lastLocationUpdate
     ? new Date(user.lastLocationUpdate).toISOString()
     : new Date().toISOString()
@@ -53,17 +54,32 @@ const initSocket = (httpServer) => {
       if (Math.abs(payload.latitude) > 90 || Math.abs(payload.longitude) > 180) return;
 
       try {
+        const accuracy = typeof payload.accuracy === 'number' && payload.accuracy >= 0 ? payload.accuracy : null;
+
         await User.update(
           {
             latitude: payload.latitude,
             longitude: payload.longitude,
+            accuracy,
             lastLocationUpdate: new Date()
           },
           { where: { id: user.id } }
         );
 
+        if (payload.bookingId && user.role === 'CUSTOMER') {
+          const { Booking } = require('./models');
+          const booking = await Booking.findOne({ where: { id: payload.bookingId, userId: user.id } });
+          if (booking && booking.pickupRequired) {
+            await booking.update({
+              pickupLatitude: payload.latitude,
+              pickupLongitude: payload.longitude,
+              shareLiveLocation: true
+            });
+          }
+        }
+
         const dbUser = await User.findByPk(user.id, {
-          attributes: ['id', 'name', 'role', 'latitude', 'longitude', 'lastLocationUpdate', 'avatar']
+          attributes: ['id', 'name', 'role', 'latitude', 'longitude', 'accuracy', 'lastLocationUpdate', 'avatar']
         });
         if (!dbUser) return;
 
@@ -72,6 +88,7 @@ const initSocket = (httpServer) => {
 
         io.to('admins').emit('location:updated', data);
         io.to('mechanics').emit('location:updated', data);
+        io.to(`watch:user:${user.id}`).emit('location:updated', data);
         if (user.role === 'CUSTOMER') {
           io.to('admins').emit('customer:location', data);
           io.to('mechanics').emit('customer:location', data);

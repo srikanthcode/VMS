@@ -157,16 +157,47 @@ const autoSeed = async () => {
   }
 };
 
+const ensureColumns = async () => {
+  const queryInterface = sequelize.getQueryInterface();
+  const models = [User, Vehicle, ServiceType, Booking, BookingStatusHistory, Bill, Payment, Notification, Review];
+
+  for (const model of models) {
+    try {
+      const tableName = model.getTableName();
+      const description = await queryInterface.describeTable(tableName);
+      for (const [attribute, definition] of Object.entries(model.rawAttributes)) {
+        if (!description[attribute]) {
+          await queryInterface.addColumn(tableName, attribute, definition);
+        }
+      }
+    } catch (error) {
+      console.warn(`Schema check skipped for ${model.name}: ${error.message}`);
+    }
+  }
+};
+
+const reportDataIntegrity = async () => {
+  try {
+    const orphanVehicles = await Vehicle.count({ where: { userId: null } });
+    const orphanBookings = await Booking.count({ where: { userId: null } });
+    const orphanBills = await Bill.count({ where: { bookingId: null } });
+    if (orphanVehicles || orphanBookings || orphanBills) {
+      console.warn(`WARNING: ${orphanVehicles} vehicle(s), ${orphanBookings} booking(s) and ${orphanBills} bill(s) lost their links. Run "npm run seed" to rebuild demo data.`);
+    }
+  } catch (error) {
+    console.warn(`Integrity check skipped: ${error.message}`);
+  }
+};
+
 const startServer = async () => {
   try {
     await sequelize.authenticate();
     console.log('Database connected.');
-    const syncOptions = process.env.DATABASE_URL || process.env.NODE_ENV === 'production'
-      ? { alter: true }
-      : { alter: true };
-    await sequelize.sync(syncOptions);
+    await ensureColumns();
+    await sequelize.sync();
     console.log('Database synced.');
     await autoSeed();
+    await reportDataIntegrity();
 
     const server = http.createServer(app);
     initSocket(server);

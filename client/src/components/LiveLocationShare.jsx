@@ -6,15 +6,18 @@ import { useLiveLocation } from '../hooks/useLiveLocation'
 const LiveLocationShare = ({ bookingId = null, compact = false }) => {
   const { sharing, position, error, lastUpdated, toggleSharing } = useLiveLocation({ bookingId })
   const [ago, setAgo] = useState('')
+  const [stale, setStale] = useState(false)
 
   useEffect(() => {
     if (!lastUpdated) {
       setAgo('')
+      setStale(false)
       return
     }
     const tick = () => {
       const seconds = Math.max(0, Math.floor((Date.now() - lastUpdated.getTime()) / 1000))
       setAgo(seconds < 5 ? 'just now' : `${seconds}s ago`)
+      setStale(seconds > 15)
     }
     tick()
     const id = setInterval(tick, 1000)
@@ -39,6 +42,7 @@ const LiveLocationShare = ({ bookingId = null, compact = false }) => {
         role: 'CUSTOMER',
         latitude: position.latitude,
         longitude: position.longitude,
+        accuracy: position.accuracy,
         lastLocationUpdate: lastUpdated?.toISOString()
       }]
     : []
@@ -91,10 +95,19 @@ const LiveLocationShare = ({ bookingId = null, compact = false }) => {
 
       <div className="mb-3">
         <span className={`badge ${sharing ? 'bg-success' : 'bg-secondary'} me-2`}>
-          {sharing ? '● LIVE' : 'Not sharing'}
+          {sharing ? (stale ? '● WEAK SIGNAL' : '● LIVE') : 'Not sharing'}
         </span>
-        {sharing && ago && <small className="text-muted">Last update: {ago}</small>}
+        {sharing && ago && <small className="text-muted me-2">Last update: {ago}</small>}
+        {sharing && position?.accuracy != null && (
+          <small className="text-muted">± {Math.round(position.accuracy)} m accuracy</small>
+        )}
         {error && <div className="text-danger small mt-1">{error}</div>}
+        {sharing && stale && (
+          <div className="text-warning small mt-1">
+            <i className="bi bi-exclamation-triangle me-1"></i>
+            Location has not updated for a while — move around or check GPS permission.
+          </div>
+        )}
       </div>
 
       <div style={{ height: compact ? 220 : 280, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border, #e5e7eb)' }}>
@@ -120,6 +133,7 @@ const LiveLocationShare = ({ bookingId = null, compact = false }) => {
         <div className="mt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
           <small className="text-muted">
             {position.latitude.toFixed(6)}, {position.longitude.toFixed(6)}
+            {position.accuracy != null ? ` (±${Math.round(position.accuracy)}m)` : ''}
           </small>
           <a
             className="btn btn-sm btn-outline-primary"

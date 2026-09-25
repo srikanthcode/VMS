@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import './LocationTracker.css'
 
 const RoleColors = { ADMIN: '#e94560', MECHANIC: '#28a745', CUSTOMER: '#17a2b8' }
+const STALE_AFTER_MS = 45000
 
 const toUser = (payload) => ({
   id: payload.userId ?? payload.id,
@@ -13,10 +14,20 @@ const toUser = (payload) => ({
   role: payload.role,
   latitude: payload.latitude,
   longitude: payload.longitude,
+  accuracy: payload.accuracy,
   lastLocationUpdate: payload.lastLocationUpdate,
   avatar: payload.avatar || null,
   phone: payload.phone || null
 })
+
+const hasCoords = (u) =>
+  u.latitude != null &&
+  u.longitude != null &&
+  !Number.isNaN(parseFloat(u.latitude)) &&
+  !Number.isNaN(parseFloat(u.longitude))
+
+const isStale = (u) =>
+  !u.lastLocationUpdate || Date.now() - new Date(u.lastLocationUpdate).getTime() > STALE_AFTER_MS
 
 const LocationTracker = ({ title = 'Location Tracker', subtitle = 'Track all users in real-time', roleFilter = null }) => {
   const { user } = useAuth()
@@ -35,7 +46,7 @@ const LocationTracker = ({ title = 'Location Tracker', subtitle = 'Track all use
       if (!exists) return [...prev, next]
       return prev.map(u => String(u.id) === String(next.id) ? { ...u, ...next } : u)
     })
-    if (next.latitude != null && next.longitude != null) {
+    if (hasCoords(next)) {
       setCenter({ lat: parseFloat(next.latitude), lng: parseFloat(next.longitude) })
     }
   }
@@ -55,12 +66,14 @@ const LocationTracker = ({ title = 'Location Tracker', subtitle = 'Track all use
 
     window.addEventListener('vms:location', onLocation)
     window.addEventListener('vms:customer-location', onLocation)
-    const poll = setInterval(fetchLocations, 15000)
+    const poll = setInterval(fetchLocations, 10000)
+    const clock = setInterval(() => setUsers(prev => [...prev]), 5000)
 
     return () => {
       window.removeEventListener('vms:location', onLocation)
       window.removeEventListener('vms:customer-location', onLocation)
       clearInterval(poll)
+      clearInterval(clock)
       if (watchIdRef.current) {
         navigator.geolocation.clearWatch(watchIdRef.current)
       }
@@ -72,9 +85,29 @@ const LocationTracker = ({ title = 'Location Tracker', subtitle = 'Track all use
       const params = filter && filter !== 'ALL' ? { role: filter } : undefined
       const res = await api.location.trackAll(params)
       const data = res.data || []
-      setUsers(data)
+      setUsers(prev => {
+        const previous = new Map(prev.map(u => [String(u.id), u]))
+        return data.map(u => {
+          const local = previous.get(String(u.id))
+          if (
+            local &&
+            local.lastLocationUpdate &&
+            u.lastLocationUpdate &&
+            new Date(local.lastLocationUpdate).getTime() > new Date(u.lastLocationUpdate).getTime()
+          ) {
+            return {
+              ...u,
+              latitude: local.latitude,
+              longitude: local.longitude,
+              accuracy: local.accuracy,
+              lastLocationUpdate: local.lastLocationUpdate
+            }
+          }
+          return u
+        })
+      })
       if (!selectedId && data.length > 0) {
-        const first = data.find(u => u.latitude && u.longitude)
+        const first = data.find(hasCoords)
         if (first) setSelectedId(first.id)
       }
     } catch (error) {
@@ -97,15 +130,16 @@ const LocationTracker = ({ title = 'Location Tracker', subtitle = 'Track all use
     toast.success('Sharing your live location')
     watchIdRef.current = navigator.geolocation.watchPosition(
       async (pos) => {
-        const { latitude, longitude } = pos.coords
+        const { latitude, longitude, accuracy } = pos.coords
         try {
-          await api.location.update({ latitude, longitude })
+          await api.location.update({ latitude, longitude, accuracy })
           mergeUser({
             id: user?.id,
             name: user?.name,
             role: user?.role,
             latitude,
             longitude,
+            accuracy,
             lastLocationUpdate: new Date().toISOString()
           })
           setSelectedId(user?.id)
@@ -118,7 +152,7 @@ const LocationTracker = ({ title = 'Location Tracker', subtitle = 'Track all use
         toast.error('Failed to get location')
         setTracking(false)
       },
-      { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+      { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
     )
   }
 
@@ -147,7 +181,7 @@ const LocationTracker = ({ title = 'Location Tracker', subtitle = 'Track all use
   const filteredUsers = users.filter(u => {
     if (roleFilter && u.role !== roleFilter) return false
     if (filter && filter !== 'ALL' && u.role !== filter) return false
-    return u.latitude != null && u.longitude != null
+    return hasCoords(u) && !isStale(u)
   })
 
   const listUsers = users.filter(u => {
@@ -163,6 +197,7 @@ const LocationTracker = ({ title = 'Location Tracker', subtitle = 'Track all use
     role: u.role,
     latitude: u.latitude,
     longitude: u.longitude,
+    accuracy: u.accuracy,
     lastLocationUpdate: u.lastLocationUpdate
   }))
 
@@ -233,7 +268,7 @@ const LocationTracker = ({ title = 'Location Tracker', subtitle = 'Track all use
               key={u.id}
               className={`user-card ${String(selectedId) === String(u.id) ? 'active' : ''}`}
               onClick={() => {
-                if (u.latitude && u.longitude) {
+                if (hasCoords(u)) {
                   setSelectedId(u.id)
                   setCenter({ lat: parseFloat(u.latitude), lng: parseFloat(u.longitude) })
                 }
@@ -249,9 +284,13 @@ const LocationTracker = ({ title = 'Location Tracker', subtitle = 'Track all use
                     {u.role}
                   </span>
                 </div>
-                {u.latitude && u.longitude ? (
+                {hasCoords(u) && !isStale(u) ? (
                   <span className="live-badge">
                     <i className="bi bi-circle-fill me-1"></i>Live
+                  </span>
+                ) : hasCoords(u) ? (
+                  <span className="text-warning" style={{ fontSize: '0.7rem' }}>
+                    <i className="bi bi-clock-history me-1"></i>Stale
                   </span>
                 ) : (
                   <span className="text-muted" style={{ fontSize: '0.7rem' }}>Offline</span>
@@ -264,10 +303,10 @@ const LocationTracker = ({ title = 'Location Tracker', subtitle = 'Track all use
               )}
               {u.lastLocationUpdate && (
                 <small className="update-time">
-                  {new Date(u.lastLocationUpdate).toLocaleString()}
+                  <i className="bi bi-clock me-1"></i>{new Date(u.lastLocationUpdate).toLocaleTimeString()} · {Math.max(0, Math.round((Date.now() - new Date(u.lastLocationUpdate).getTime()) / 1000))}s ago
                 </small>
               )}
-              {u.latitude && u.longitude && (
+              {hasCoords(u) && (
                 <a
                   className="btn btn-sm btn-outline-primary mt-2 w-100"
                   href={`https://www.google.com/maps?q=${u.latitude},${u.longitude}`}

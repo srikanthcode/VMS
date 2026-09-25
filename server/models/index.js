@@ -24,6 +24,7 @@ const User = sequelize.define('User', {
   isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
   latitude: { type: DataTypes.DECIMAL(10, 8), allowNull: true },
   longitude: { type: DataTypes.DECIMAL(11, 8), allowNull: true },
+  accuracy: { type: DataTypes.FLOAT, allowNull: true },
   lastLocationUpdate: { type: DataTypes.DATE, allowNull: true }
 });
 

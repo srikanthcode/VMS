@@ -61,7 +61,7 @@ const AdminMechanicsPage = () => {
 
   const handleToggleStatus = async (id, currentStatus) => {
     try {
-      await api.mechanics.update(id, { isActive: !currentStatus })
+      await api.mechanics.toggleStatus(id)
       setMechanics(prev => prev.map(m => m.id === id ? { ...m, isActive: !currentStatus } : m))
       toast.success('Mechanic status updated')
     } catch (error) {
