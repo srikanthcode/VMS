@@ -1,8 +1,15 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
+import { useAuth } from '../context/AuthContext'
 
 const NotificationDropdown = () => {
+  const { user } = useAuth()
+  const allPath = user?.role === 'ADMIN'
+    ? '/admin/notifications'
+    : user?.role === 'MECHANIC'
+    ? '/mechanic/notifications'
+    : '/dashboard/notifications'
   const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(false)
@@ -143,7 +150,7 @@ const NotificationDropdown = () => {
         </div>
 
         <div className="border-top px-3 py-2">
-          <Link to="/dashboard/notifications" className="text-decoration-none small">
+          <Link to={allPath} className="text-decoration-none small">
             View all notifications
           </Link>
         </div>

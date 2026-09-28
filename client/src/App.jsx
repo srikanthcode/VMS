@@ -164,12 +164,14 @@ function App() {
         <Route path="/admin/reviews" element={<AdminRoute><AdminReviewsPage /></AdminRoute>} />
         <Route path="/admin/reports" element={<AdminRoute><AdminReportsPage /></AdminRoute>} />
         <Route path="/admin/location" element={<AdminRoute><AdminLocationPage /></AdminRoute>} />
+        <Route path="/admin/notifications" element={<AdminRoute><NotificationsPage /></AdminRoute>} />
         <Route path="/admin/settings" element={<AdminRoute><AdminSettingsPage /></AdminRoute>} />
 
         {/* Mechanic Routes */}
         <Route path="/mechanic/dashboard" element={<MechanicRoute><MechanicDashboard /></MechanicRoute>} />
         <Route path="/mechanic/bookings" element={<MechanicRoute><MechanicDashboard /></MechanicRoute>} />
         <Route path="/mechanic/location" element={<MechanicRoute><MechanicLocationPage /></MechanicRoute>} />
+        <Route path="/mechanic/notifications" element={<MechanicRoute><NotificationsPage /></MechanicRoute>} />
 
         {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />

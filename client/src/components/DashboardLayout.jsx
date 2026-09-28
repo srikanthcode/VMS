@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
+import { useSocket } from '../context/SocketContext'
 import api from '../services/api'
 
 const DashboardLayout = ({ children, role = 'customer', links = [] }) => {
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
+  const { connected: live } = useSocket()
   const location = useLocation()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -73,12 +75,14 @@ const DashboardLayout = ({ children, role = 'customer', links = [] }) => {
       { path: '/admin/reviews', label: 'Reviews', icon: 'bi-star' },
       { path: '/admin/reports', label: 'Reports', icon: 'bi-graph-up' },
       { path: '/admin/location', label: 'Location', icon: 'bi-geo-alt' },
+      { path: '/admin/notifications', label: 'Notifications', icon: 'bi-bell' },
       { path: '/admin/settings', label: 'Settings', icon: 'bi-gear-wide-connected' }
     ],
     mechanic: [
       { path: '/mechanic/dashboard', label: 'Dashboard', icon: 'bi-speedometer2' },
       { path: '/mechanic/bookings', label: 'My Assignments', icon: 'bi-calendar-check' },
-      { path: '/mechanic/location', label: 'Customer Location', icon: 'bi-geo-alt' }
+      { path: '/mechanic/location', label: 'Customer Location', icon: 'bi-geo-alt' },
+      { path: '/mechanic/notifications', label: 'Notifications', icon: 'bi-bell' }
     ]
   }
 
@@ -91,24 +95,25 @@ const DashboardLayout = ({ children, role = 'customer', links = [] }) => {
 
   return (
     <div className="dashboard-layout">
-      {/* Sidebar Toggle Button (Mobile) */}
-      <button
-        className="btn btn-primary position-fixed d-lg-none"
-        style={{ top: '1rem', left: '1rem', zIndex: 1001 }}
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-      >
-        <i className="bi bi-list fs-4"></i>
-      </button>
-
       {/* Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? 'show' : ''}`}>
         <div className="sidebar-brand">
-          <Link to="/" className="text-decoration-none">
-            <h4 className="text-white mb-0">
-              <i className="bi bi-tools me-2" style={{ color: '#e94560' }}></i>
-              VMS
-            </h4>
-          </Link>
+          <div className="d-flex align-items-center justify-content-between">
+            <Link to="/" className="text-decoration-none">
+              <h4 className="sidebar-brand-title mb-0">
+                <i className="bi bi-tools me-2" style={{ color: '#e94560' }}></i>
+                VMS
+              </h4>
+            </Link>
+            <button
+              className="sidebar-close d-lg-none"
+              onClick={() => setSidebarOpen(false)}
+              title="Close menu"
+              aria-label="Close menu"
+            >
+              <i className="bi bi-x-lg"></i>
+            </button>
+          </div>
         </div>
 
         <nav className="sidebar-nav">
@@ -126,7 +131,7 @@ const DashboardLayout = ({ children, role = 'customer', links = [] }) => {
             </Link>
           ))}
 
-          <hr className="my-3 mx-3" style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+          <hr className="sidebar-divider my-3 mx-3" />
 
           <Link to="/" className="sidebar-nav-item">
             <i className="bi bi-house"></i>
@@ -145,12 +150,28 @@ const DashboardLayout = ({ children, role = 'customer', links = [] }) => {
         {/* Topbar */}
         <div className="topbar">
           <div className="d-flex align-items-center gap-3">
+            <button
+              className="btn btn-outline-secondary sidebar-toggle d-lg-none"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              title="Open menu"
+              aria-label="Open menu"
+            >
+              <i className="bi bi-list"></i>
+            </button>
             <h5 className="mb-0 d-none d-md-block">
               {navLinks.find(l => l.path === location.pathname)?.label || 'Dashboard'}
             </h5>
           </div>
 
           <div className="topbar-actions">
+            <span
+              className={`live-pill d-none d-sm-inline-flex ${live ? 'is-live' : ''}`}
+              title={live ? 'Real-time updates connected' : 'Reconnecting to live updates...'}
+            >
+              <span className="live-dot"></span>
+              {live ? 'Live' : 'Offline'}
+            </span>
+
             <button
               className="btn btn-outline-secondary"
               onClick={toggleTheme}
@@ -165,7 +186,13 @@ const DashboardLayout = ({ children, role = 'customer', links = [] }) => {
             </div>
 
             <Link
-              to={role === 'admin' ? '/admin/dashboard' : '/dashboard/notifications'}
+              to={
+                role === 'admin'
+                  ? '/admin/notifications'
+                  : role === 'mechanic'
+                  ? '/mechanic/notifications'
+                  : '/dashboard/notifications'
+              }
               className="btn btn-outline-secondary position-relative"
               title="Notifications"
             >

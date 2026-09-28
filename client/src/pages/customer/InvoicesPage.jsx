@@ -3,6 +3,7 @@ import DashboardLayout from '../../components/DashboardLayout'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import EmptyState from '../../components/EmptyState'
 import api from '../../services/api'
+import useRealtimeEvents from '../../hooks/useRealtimeEvents'
 import toast from 'react-hot-toast'
 
 const InvoicesPage = () => {
@@ -12,6 +13,8 @@ const InvoicesPage = () => {
   useEffect(() => {
     fetchInvoices()
   }, [])
+
+  useRealtimeEvents(['vms:bill','vms:payment'], () => fetchInvoices())
 
   const fetchInvoices = async () => {
     try {
@@ -27,7 +30,7 @@ const InvoicesPage = () => {
   const handleDownload = async (invoiceId) => {
     try {
       const response = await api.invoices.generatePdf(invoiceId)
-      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const url = window.URL.createObjectURL(new Blob([response], { type: 'application/pdf' }))
       const link = document.createElement('a')
       link.href = url
       link.setAttribute('download', `invoice-${invoiceId}.pdf`)

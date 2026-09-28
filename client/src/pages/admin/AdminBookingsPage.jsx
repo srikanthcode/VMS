@@ -29,15 +29,16 @@ const AdminBookingsPage = () => {
     return () => window.removeEventListener('vms:booking', handler)
   }, [searchTerm])
 
-  const fetchBookings = async (search = '') => {
+  const fetchBookings = async (search = searchTerm, page = pagination.page) => {
     try {
       setLoading(true)
-      const params = { page: pagination.page, limit: pagination.limit, search }
+      const params = { page, limit: pagination.limit, search }
       if (statusFilter !== 'ALL') params.status = statusFilter
       const response = await api.bookings.getAll(params)
       setBookings(response.data.bookings || response.data || [])
       setPagination(prev => ({
         ...prev,
+        page,
         total: response.data.total || response.data.length || 0,
         totalPages: response.data.totalPages || 1
       }))
@@ -51,7 +52,7 @@ const AdminBookingsPage = () => {
   const handleSearch = (search) => {
     setSearchTerm(search)
     setPagination(prev => ({ ...prev, page: 1 }))
-    fetchBookings(search)
+    fetchBookings(search, 1)
   }
 
   const fetchMechanics = async () => {

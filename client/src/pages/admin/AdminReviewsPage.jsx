@@ -3,6 +3,7 @@ import DashboardLayout from '../../components/DashboardLayout'
 import DataTable from '../../components/DataTable'
 import Modal from '../../components/Modal'
 import api from '../../services/api'
+import useRealtimeEvents from '../../hooks/useRealtimeEvents'
 import toast from 'react-hot-toast'
 
 const AdminReviewsPage = () => {
@@ -16,6 +17,8 @@ const AdminReviewsPage = () => {
   useEffect(() => {
     fetchReviews()
   }, [])
+
+  useRealtimeEvents(['vms:review'], () => fetchReviews())
 
   const fetchReviews = async () => {
     try {

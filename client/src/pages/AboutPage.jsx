@@ -17,8 +17,8 @@ const AboutPage = () => {
   ]
 
   const team = [
-    { name: 'Rajesh Kumar', role: 'Founder & CEO', experience: '15+ years' },
-    { name: 'Amit Singh', role: 'Head Mechanic', experience: '12+ years' },
+    { name: 'Rajesh Kumar', role: 'Founder & CEO', experience: '15+ years', photo: '/rajesh-kumar.webp' },
+    { name: 'Amit Singh', role: 'Head Mechanic', experience: '12+ years', photo: '/amit-singh.jpg' },
     { name: 'Priya Sharma', role: 'Service Manager', experience: '8+ years' },
     { name: 'Vikram Patel', role: 'Quality Head', experience: '10+ years' }
   ]
@@ -112,8 +112,16 @@ const AboutPage = () => {
               {team.map((member, index) => (
                 <div key={index} className="col-lg-3 col-md-6">
                   <div className="card-custom text-center p-4">
-                    <div className="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style={{ width: '100px', height: '100px' }}>
-                      <i className="bi bi-person display-4 text-white"></i>
+                    <div className="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3 overflow-hidden position-relative" style={{ width: '100px', height: '100px' }}>
+                      <i className="bi bi-person display-4 text-white" style={{ position: 'absolute' }}></i>
+                      {member.photo && (
+                        <img
+                          src={member.photo}
+                          alt={member.name}
+                          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                          onError={(e) => { e.currentTarget.style.display = 'none' }}
+                        />
+                      )}
                     </div>
                     <h5 className="fw-bold mb-1">{member.name}</h5>
                     <p className="text-accent mb-1" style={{ color: '#e94560' }}>{member.role}</p>

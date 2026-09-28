@@ -4,8 +4,11 @@ import LoadingSpinner from '../../components/LoadingSpinner'
 import EmptyState from '../../components/EmptyState'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
+import { useAuth } from '../../context/AuthContext'
 
 const NotificationsPage = () => {
+  const { user } = useAuth()
+  const layoutRole = user?.role === 'ADMIN' ? 'admin' : user?.role === 'MECHANIC' ? 'mechanic' : 'customer'
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -13,10 +16,13 @@ const NotificationsPage = () => {
     fetchNotifications()
     const onNotification = () => fetchNotifications()
     const onClear = () => setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
+    const onUpdated = () => fetchNotifications()
     window.addEventListener('vms:notification', onNotification)
+    window.addEventListener('vms:notification-updated', onUpdated)
     window.addEventListener('vms:notifications-cleared', onClear)
     return () => {
       window.removeEventListener('vms:notification', onNotification)
+      window.removeEventListener('vms:notification-updated', onUpdated)
       window.removeEventListener('vms:notifications-cleared', onClear)
     }
   }, [])
@@ -75,14 +81,14 @@ const NotificationsPage = () => {
 
   if (loading) {
     return (
-      <DashboardLayout role="customer">
+      <DashboardLayout role={layoutRole}>
         <LoadingSpinner message="Loading notifications..." />
       </DashboardLayout>
     )
   }
 
   return (
-    <DashboardLayout role="customer">
+      <DashboardLayout role={layoutRole}>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h4 className="fw-bold mb-0">

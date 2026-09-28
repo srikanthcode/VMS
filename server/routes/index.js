@@ -43,9 +43,44 @@ router.post('/auth/reset-password', authController.resetPassword);
 router.get('/customers', authenticate, authorize('ADMIN'), async (req, res) => {
   try {
     const { User } = require('../models');
+    const where = { role: 'CUSTOMER' };
+    const search = String(req.query.search || '').trim();
+    if (search) {
+      where[Op.or] = [
+        { username: { [Op.like]: `%${search}%` } },
+        { name: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } },
+        { phone: { [Op.like]: `%${search}%` } }
+      ];
+    }
+
+    const page = parseInt(req.query.page, 10);
+    const limit = parseInt(req.query.limit, 10);
+
+    if (page && limit && page > 0 && limit > 0) {
+      const { count, rows } = await User.findAndCountAll({
+        where,
+        attributes: { exclude: ['password'] },
+        order: [['createdAt', 'DESC']],
+        limit,
+        offset: (page - 1) * limit
+      });
+      return res.json({
+        success: true,
+        data: {
+          customers: rows,
+          total: count,
+          totalPages: Math.max(1, Math.ceil(count / limit)),
+          page,
+          limit
+        }
+      });
+    }
+
     const customers = await User.findAll({
-      where: { role: 'CUSTOMER' },
-      attributes: { exclude: ['password'] }
+      where,
+      attributes: { exclude: ['password'] },
+      order: [['createdAt', 'DESC']]
     });
     res.json({ success: true, data: customers });
   } catch (error) {

@@ -63,6 +63,14 @@ export const SocketProvider = ({ children }) => {
       window.dispatchEvent(new CustomEvent('vms:notifications-cleared'))
     })
 
+    s.on('notification:updated', (notification) => {
+      window.dispatchEvent(new CustomEvent('vms:notification-updated', { detail: notification }))
+    })
+
+    s.on('review:replied', (review) => {
+      window.dispatchEvent(new CustomEvent('vms:review', { detail: { type: 'replied', review } }))
+    })
+
     s.on('booking:created', (booking) => {
       window.dispatchEvent(new CustomEvent('vms:booking', { detail: { type: 'created', booking } }))
       if (user?.role === 'ADMIN') {

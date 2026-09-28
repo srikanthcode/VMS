@@ -23,6 +23,8 @@ const Navbar = () => {
     navigate('/')
   }
 
+  const dashboardPath = isAdmin ? '/admin/dashboard' : user?.role === 'MECHANIC' ? '/mechanic/dashboard' : '/dashboard'
+
   return (
     <nav className={`navbar navbar-expand-lg navbar-dark fixed-top navbar-custom ${scrolled ? 'scrolled' : ''}`}>
       <div className="container">
@@ -84,7 +86,7 @@ const Navbar = () => {
                   </li>
                 )}
                 <li className="nav-item">
-                  <NavLink className={({ isActive }) => `nav-link nav-link-custom ${isActive ? 'active' : ''}`} to="/dashboard">
+                  <NavLink className={({ isActive }) => `nav-link nav-link-custom ${isActive ? 'active' : ''}`} to={dashboardPath}>
                     <i className="bi bi-layout-text-window me-1"></i> Dashboard
                   </NavLink>
                 </li>

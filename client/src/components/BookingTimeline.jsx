@@ -1,13 +1,17 @@
 const BookingTimeline = ({ statusHistory, currentStatus }) => {
   const statusConfig = {
-    PENDING: { color: '#ffc107', icon: 'bi-clock', label: 'Pending' },
-    CONFIRMED: { color: '#17a2b8', icon: 'bi-check-circle', label: 'Confirmed' },
-    PICKUP_SCHEDULED: { color: '#6f42c1', icon: 'bi-truck', label: 'Pickup Scheduled' },
-    PICKED_UP: { color: '#fd7e14', icon: 'bi-truck', label: 'Picked Up' },
-    SERVICE_IN_PROGRESS: { color: '#007bff', icon: 'bi-gear', label: 'In Progress' },
-    COMPLETED: { color: '#28a745', icon: 'bi-check-circle-fill', label: 'Completed' },
-    DELIVERED: { color: '#20c997', icon: 'bi-house', label: 'Delivered' },
-    CANCELLED: { color: '#dc3545', icon: 'bi-x-circle', label: 'Cancelled' }
+    PENDING: { color: '#ffc107', fg: '#1a1a2e', icon: 'bi-clock', label: 'Pending' },
+    CONFIRMED: { color: '#17a2b8', fg: '#062a31', icon: 'bi-check-circle', label: 'Confirmed' },
+    PICKUP_SCHEDULED: { color: '#6f42c1', fg: '#ffffff', icon: 'bi-truck', label: 'Pickup Scheduled' },
+    PICKED_UP: { color: '#fd7e14', fg: '#1a1a2e', icon: 'bi-truck', label: 'Picked Up' },
+    VEHICLE_PICKED_UP: { color: '#fd7e14', fg: '#1a1a2e', icon: 'bi-truck', label: 'Vehicle Picked Up' },
+    INSPECTION: { color: '#17a2b8', fg: '#062a31', icon: 'bi-clipboard-check', label: 'Inspection' },
+    READY_FOR_DELIVERY: { color: '#20c997', fg: '#062e23', icon: 'bi-check2-circle', label: 'Ready for Delivery' },
+    OUT_FOR_DELIVERY: { color: '#007bff', fg: '#ffffff', icon: 'bi-truck', label: 'Out for Delivery' },
+    SERVICE_IN_PROGRESS: { color: '#007bff', fg: '#ffffff', icon: 'bi-gear', label: 'In Progress' },
+    COMPLETED: { color: '#28a745', fg: '#052e16', icon: 'bi-check-circle-fill', label: 'Completed' },
+    DELIVERED: { color: '#20c997', fg: '#062e23', icon: 'bi-house', label: 'Delivered' },
+    CANCELLED: { color: '#dc3545', fg: '#ffffff', icon: 'bi-x-circle', label: 'Cancelled' }
   }
 
   const formatDate = (dateString) => {
@@ -44,7 +48,7 @@ const BookingTimeline = ({ statusHistory, currentStatus }) => {
                     ></i>
                     <span
                       className="badge"
-                      style={{ backgroundColor: config.color, color: 'white' }}
+                      style={{ backgroundColor: config.color, color: config.fg || '#ffffff' }}
                     >
                       {config.label}
                     </span>
@@ -79,7 +83,7 @@ const BookingTimeline = ({ statusHistory, currentStatus }) => {
               className="badge"
               style={{
                 backgroundColor: statusConfig[currentStatus]?.color || '#ffc107',
-                color: 'white'
+                color: statusConfig[currentStatus]?.fg || '#ffffff'
               }}
             >
               {statusConfig[currentStatus]?.label || currentStatus}

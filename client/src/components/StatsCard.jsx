@@ -1,7 +1,7 @@
 const StatsCard = ({ icon, title, value, trend, color = 'accent' }) => {
   const colorMap = {
     accent: { bg: 'rgba(233, 69, 96, 0.1)', text: '#e94560' },
-    primary: { bg: 'rgba(26, 26, 46, 0.1)', text: '#1a1a2e' },
+    primary: { bg: 'rgba(110, 168, 254, 0.15)', text: '#6ea8fe' },
     success: { bg: 'rgba(40, 167, 69, 0.1)', text: '#28a745' },
     info: { bg: 'rgba(23, 162, 184, 0.1)', text: '#17a2b8' },
     warning: { bg: 'rgba(255, 193, 7, 0.1)', text: '#ffc107' },

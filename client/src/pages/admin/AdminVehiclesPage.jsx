@@ -9,17 +9,20 @@ const AdminVehiclesPage = () => {
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 })
 
+  const [searchTerm, setSearchTerm] = useState('')
+
   useEffect(() => {
-    fetchVehicles()
+    fetchVehicles(searchTerm)
   }, [pagination.page])
 
-  const fetchVehicles = async (search = '') => {
+  const fetchVehicles = async (search = searchTerm, page = pagination.page) => {
     try {
       setLoading(true)
-      const response = await api.vehicles.getAll({ page: pagination.page, limit: pagination.limit, search })
+      const response = await api.vehicles.getAll({ page, limit: pagination.limit, search })
       setVehicles(response.data.vehicles || response.data || [])
       setPagination(prev => ({
         ...prev,
+        page,
         total: response.data.total || response.data.length || 0,
         totalPages: response.data.totalPages || 1
       }))
@@ -28,6 +31,12 @@ const AdminVehiclesPage = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSearch = (search) => {
+    setSearchTerm(search)
+    setPagination(prev => ({ ...prev, page: 1 }))
+    fetchVehicles(search, 1)
   }
 
   const columns = [
@@ -62,7 +71,7 @@ const AdminVehiclesPage = () => {
         loading={loading}
         pagination={pagination}
         onPageChange={(page) => setPagination(prev => ({ ...prev, page }))}
-        onSearch={(search) => fetchVehicles(search)}
+        onSearch={handleSearch}
       />
     </DashboardLayout>
   )

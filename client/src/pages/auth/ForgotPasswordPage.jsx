@@ -136,7 +136,7 @@ const ForgotPasswordPage = () => {
 
         {step === 1 && (
           <form onSubmit={handleSendOTP} className="form-custom">
-            <p className="mb-4" style={{ color: '#8a94a6' }}>
+            <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
               Enter your email address and we'll send you a verification code.
             </p>
 
@@ -182,8 +182,8 @@ const ForgotPasswordPage = () => {
 
         {step === 2 && (
           <div className="form-custom">
-            <p className="mb-4" style={{ color: '#8a94a6' }}>
-              We've sent a 6-digit code to <strong style={{ color: '#ffffff' }}>{email}</strong>
+            <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
+              We've sent a 6-digit code to <strong style={{ color: 'var(--text-primary)' }}>{email}</strong>
             </p>
 
             <div className="mb-4">
@@ -200,9 +200,9 @@ const ForgotPasswordPage = () => {
                       height: '55px',
                       fontSize: '1.5rem',
                       fontWeight: 'bold',
-                      background: '#2a2a4a',
-                      border: digit ? '2px solid #e94560' : '2px solid #3a3a5a',
-                      color: '#ffffff'
+                      background: 'var(--bg-light)',
+                      border: digit ? '2px solid #e94560' : '2px solid var(--border)',
+                      color: 'var(--text-primary)'
                     }}
                     maxLength="1"
                     value={digit}
@@ -237,7 +237,7 @@ const ForgotPasswordPage = () => {
               <button
                 type="button"
                 className="btn btn-link"
-                style={{ color: '#8a94a6' }}
+                style={{ color: 'var(--text-secondary)' }}
                 onClick={handleSendOTP}
                 disabled={loading}
               >
@@ -249,7 +249,7 @@ const ForgotPasswordPage = () => {
 
         {step === 3 && (
           <form onSubmit={handleResetPassword} className="form-custom">
-            <p className="mb-4" style={{ color: '#8a94a6' }}>
+            <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
               Create a new password for your account.
             </p>
 
@@ -306,7 +306,7 @@ const ForgotPasswordPage = () => {
         )}
 
         <div className="text-center mt-4">
-          <Link to="/login" className="text-decoration-none" style={{ color: '#8a94a6' }}>
+          <Link to="/login" className="text-decoration-none" style={{ color: 'var(--text-secondary)' }}>
             <i className="bi bi-arrow-left me-2"></i>
             Back to Login
           </Link>

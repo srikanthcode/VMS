@@ -120,7 +120,7 @@ const createBill = async (req, res) => {
       await createNotification(
         booking.userId,
         'Bill Generated',
-        `A bill of â‚¹${grandTotal.toFixed(2)} has been generated for booking ${booking.bookingId}.`,
+        `A bill of ₹${grandTotal.toFixed(2)} has been generated for booking ${booking.bookingId}.`,
         'PAYMENT'
       );
     }

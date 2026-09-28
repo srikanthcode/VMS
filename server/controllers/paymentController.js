@@ -102,7 +102,7 @@ const processPayment = async (req, res) => {
       await createNotification(
         bill.Booking.userId,
         'Payment Successful',
-        `Payment of â‚¹${bill.grandTotal} received for invoice ${bill.invoiceNumber}.`,
+        `Payment of ₹${bill.grandTotal} received for invoice ${bill.invoiceNumber}.`,
         'PAYMENT'
       );
     }

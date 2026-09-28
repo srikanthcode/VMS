@@ -4,6 +4,7 @@ import StatusBadge from '../../components/StatusBadge'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import EmptyState from '../../components/EmptyState'
 import api from '../../services/api'
+import useRealtimeEvents from '../../hooks/useRealtimeEvents'
 import toast from 'react-hot-toast'
 
 const PaymentsPage = () => {
@@ -12,12 +13,14 @@ const PaymentsPage = () => {
   const [loading, setLoading] = useState(true)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [selectedBill, setSelectedBill] = useState(null)
-  const [paymentMethod, setPaymentMethod] = useState('online')
+  const [paymentMethod, setPaymentMethod] = useState('UPI')
   const [processing, setProcessing] = useState(false)
 
   useEffect(() => {
     fetchData()
   }, [])
+
+  useRealtimeEvents(['vms:payment','vms:bill'], () => fetchData())
 
   const fetchData = async () => {
     try {
@@ -180,10 +183,10 @@ const PaymentsPage = () => {
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value)}
                   >
-                    <option value="online">Online Payment</option>
-                    <option value="upi">UPI</option>
-                    <option value="card">Credit/Debit Card</option>
-                    <option value="netbanking">Net Banking</option>
+                    <option value="UPI">UPI</option>
+                    <option value="CARD">Credit/Debit Card</option>
+                    <option value="NET_BANKING">Net Banking</option>
+                    <option value="CASH">Cash</option>
                   </select>
                 </div>
                 <div className="alert alert-info">

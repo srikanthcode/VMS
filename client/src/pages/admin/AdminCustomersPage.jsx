@@ -16,17 +16,20 @@ const AdminCustomersPage = () => {
   const [formLoading, setFormLoading] = useState(false)
   const [errors, setErrors] = useState({})
 
+  const [searchTerm, setSearchTerm] = useState('')
+
   useEffect(() => {
-    fetchCustomers()
+    fetchCustomers(searchTerm)
   }, [pagination.page])
 
-  const fetchCustomers = async (search = '') => {
+  const fetchCustomers = async (search = searchTerm, page = pagination.page) => {
     try {
       setLoading(true)
-      const response = await api.customers.getAll({ page: pagination.page, limit: pagination.limit, search })
+      const response = await api.customers.getAll({ page, limit: pagination.limit, search })
       setCustomers(response.data.customers || response.data || [])
       setPagination(prev => ({
         ...prev,
+        page,
         total: response.data.total || response.data.length || 0,
         totalPages: response.data.totalPages || 1
       }))
@@ -35,6 +38,12 @@ const AdminCustomersPage = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSearch = (search) => {
+    setSearchTerm(search)
+    setPagination(prev => ({ ...prev, page: 1 }))
+    fetchCustomers(search, 1)
   }
 
   const handleAdd = () => {
@@ -147,7 +156,7 @@ const AdminCustomersPage = () => {
         loading={loading}
         pagination={pagination}
         onPageChange={(page) => setPagination(prev => ({ ...prev, page }))}
-        onSearch={(search) => fetchCustomers(search)}
+        onSearch={handleSearch}
       />
 
       <Modal

@@ -5,6 +5,7 @@ import StatusBadge from '../../components/StatusBadge'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import EmptyState from '../../components/EmptyState'
 import api from '../../services/api'
+import useRealtimeEvents from '../../hooks/useRealtimeEvents'
 
 const ServiceHistoryPage = () => {
   const [bookings, setBookings] = useState([])
@@ -13,6 +14,8 @@ const ServiceHistoryPage = () => {
   useEffect(() => {
     fetchServiceHistory()
   }, [])
+
+  useRealtimeEvents(['vms:booking'], () => fetchServiceHistory())
 
   const fetchServiceHistory = async () => {
     try {

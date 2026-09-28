@@ -12,7 +12,13 @@ const StatusBadge = ({ status }) => {
     PARTIAL: { class: 'badge-in-progress', label: 'Partial' },
     PICKUP_SCHEDULED: { class: 'badge-confirmed', label: 'Pickup Scheduled' },
     PICKED_UP: { class: 'badge-in-progress', label: 'Picked Up' },
-    DELIVERED: { class: 'badge-completed', label: 'Delivered' }
+    VEHICLE_PICKED_UP: { class: 'badge-in-progress', label: 'Vehicle Picked Up' },
+    INSPECTION: { class: 'badge-in-progress', label: 'Inspection' },
+    READY_FOR_DELIVERY: { class: 'badge-confirmed', label: 'Ready for Delivery' },
+    OUT_FOR_DELIVERY: { class: 'badge-in-progress', label: 'Out for Delivery' },
+    DELIVERED: { class: 'badge-completed', label: 'Delivered' },
+    FAILED: { class: 'badge-cancelled', label: 'Failed' },
+    REFUNDED: { class: 'badge-cancelled', label: 'Refunded' }
   }
 
   const config = statusConfig[status] || { class: 'badge-pending', label: status }

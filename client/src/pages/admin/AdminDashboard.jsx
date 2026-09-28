@@ -5,10 +5,17 @@ import StatusBadge from '../../components/StatusBadge'
 import api from '../../services/api'
 import { Line, Doughnut, Bar } from 'react-chartjs-2'
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, ArcElement, BarElement, Title, Tooltip, Legend } from 'chart.js'
+import { useTheme } from '../../context/ThemeContext'
+import { syncChartDefaults, cartesianOptions, doughnutOptions, getChartTheme } from '../../utils/chartTheme'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, BarElement, Title, Tooltip, Legend)
 
+const FALLBACK_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
+const FALLBACK_REVENUE = [12000, 19000, 15000, 25000, 22000, 30000]
+const DOUGHNUT_COLORS = ['#e94560', '#6ea8fe', '#17a2b8', '#ffc107', '#5dd879']
+
 const AdminDashboard = () => {
+  const { theme } = useTheme()
   const [stats, setStats] = useState({
     totalCustomers: 0,
     totalVehicles: 0,
@@ -37,6 +44,10 @@ const AdminDashboard = () => {
       window.removeEventListener('vms:review', handler)
     }
   }, [])
+
+  useEffect(() => {
+    syncChartDefaults(theme)
+  }, [theme])
 
   const fetchDashboardData = async () => {
     try {
@@ -103,11 +114,14 @@ const AdminDashboard = () => {
     })
   }
 
+  const revenueLabels = revenueData.length > 0 ? revenueData.map(d => d.date) : FALLBACK_LABELS
+  const revenueValues = revenueData.length > 0 ? revenueData.map(d => d.revenue) : FALLBACK_REVENUE
+
   const revenueChartData = {
-    labels: revenueData.map(d => d.date) || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    labels: revenueLabels,
     datasets: [{
       label: 'Revenue (₹)',
-      data: revenueData.map(d => d.revenue) || [12000, 19000, 15000, 25000, 22000, 30000],
+      data: revenueValues,
       borderColor: '#e94560',
       backgroundColor: 'rgba(233, 69, 96, 0.1)',
       fill: true,
@@ -115,11 +129,14 @@ const AdminDashboard = () => {
     }]
   }
 
+  const serviceValues = serviceStats.map(s => s.count)
+  const hasServiceData = serviceValues.some(v => v > 0)
+
   const serviceChartData = {
-    labels: serviceStats.map(s => s.name),
+    labels: hasServiceData ? serviceStats.map(s => s.name) : ['No data yet'],
     datasets: [{
-      data: serviceStats.map(s => s.count),
-      backgroundColor: ['#e94560', '#1a1a2e', '#16213e', '#0f3460', '#17a2b8'],
+      data: hasServiceData ? serviceValues : [1],
+      backgroundColor: hasServiceData ? DOUGHNUT_COLORS : [getChartTheme(theme).empty],
       borderWidth: 0
     }]
   }
@@ -129,7 +146,7 @@ const AdminDashboard = () => {
     datasets: [{
       label: 'Bookings',
       data: bookingStatus.map(b => b.count),
-      backgroundColor: ['#ffc107', '#17a2b8', '#007bff', '#28a745', '#dc3545'],
+      backgroundColor: ['#ffc107', '#17a2b8', '#6ea8fe', '#28a745', '#dc3545'],
       borderWidth: 0
     }]
   }
@@ -176,7 +193,7 @@ const AdminDashboard = () => {
           <div className="card-custom p-4">
             <h5 className="fw-bold mb-3">Revenue Overview</h5>
             <div style={{ height: '300px' }}>
-              <Line data={revenueChartData} options={{ responsive: true, maintainAspectRatio: false }} />
+              <Line data={revenueChartData} options={cartesianOptions(theme)} />
             </div>
           </div>
         </div>
@@ -184,7 +201,7 @@ const AdminDashboard = () => {
           <div className="card-custom p-4">
             <h5 className="fw-bold mb-3">Services Distribution</h5>
             <div style={{ height: '300px' }}>
-              <Doughnut data={serviceChartData} options={{ responsive: true, maintainAspectRatio: false }} />
+              <Doughnut data={serviceChartData} options={doughnutOptions(theme)} />
             </div>
           </div>
         </div>
@@ -196,7 +213,7 @@ const AdminDashboard = () => {
           <div className="card-custom p-4">
             <h5 className="fw-bold mb-3">Bookings by Status</h5>
             <div style={{ height: '250px' }}>
-              <Bar data={bookingChartData} options={{ responsive: true, maintainAspectRatio: false }} />
+              <Bar data={bookingChartData} options={cartesianOptions(theme)} />
             </div>
           </div>
         </div>

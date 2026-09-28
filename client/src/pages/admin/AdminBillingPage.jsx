@@ -3,6 +3,7 @@ import DashboardLayout from '../../components/DashboardLayout'
 import DataTable from '../../components/DataTable'
 import Modal from '../../components/Modal'
 import api from '../../services/api'
+import useRealtimeEvents from '../../hooks/useRealtimeEvents'
 import toast from 'react-hot-toast'
 
 const AdminBillingPage = () => {
@@ -19,6 +20,8 @@ const AdminBillingPage = () => {
     fetchBills()
     fetchBookings()
   }, [])
+
+  useRealtimeEvents(['vms:bill','vms:payment','vms:booking'], () => fetchBills())
 
   const fetchBills = async () => {
     try {

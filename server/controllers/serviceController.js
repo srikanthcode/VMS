@@ -44,7 +44,10 @@ const serialize = (service) => {
 const getServices = async (req, res) => {
   try {
     const where = req.user && req.user.role === 'ADMIN' ? {} : { isActive: true };
-    const services = await ServiceType.findAll({ where, order: [['id', 'ASC']] });
+    const options = { where, order: [['id', 'ASC']] };
+    const limit = parseInt(req.query.limit, 10);
+    if (limit && limit > 0) options.limit = limit;
+    const services = await ServiceType.findAll(options);
 
     res.json({ success: true, data: services.map(serialize) });
   } catch (error) {

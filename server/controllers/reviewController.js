@@ -6,7 +6,7 @@ const getReviews = async (req, res) => {
   try {
     const where = req.user && req.user.role === 'ADMIN' ? {} : { isVisible: true };
 
-    const reviews = await Review.findAll({
+    const options = {
       where,
       include: [
         { model: User, attributes: ['id', 'name', 'avatar'] },
@@ -19,7 +19,11 @@ const getReviews = async (req, res) => {
         }
       ],
       order: [['createdAt', 'DESC']]
-    });
+    };
+    const limit = parseInt(req.query.limit, 10);
+    if (limit && limit > 0) options.limit = limit;
+
+    const reviews = await Review.findAll(options);
 
     res.json({ success: true, data: reviews });
   } catch (error) {

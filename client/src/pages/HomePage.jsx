@@ -92,7 +92,7 @@ const HomePage = () => {
           ) : (
             <div className="row g-4">
               {services.length > 0 ? (
-                services.map((service) => (
+                services.slice(0, 6).map((service) => (
                   <div key={service.id} className="col-lg-4 col-md-6">
                     <ServiceCard service={service} />
                   </div>

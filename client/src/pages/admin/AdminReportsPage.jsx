@@ -4,10 +4,13 @@ import api from '../../services/api'
 import { Line, Bar } from 'react-chartjs-2'
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend } from 'chart.js'
 import toast from 'react-hot-toast'
+import { useTheme } from '../../context/ThemeContext'
+import { syncChartDefaults, cartesianOptions } from '../../utils/chartTheme'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend)
 
 const AdminReportsPage = () => {
+  const { theme } = useTheme()
   const [reportType, setReportType] = useState('revenue')
   const [dateRange, setDateRange] = useState({ start: '', end: '' })
   const [reportData, setReportData] = useState(null)
@@ -17,10 +20,16 @@ const AdminReportsPage = () => {
     fetchReport()
   }, [reportType, dateRange])
 
+  useEffect(() => {
+    syncChartDefaults(theme)
+  }, [theme])
+
   const fetchReport = async () => {
     setLoading(true)
     try {
-      const params = { ...dateRange }
+      const params = {}
+      if (dateRange.start) params.startDate = dateRange.start
+      if (dateRange.end) params.endDate = dateRange.end
       let response
       switch (reportType) {
         case 'revenue':
@@ -50,12 +59,14 @@ const AdminReportsPage = () => {
     }
   }
 
+  const reportList = Array.isArray(reportData) ? reportData : null
+
   const chartData = {
     revenue: {
-      labels: reportData?.breakdown?.map(d => d.date) || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+      labels: reportData?.breakdown?.map(d => d.date) || [],
       datasets: [{
         label: 'Revenue (₹)',
-        data: reportData?.breakdown?.map(d => d.revenue) || [12000, 19000, 15000, 25000, 22000, 30000],
+        data: reportData?.breakdown?.map(d => d.revenue) || [],
         borderColor: '#e94560',
         backgroundColor: 'rgba(233, 69, 96, 0.1)',
         fill: true,
@@ -63,19 +74,42 @@ const AdminReportsPage = () => {
       }]
     },
     services: {
-      labels: reportData?.map(d => d.ServiceType?.name || d.name) || ['Basic', 'Premium', 'Major', 'Oil Change', 'Brake'],
+      labels: reportList ? reportList.map(d => d.ServiceType?.name || d.name) : [],
       datasets: [{
         label: 'Bookings',
-        data: reportData?.map(d => parseInt(d.bookingCount) || d.count) || [45, 32, 18, 65, 28],
+        data: reportList ? reportList.map(d => parseInt(d.bookingCount) || d.count || 0) : [],
         backgroundColor: '#e94560'
       }]
     },
     bookings: {
-      labels: reportData?.byStatus?.map(d => d.status?.replace('_', ' ')) || ['Pending', 'Confirmed', 'In Progress', 'Completed', 'Cancelled'],
+      labels: reportData?.byStatus?.map(d => d.status?.replace('_', ' ')) || [],
       datasets: [{
         label: 'Bookings',
-        data: reportData?.byStatus?.map(d => d.count) || [12, 8, 5, 45, 3],
-        backgroundColor: ['#ffc107', '#17a2b8', '#007bff', '#28a745', '#dc3545']
+        data: reportData?.byStatus?.map(d => d.count) || [],
+        backgroundColor: ['#ffc107', '#17a2b8', '#6ea8fe', '#28a745', '#dc3545']
+      }]
+    },
+    customers: {
+      labels: reportData?.registrationTrend?.map(d => d.date) || [],
+      datasets: [{
+        label: 'New Customers',
+        data: reportData?.registrationTrend?.map(d => d.count) || [],
+        borderColor: '#e94560',
+        backgroundColor: 'rgba(233, 69, 96, 0.1)',
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    mechanics: {
+      labels: reportList ? reportList.map(d => d.name) : [],
+      datasets: [{
+        label: 'Completed Services',
+        data: reportList ? reportList.map(d => d.completedServices) : [],
+        backgroundColor: '#6ea8fe'
+      }, {
+        label: 'Total Services',
+        data: reportList ? reportList.map(d => d.totalServices) : [],
+        backgroundColor: '#e94560'
       }]
     }
   }
@@ -147,9 +181,9 @@ const AdminReportsPage = () => {
         ) : (
           <div style={{ height: '400px' }}>
             {reportType === 'revenue' ? (
-              <Line data={chartData.revenue} options={{ responsive: true, maintainAspectRatio: false }} />
+              <Line data={chartData.revenue} options={cartesianOptions(theme)} />
             ) : (
-              <Bar data={chartData[reportType] || chartData.bookings} options={{ responsive: true, maintainAspectRatio: false }} />
+              <Bar data={chartData[reportType] || chartData.bookings} options={cartesianOptions(theme)} />
             )}
           </div>
         )}

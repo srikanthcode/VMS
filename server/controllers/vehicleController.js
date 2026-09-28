@@ -1,12 +1,47 @@
+const { Op } = require('sequelize');
 const { Vehicle, User, Booking } = require('../models');
 
 const getVehicles = async (req, res) => {
   try {
     const where = req.user.role === 'ADMIN' ? {} : { userId: req.user.id };
-    const vehicles = await Vehicle.findAll({
-      where,
-      include: [{ model: User, as: 'owner', attributes: ['id', 'name', 'email'] }]
-    });
+    const search = String(req.query.search || '').trim();
+    if (search) {
+      where[Op.or] = [
+        { vehicleNumber: { [Op.like]: `%${search}%` } },
+        { brand: { [Op.like]: `%${search}%` } },
+        { model: { [Op.like]: `%${search}%` } },
+        { color: { [Op.like]: `%${search}%` } }
+      ];
+    }
+
+    const include = [{ model: User, as: 'owner', attributes: ['id', 'name', 'email'] }];
+    const page = parseInt(req.query.page, 10);
+    const limit = parseInt(req.query.limit, 10);
+
+    if (page && limit && page > 0 && limit > 0) {
+      const { count, rows } = await Vehicle.findAndCountAll({
+        where,
+        include,
+        order: [['createdAt', 'DESC']],
+        limit,
+        offset: (page - 1) * limit,
+        distinct: true
+      });
+      return res.json({
+        success: true,
+        data: {
+          vehicles: rows,
+          total: count,
+          totalPages: Math.max(1, Math.ceil(count / limit)),
+          page,
+          limit
+        }
+      });
+    }
+
+    const options = { where, include, order: [['createdAt', 'DESC']] };
+    if (limit && limit > 0) options.limit = limit;
+    const vehicles = await Vehicle.findAll(options);
 
     res.json({ success: true, data: vehicles });
   } catch (error) {
@@ -54,7 +89,7 @@ const createVehicle = async (req, res) => {
       fuelType,
       color,
       currentKM: currentKM || 0,
-      insuranceExpiry,
+      insuranceExpiry: insuranceExpiry || null,
       rcNumber
     });
 
@@ -94,8 +129,8 @@ const updateVehicle = async (req, res) => {
       year: year || vehicle.year,
       fuelType: fuelType || vehicle.fuelType,
       color: color !== undefined ? color : vehicle.color,
-      currentKM: currentKM !== undefined ? currentKM : vehicle.currentKM,
-      insuranceExpiry: insuranceExpiry !== undefined ? insuranceExpiry : vehicle.insuranceExpiry,
+      currentKM: currentKM !== undefined && currentKM !== '' ? currentKM : vehicle.currentKM,
+      insuranceExpiry: insuranceExpiry !== undefined ? (insuranceExpiry || null) : vehicle.insuranceExpiry,
       rcNumber: rcNumber !== undefined ? rcNumber : vehicle.rcNumber
     });
 

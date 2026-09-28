@@ -1,3 +1,4 @@
+const { Op } = require('sequelize');
 const { Booking, Vehicle, ServiceType, User, BookingStatusHistory, Bill, Payment } = require('../models');
 const { generateBookingId } = require('./../utils/helpers');
 const { emitToUser, emitToAdmins, emitToMechanics, emitBroadcast } = require('../socket');
@@ -17,14 +18,57 @@ const getBookings = async (req, res) => {
       where.status = req.query.status;
     }
 
-    const bookings = await Booking.findAll({
-      where,
-      include: [
-        { model: Vehicle },
-        { model: ServiceType }
-      ],
-      order: [['createdAt', 'DESC']]
-    });
+    if (req.query.vehicleId) {
+      where.vehicleId = req.query.vehicleId;
+    }
+
+    const search = String(req.query.search || '').trim();
+    const page = parseInt(req.query.page, 10);
+    const limit = parseInt(req.query.limit, 10);
+
+    const include = [
+      { model: Vehicle },
+      { model: ServiceType }
+    ];
+
+    if (search) {
+      where[Op.or] = [
+        { bookingId: { [Op.like]: `%${search}%` } },
+        { '$Vehicle.vehicleNumber$': { [Op.like]: `%${search}%` } },
+        { '$user.name$': { [Op.like]: `%${search}%` } },
+        { '$user.username$': { [Op.like]: `%${search}%` } }
+      ];
+      include.push({ model: User, as: 'user', attributes: ['id', 'name', 'email', 'phone'] });
+    }
+
+    const order = [['createdAt', 'DESC']];
+    let rawBookings;
+    let total = null;
+
+    if (page && limit && page > 0 && limit > 0) {
+      const result = await Booking.findAndCountAll({
+        where,
+        include,
+        order,
+        limit,
+        offset: (page - 1) * limit,
+        distinct: true
+      });
+      rawBookings = result.rows;
+      total = result.count;
+    } else {
+      const options = { where, include, order };
+      if (limit && limit > 0) {
+        options.limit = limit;
+        const { count, rows } = await Booking.findAndCountAll({ ...options, distinct: true });
+        total = count;
+        rawBookings = rows;
+      } else {
+        rawBookings = await Booking.findAll(options);
+      }
+    }
+
+    const bookings = rawBookings;
 
     const userIds = [...new Set(bookings.map(b => b.userId).filter(Boolean))];
     const mechanicIds = [...new Set(bookings.map(b => b.mechanicId).filter(Boolean))];
@@ -45,6 +89,19 @@ const getBookings = async (req, res) => {
       return booking;
     });
 
+    if (page && limit && page > 0 && limit > 0) {
+      return res.json({
+        success: true,
+        data: {
+          bookings: enrichedBookings,
+          total,
+          totalPages: Math.max(1, Math.ceil(total / limit)),
+          page,
+          limit
+        }
+      });
+    }
+
     res.json({ success: true, data: enrichedBookings });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
@@ -56,7 +113,8 @@ const getBooking = async (req, res) => {
     const booking = await Booking.findByPk(req.params.id, {
       include: [
         { model: Vehicle },
-        { model: ServiceType }
+        { model: ServiceType },
+        { model: Bill, include: [{ model: Payment }] }
       ]
     });
 
@@ -80,7 +138,18 @@ const getBooking = async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    res.json({ success: true, data: { ...booking.toJSON(), user: user ? user.toJSON() : null, mechanic: mechanic ? mechanic.toJSON() : null, statusHistory: history } });
+    const plainBooking = booking.toJSON();
+
+    res.json({
+      success: true,
+      data: {
+        ...plainBooking,
+        user: user ? user.toJSON() : null,
+        mechanic: mechanic ? mechanic.toJSON() : null,
+        statusHistory: history,
+        paymentStatus: (plainBooking.Bill && plainBooking.Bill.Payment && plainBooking.Bill.Payment.status) || 'UNPAID'
+      }
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }

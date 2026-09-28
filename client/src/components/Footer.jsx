@@ -14,10 +14,10 @@ const Footer = () => {
               We provide fast, reliable, and affordable care for your bikes and vehicles.
             </p>
             <div className="d-flex gap-3">
-              <a href="#" className="text-white fs-5"><i className="bi bi-facebook"></i></a>
-              <a href="#" className="text-white fs-5"><i className="bi bi-twitter"></i></a>
-              <a href="#" className="text-white fs-5"><i className="bi bi-instagram"></i></a>
-              <a href="#" className="text-white fs-5"><i className="bi bi-linkedin"></i></a>
+              <a href="#" className="fs-5" aria-label="Facebook"><i className="bi bi-facebook"></i></a>
+              <a href="#" className="fs-5" aria-label="Twitter"><i className="bi bi-twitter"></i></a>
+              <a href="#" className="fs-5" aria-label="Instagram"><i className="bi bi-instagram"></i></a>
+              <a href="#" className="fs-5" aria-label="LinkedIn"><i className="bi bi-linkedin"></i></a>
             </div>
           </div>
 
@@ -70,10 +70,6 @@ const Footer = () => {
               <p className="mb-0">
                 &copy; {new Date().getFullYear()} Vehicle Management System. All rights reserved.
               </p>
-            </div>
-            <div className="col-md-6 text-center text-md-end">
-              <Link to="/privacy" className="me-3">Privacy Policy</Link>
-              <Link to="/terms">Terms of Service</Link>
             </div>
           </div>
         </div>

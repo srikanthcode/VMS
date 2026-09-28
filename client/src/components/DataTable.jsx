@@ -59,7 +59,7 @@ const DataTable = ({
       {onSearch && (
         <div className="p-3 border-bottom">
           <div className="input-group" style={{ maxWidth: '400px' }}>
-            <span className="input-group-text bg-white">
+            <span className="input-group-text">
               <i className="bi bi-search text-muted"></i>
             </span>
             <input
@@ -141,12 +141,13 @@ const DataTable = ({
                          (page >= current - 2 && page <= current + 2)
                 })
                 .map((page, index, array) => (
-                  <li key={page} className="page-item">
+                  <li key={page} className={`page-item ${pagination.page === page ? 'active' : ''}`}>
                     {index > 0 && array[index - 1] !== page - 1 && (
                       <span className="page-link">...</span>
                     )}
                     <button
-                      className={`page-link ${pagination.page === page ? 'active' : ''}`}
+                      className="page-link"
+                      aria-current={pagination.page === page ? 'page' : undefined}
                       onClick={() => onPageChange(page)}
                     >
                       {page}

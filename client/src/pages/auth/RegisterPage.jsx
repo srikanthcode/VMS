@@ -134,7 +134,7 @@ const RegisterPage = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="form-custom">
-          <div className="mb-2">
+          <div className="mb-1">
             <label className="form-label">Username</label>
             <div className="input-group input-group-sm">
               <span className="input-group-text">
@@ -152,7 +152,7 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          <div className="mb-2">
+          <div className="mb-1">
             <label className="form-label">Email Address</label>
             <div className="input-group input-group-sm">
               <span className="input-group-text">
@@ -170,7 +170,7 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          <div className="mb-2">
+          <div className="mb-1">
             <label className="form-label">Phone Number</label>
             <div className="input-group input-group-sm">
               <select
@@ -234,7 +234,7 @@ const RegisterPage = () => {
             )}
           </div>
 
-          <div className="mb-2">
+          <div className="mb-1">
             <label className="form-label">Password</label>
             <div className="input-group input-group-sm">
               <span className="input-group-text">
@@ -252,7 +252,7 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          <div className="mb-3">
+          <div className="mb-2">
             <label className="form-label">Confirm Password</label>
             <div className="input-group input-group-sm">
               <span className="input-group-text">
@@ -272,7 +272,7 @@ const RegisterPage = () => {
 
           <button
             type="submit"
-            className="btn btn-accent w-100 py-2"
+            className="btn btn-accent w-100 py-2 mt-2"
             disabled={loading}
           >
             {loading ? (
@@ -289,7 +289,7 @@ const RegisterPage = () => {
           </button>
         </form>
 
-        <div className="text-center mt-3">
+        <div className="text-center mt-2">
           <p className="text-muted mb-0" style={{ fontSize: '0.85rem' }}>
             Already have an account?{' '}
             <Link to="/login" className="text-decoration-none fw-bold">

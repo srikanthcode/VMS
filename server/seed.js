@@ -104,7 +104,7 @@ const seed = async () => {
       Booking.create({ bookingId: generateBookingId(), userId: customers[0].id, vehicleId: vehicles[0].id, serviceTypeId: services[0].id, mechanicId: mechanics[0].id, preferredDate: '2026-09-15', preferredTime: '10:00 AM', status: 'COMPLETED', estimatedPrice: services[0].price }),
       Booking.create({ bookingId: generateBookingId(), userId: customers[1].id, vehicleId: vehicles[2].id, serviceTypeId: services[1].id, mechanicId: mechanics[1].id, preferredDate: '2026-09-16', preferredTime: '11:00 AM', status: 'SERVICE_IN_PROGRESS', estimatedPrice: services[1].price }),
       Booking.create({ bookingId: generateBookingId(), userId: customers[2].id, vehicleId: vehicles[3].id, serviceTypeId: services[2].id, preferredDate: '2026-09-17', preferredTime: '09:00 AM', status: 'PENDING', estimatedPrice: services[2].price }),
-      Booking.create({ bookingId: generateBookingId(), userId: customers[0].id, vehicleId: vehicles[1].id, serviceTypeId: services[3].id, mechanicId: mechanics[2].id, preferredDate: '2026-09-18', preferredTime: '02:00 PM', pickupRequired: true, pickupAddress: '123 Main Street', pickupLandmark: 'Near Park', pickupTime: '01:30 PM', pickupContact: '8765432100', status: 'CONFIRMED', estimatedPrice: services[3].price }),
+      Booking.create({ bookingId: generateBookingId(), userId: customers[0].id, vehicleId: vehicles[1].id, serviceTypeId: services[3].id, mechanicId: mechanics[2].id, preferredDate: '2026-09-18', preferredTime: '02:00 PM', pickupRequired: true, pickupAddress: 'No. 14, 3rd Cross Street, Rajakilpakkam, Pallikaranai, Chennai, Tamil Nadu 600100', pickupLandmark: 'Near Pallikaranai Marsh Land', pickupTime: '01:30 PM', pickupContact: '8765432100', pickupLatitude: 12.9658, pickupLongitude: 80.2212, status: 'CONFIRMED', estimatedPrice: services[3].price }),
       Booking.create({ bookingId: generateBookingId(), userId: customers[3].id, vehicleId: vehicles[4].id, serviceTypeId: services[4].id, preferredDate: '2026-09-19', preferredTime: '03:00 PM', status: 'PENDING', estimatedPrice: services[4].price })
     ]);
 
@@ -129,9 +129,21 @@ const seed = async () => {
 
     console.log('Creating notifications...');
     await Promise.all([
-      Notification.create({ userId: customers[0].id, title: 'Booking Confirmed', message: 'Your booking has been confirmed', type: 'BOOKING' }),
-      Notification.create({ userId: customers[0].id, title: 'Service Completed', message: 'Your vehicle service is completed', type: 'SERVICE' }),
-      Notification.create({ userId: customers[1].id, title: 'Booking Update', message: 'Your booking is in progress', type: 'BOOKING' })
+      Notification.create({ userId: customers[0].id, title: 'Booking Confirmed', message: `Booking ${bookings[0].bookingId} has been confirmed`, type: 'BOOKING' }),
+      Notification.create({ userId: customers[0].id, title: 'Service Completed', message: `Service for booking ${bookings[0].bookingId} is completed`, type: 'SERVICE' }),
+      Notification.create({ userId: customers[0].id, title: 'Booking Confirmed', message: `Booking ${bookings[3].bookingId} has been confirmed`, type: 'BOOKING' }),
+      Notification.create({ userId: customers[0].id, title: 'Payment Received', message: 'Payment of ₹58.99 received for your invoice', type: 'PAYMENT' }),
+      Notification.create({ userId: customers[1].id, title: 'Booking Update', message: `Service for booking ${bookings[1].bookingId} is in progress`, type: 'BOOKING' }),
+      Notification.create({ userId: customers[1].id, title: 'Payment Pending', message: 'Payment of ₹176.99 is pending for your invoice', type: 'PAYMENT' }),
+      Notification.create({ userId: customers[2].id, title: 'Booking Received', message: `Your booking ${bookings[2].bookingId} is pending confirmation`, type: 'BOOKING' }),
+      Notification.create({ userId: customers[3].id, title: 'Booking Received', message: `Your booking ${bookings[4].bookingId} is pending confirmation`, type: 'BOOKING' }),
+      Notification.create({ userId: customers[4].id, title: 'Welcome to VMS', message: 'Book your first service and get 10% off', type: 'GENERAL' }),
+      Notification.create({ userId: mechanics[0].id, title: 'New Assignment', message: `You have been assigned booking ${bookings[0].bookingId}`, type: 'BOOKING' }),
+      Notification.create({ userId: mechanics[1].id, title: 'New Assignment', message: `You have been assigned booking ${bookings[1].bookingId}`, type: 'BOOKING' }),
+      Notification.create({ userId: mechanics[2].id, title: 'New Assignment', message: `You have been assigned booking ${bookings[3].bookingId}`, type: 'BOOKING' }),
+      Notification.create({ userId: admin.id, title: 'New Booking', message: `New booking ${bookings[2].bookingId} needs your confirmation`, type: 'BOOKING' }),
+      Notification.create({ userId: admin.id, title: 'New Booking', message: `New booking ${bookings[4].bookingId} needs your confirmation`, type: 'BOOKING' }),
+      Notification.create({ userId: admin.id, title: 'Payment Received', message: 'Payment of ₹58.99 received for invoice', type: 'PAYMENT' })
     ]);
 
     console.log('Creating reviews...');

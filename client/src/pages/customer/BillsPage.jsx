@@ -5,6 +5,7 @@ import StatusBadge from '../../components/StatusBadge'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import EmptyState from '../../components/EmptyState'
 import api from '../../services/api'
+import useRealtimeEvents from '../../hooks/useRealtimeEvents'
 import toast from 'react-hot-toast'
 
 const BillsPage = () => {
@@ -14,6 +15,8 @@ const BillsPage = () => {
   useEffect(() => {
     fetchBills()
   }, [])
+
+  useRealtimeEvents(['vms:bill','vms:payment'], () => fetchBills())
 
   const fetchBills = async () => {
     try {

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import DashboardLayout from '../../components/DashboardLayout'
 import DataTable from '../../components/DataTable'
 import api from '../../services/api'
+import useRealtimeEvents from '../../hooks/useRealtimeEvents'
 import toast from 'react-hot-toast'
 
 const AdminPaymentsPage = () => {
@@ -11,6 +12,8 @@ const AdminPaymentsPage = () => {
   useEffect(() => {
     fetchPayments()
   }, [])
+
+  useRealtimeEvents(['vms:payment'], () => fetchPayments())
 
   const fetchPayments = async () => {
     try {

@@ -34,7 +34,7 @@ const BookServicePage = () => {
 
   useEffect(() => {
     if (formData.serviceTypeId && services.length > 0) {
-      const service = services.find(s => s.id === formData.serviceTypeId)
+      const service = services.find(s => Number(s.id) === Number(formData.serviceTypeId))
       setSelectedService(service)
     }
   }, [formData.serviceTypeId, services])

@@ -7,6 +7,7 @@ import LoadingSpinner from '../../components/LoadingSpinner'
 import LiveLocationShare from '../../components/LiveLocationShare'
 import GoogleMapsView from '../../components/GoogleMapsView'
 import api from '../../services/api'
+import useRealtimeEvents from '../../hooks/useRealtimeEvents'
 import toast from 'react-hot-toast'
 
 const BookingDetailPage = () => {
@@ -17,6 +18,8 @@ const BookingDetailPage = () => {
   useEffect(() => {
     fetchBooking()
   }, [id])
+
+  useRealtimeEvents(['vms:booking','vms:pickup'], () => fetchBooking())
 
   const fetchBooking = async () => {
     try {
